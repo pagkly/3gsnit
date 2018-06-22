@@ -1553,6 +1553,30 @@ echo "options nouveau modeset=0" | sudo tee -a /etc/modprobe.d/nouveau-kms.conf
 EOF
 )
 
+
+detectcurdesktop() {
+#https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-
+bash-script
+#https://askubuntu.com/questions/125062/how-can-i-find-which-desktop-enviroment-i-am-using
+#echo $XDG_DATA_DIRS
+#/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
+#current
+#echo $DESKTOP_SESSION
+#echo $XDG_SESSION_DESKTOP
+
+#sessionlist=$(ls /usr/bin/*session)
+#[[ $sessionlist =~ (gnome) ]] && desktop="gnome"
+#[[ $sessionlist =~ (mate) ]] && desktop="mate"
+#[[ $sessionlist =~ (lx) ]] && desktop="lxde"
+#[[ $sessionlist =~ (icewm) ]] && desktop="jwm"
+
+if [[ $XDG_DATA_DIRS =~ (gnome) ]] ; then
+desktop="gnome"
+elif [[ $XDG_DATA_DIRS =~ (unity) ]] ; then
+desktop="unity"
+fi
+}
+
 grubsplashplymouthg=$(cat <<EOF
 #sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash\"*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet\"/g' "/etc/default/grub"
 #desk=$XDG_CURRENT_DESKTOP
