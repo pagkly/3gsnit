@@ -1,0 +1,3649 @@
+#!/bin/bash
+#https://stackoverflow.com/questions/18660798/here-document-gives-unexpected-end-of-file-error
+getdirwh() {
+#https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
+pushd . > /dev/null
+SCRIPT_PATH="${BASH_SOURCE[0]}";
+if ([ -h "${SCRIPT_PATH}" ]) then
+  while([ -h "${SCRIPT_PATH}" ]) do cd `dirname "$SCRIPT_PATH"`; SCRIPT_PATH=`readlink "${SCRIPT_PATH}"`; done
+fi
+cd `dirname ${SCRIPT_PATH}` > /dev/null
+SCRIPT_PATH=`pwd`;
+popd  > /dev/null
+}
+#getdirwh
+echo "$SCRIPT_PATH"
+#exit
+getdirwh2() {
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+scriptname="$(awk -F'/' '{print $NF}' <<< "$0")"
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+DIR0="$DIR/$scriptname"
+}
+getdirwh2
+echo "$DIR0"
+detectos() {
+##https://stackoverflow.com/questions/394230/how-to-detect-the-os-from-a-bash-script
+if [[ -z $1 ]] ; then
+currentos=$OSTYPE
+else
+currentos="$1"
+fi
+
+if [[ "$currentos" == "linux-gnu" ]]; then
+listthisfn="(reinstallcomp|installdockeruv10|install|getspecs|testecho|showsplash|choosesplash|startupdaten6p|gitpush1m|gitpush3gsnit)"
+elif [[ "$currentos" == "darwin"* ]]; then
+listthisfn="(install)"
+elif [[ "$currentos" == "cygwin" ]]; then
+# POSIX compatibility layer and Linux environment emulation for Windows
+echo "cygwin"
+elif [[ "$currentos" == "msys" ]]; then
+# Lightweight shell and GNU utilities compiled for Windows (part of MinGW)
+echo "msys"
+elif [[ "$currentos" == "win32" ]]; then
+# I'm not sure this can happen.
+echo "win32"
+elif [[ "$currentos" == "freebsd"* ]]; then
+# ...
+echo "fbsd"
+else
+# Unknown.
+echo "unknown"
+fi
+}
+#####3gsnit
+getdirfromwithin() {
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+}
+###UBUNTU
+UBUNTU() {
+echo "$DIR0"
+getip() {
+extip="$(curl ipinfo.io/ip)"
+[[ -z extip ]] && echo "ipnull" || echo "$extip"
+#userno="123.456.789.10"
+}
+
+getcpugpu() {
+#sudo dmidecode
+#https://askubuntu.com/questions/524242/how-to-find-out-which-nvidia-gpu-i-have
+#| awk '{$1=$1};1'
+#cpu=$(lscpu | grep CPU | grep "Model name" | sed -r "s/(Model name.*:)|(\t)//g" | awk '{$1=$1};1')
+cpu=$(awk '/Model\ name/ {gsub("Model name:", ""); gsub(/^[ \t]+/, ""); print $0}' <<< "$(lscpu)")
+#GPUmaker=$(sudo lshw | sed -rn "s/(NVIDIA|AMD|Intel)/\1/p")
+GPUmaker=$(sed -rn "/(\[03)/p" <<< "$(lspci -nn)")
+if [[ -n $GPUmaker ]] && [[ $GPUmaker =~ (NVIDIA) ]] ; then
+#GPUmodel=$(nvidia-smi | grep Geforce)
+#GPUmodel=$(grep NVIDIA <<< "$GPUmaker" | sed -r "s/(01:00.0 VGA compatible controller| \[0300\]:|Corporation ..... \[)//g;s/(\](.)*([)])$)|\[|\]//g")
+GPUmodel=$(sed -rn "/(NVIDIA)/p;s/(01:00.0 VGA compatible controller| \[0300\]:|Corporation ..... \[)//g;s/(\](.)*([)])$)|\[|\]//g" <<< "$GPUmaker")
+elif [[ -n $GPUmaker ]] && [[ $GPUmaker =~ (AMD) ]] ; then
+GPUmaker="AMD"
+GPUmodel="AMD"
+elif [[ -n $GPUmaker ]] && [[ $GPUmaker =~ (Intel) ]] ; then
+GPUmaker="Intel"
+GPUmodel="Intel"
+else
+GPUmaker="null"
+GPUmodel="null"
+fi
+echo "$cpu"
+echo "$GPUmodel"
+}
+
+getramingb() {
+#https://stackoverflow.com/questions/6348902/how-can-i-add-numbers-in-a-bash-script
+#https://stackoverflow.com/questions/25826752/using-tr-to-replace-newline-with-space
+#https://unix.stackexchange.com/questions/89712/how-to-convert-floating-point-number-to-integer
+#https://stackoverflow.com/questions/2441046/how-to-get-the-total-physical-memory-in-bash-to-assign-it-to-a-variable/2441150
+TPMRAM=$(awk '/MemTotal/{print $2}' /proc/meminfo | xargs -I {} echo "scale=4; {}/1024^2" | bc)
+#TPMRAMr=$(printf '%.*f\n' 0 $TPRAM)
+#TPMRAMr=$(printf -v int %.0f $TPRAM)
+float=$TPMRAM
+int=${float%.*}
+fint=$(LC_ALL=C printf '%.0f' "$float")
+TPMRAMr=$fint
+echo "$TPMRAMr"
+}
+
+getspecs() {
+rm -f $DIR0bk ;
+cp "$DIR0" $DIR0bk ;
+chmod +x $DIR0bk ;
+getip
+getcpugpu
+getramingb
+echo "$extip;;$cpu;;$GPUmodel;;"$TPMRAMr"GB"
+locname=$(awk -F";;" '/'$extip'/{printf $2}' $DIR0)
+gpum=$(awk -F";;" '/'$extip'/{printf $3}' $DIR0)
+if [[ -z $gpum ]] ; then
+#no-rni
+sed -ri "s/(inetcafeiplist=[$][(]cat <<EOF)/\1\n$extip;;$cpu;;$GPUmodel;;$TPMRAMr\GB;;$locname/g" $DIR0
+else
+sed -ri "s/(inetcafeiplist=[$][(]cat <<EOF)/\1\n$extip;;$cpu;;$GPUmodel;;$TPMRAMr\GB/g" $DIR0
+fi
+echo "check3gsnit"
+}
+
+getgeoloc() {
+##curl -s https://www.whoismyisp.org |  grep -o -P '(?<=is).*(?=In some)'
+curl http://freegeoip.net/json/$(curl ipinfo.io/ip) | jq
+}
+
+inetcafe() {
+#nvidia10606gb
+#https://askubuntu.com/questions/72766/how-do-i-find-out-the-model-of-my-graphics-card
+inetcafeiplist=$(cat <<EOF
+210.8.206.206;;Intel(R) Xeon(R) CPU E3-1231 v3 @ 3.40GHz;; NVIDIA Corporation Device 10de:1c03;;16GB;;genesis
+141.168.253.89;;Intel(R) Core(TM) i5-2435M CPU @ 2.40GHz;;Intel;;8GB;;mbp
+61.68.25.190;;inetcity
+210.185.99.150;;mc1
+123.51.107.42;;wangyu
+210.9.147.54
+59.167.118.209;;BEYOND	
+128.250.0.172 EDS
+128.250.0.173 EDS
+128.250.0.175 OldEng	
+EOF
+)
+}
+
+getmacaddressvendor() {
+if [ $# -eq 0 ]
+then
+echo "Enter only first three octet of mac adddress
+        for ex - xx-xx-xx or xx:xx:xx"
+else
+touch output.txt
+trans=`echo "$1" | tr ':' '-'`
+upper=`echo "$trans" | tr '[a-z]' '[A-Z]'`
+cat oui.txt | grep $upper | cut -f3 > output.txt
+cat oui1.txt | grep $upper | cut -f3 > output.txt
+cat oui2.txt | grep $upper | cut -f3 > output.txt
+outfile=output.txt
+if [ -s $outfile ]
+then
+ cat output.txt
+else
+  echo "Enter only first three octet of mac adddress
+        for ex - xx-xx-xx or xx:xx:xx"
+fi
+fi
+}
+
+getoui() {
+OUI=$(echo ${1//[:.- ]/} | tr "[a-f]" "[A-F]" | egrep -o "^[0-9A-F]{6}")
+
+grep $OUI lynx -dump http://standards.ieee.org/regauth/oui/oui.txt
+
+
+MA=$(ifconfig -a | awk '/^[a-z]/ { iface=$1; mac=$NF; next }
+    /inet addr:/ { print iface, mac }' | awk '{printf $2}' | sed "s/Loopback//g") 
+lynx -dump http://api.macvendors.com/$MA
+}
+
+#####REINSTALL
+portand() {
+#https://forum.xda-developers.com/showthread.php?t=2284985
+return 0
+}
+#203
+reinstallcomp() {
+comp="MBP"
+comp="SP3"
+comp=$1
+installkernel$comp
+blackgrub
+blacksplash
+addrepo$comp
+installgooglechrome
+installdockerce
+if [[ $comp =~ ^(SP3)$ ]] ; then
+wintheme
+fi
+}
+reinstallMBP() 
+{
+updaterepo
+installchromebrowser
+installdockerce
+installandroidstudio
+installgnirehtet
+installpython
+installpythonext1
+}
+reinstallcomp2() {
+read -p "COMP (SP3|MBP)=" comp
+##reinstall mwifiex-firmware(SP3)
+installmwifiex
+installchromebrowser
+installpy
+sudo apt-get install -y idle \
+python-pip \
+bless \
+gparted \
+#Kernel change to KL3 Custom
+#Add Surface Keyboard Support
+#MBP
+#Kernel change to KL3
+#WINMKLINK
+#mklink /d C:\Users\SP3\Documents\Docs\Tech\Automate\FiiNote\Save\fiinote Z:\fiinote
+#mklink /d C:\Users\SP3\Documents\Docs\Tech\Automate\FiiNote\Save\@pagkly Z:\fiinote
+#mklink /d C:\Users\SP3\Documents\Docs\Tech\Automate\FiiNote\Save\@pagkly "C:\Users\SP3\AppData\Roaming\Microsoft\Windows\Network Shortcuts\10.0.0.1\fiinote"
+#mklink /d C:\Users\SP3\Documents\Docs\Tech\Automate\FiiNote\Save\@pagkly "\\10.0.0.1@8080\DavWWWRoot\fiinote"
+#\\10.0.0.1@8080\DavWWWRoot
+echo "#UUID=01D2CDF49BBAF180/Users/SP3/Documents/Docs/Tech    $userhomedir/Documents/Docs       ntfs    permissions,locale=en_US.utf8    0   2
+#UUID=01D2CDF49BBAF180  $userhomedir/Documents/Docs       ntfs-3g  rbind,nosuid,user,umask=0222  0  0
+UUID=01D2CDF49BBAF180   $mdir/Windows     ntfs-3g  nosuid,nodev,nofail,x-gvfs-show  0  0
+#$mdir/Windows/Users/SP3/Documents/Docs/Tech      $userhomedir/Documents/Docs       ntfs-3g  nosuid,nodev,nofail,x-gvfs-show  0  0
+#nosuid,nodev,nofail,x-gvfs-show
+#/dev/sda4/Users/SP3/Documents/Docs/Tech        $userhomedir/Documents/Docs       ntfs-3g  nosuid,nodev,nofail,x-gvfs-show  0  0
+$mdir/Windows/Users/SP3/Documents/Docs $userhomedir/Documents/Docs auto defaults,nofail,nobootwait,bind 0 2
+#mount --bind /home/ubuntu/stuff /home/bob/things
+" | sudo tee -a /etc/fstab
+sudo mount -a
+xhost + && sudo /home/Documents/TW/layoutmanager.sh --windows &
+}
+
+#####INSTALL
+updaterepo () {
+release="$(lsb_release -sc)"
+repolink="http://archive.ubuntu.com/ubuntu"
+repoverse="main restricted universe multiverse"
+sudo add-apt-repository -y "deb $repolink $release $repoverse"
+sudo add-apt-repository -y "deb-src $repolink $release $repoverse"
+sudo apt-get update ;
+}
+installchromebrowser () {
+#https://askubuntu.com/questions/510056/how-to-install-google-chrome?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' | sudo tee /etc/apt/sources.list.d/google-chrome.list
+sudo apt-get update ;
+sudo apt-get install -y google-chrome-stable
+}
+installb43d() {
+return 0
+}
+installmwifiexf() {
+return 0
+}
+installblesshex() {
+sudo apt-get install -y bless
+}
+installdockerce() {
+#https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce-1
+#https://github.com/moby/moby/issues/25913
+#https://askubuntu.com/questions/761592/unable-to-apt-get-dist-upgrade-due-to-appstreamcli-database-error
+sudo chmod -R a+rX,u+w /var/cache/app-info/xapian/default ;
+sudo rm -rf /var/lib/docker ;\
+sudo apt-get remove -y docker docker-engine docker.io ;\
+sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common && \
+curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | sudo apt-key add - 
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable" 
+sudo apt-get update ;\
+apt-cache policy docker-ce ;\
+sudo apt-get install -y docker-ce
+#docker run -itd --name some-xmr-stak-cpu -v "$PWD"/config.txt:/usr/local/etc/config.txt minecoins/xmr-stak-cpu
+#https://docs.microsoft.com/en-us/virtualization/windowscontainers/deploy-containers/version-compatibility
+#sudo docker pull microsoft/windowsservercore
+}
+installdce2() {
+#https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly
+# Allow your user to access the Docker CLI without needing root.
+sudo usermod -aG docker $userid
+# Install Docker Compose.
+sudo curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose &&
+sudo chmod +x /usr/local/bin/docker-compose
+}
+
+#WIN
+#https://stackoverflow.com/questions/7330187/how-to-find-the-windows-version-from-the-powershell-command-line
+#https://gist.github.com/melak47/f58d4d2d52b0a8d976b4
+#WSLDOCKER
+#https://blog.jayway.com/2017/04/19/running-docker-on-bash-on-windows/
+#https://gist.github.com/kekru/0d14eb363260df78d012c901b94a19be
+otherstuff() {
+bla=$(cat <<EOF
+#https://www.cybrary.it/0p3n/escaping-linux-chroot-jail/
+grep
+sed
+awk
+perl
+
+gedit
+vim
+
+html
+ahk
+powershell
+cmd
+python
+java
+bash
+c
+cpp
+c#
+
+vbox
+vmware
+hyper-v
+docker
+EOF
+)
+}
+dockerwincommand() {
+#https://blogs.msdn.microsoft.com/premier_developer/2018/04/20/running-docker-windows-and-linux-containers-simultaneously/
+echo “export DOCKER_HOST=localhost:2375” >> ~/.bash_profile
+docker -H localhost:2375 images
+#docker pull --platform=linux ubuntu
+#docker run --platform=linux -d ubuntu /bin/sh -c "while true; do echo hello world; sleep 1; done"
+#docker run -d microsoft/windowsservercore ping -t 127.0.0.1
+#docker inspect --format '{{.Os}}' ubuntu
+}
+installgolang() {
+#Make sure we have the latest package lists
+sudo apt-get update
+#Download Go. You should change the version if there's a newer one. Check at: https://golang.org/dl/
+sudo wget https://storage.googleapis.com/golang/go1.9.2.linux-amd64.tar.gz
+
+cd ~/Downloads
+#unzip Go
+sudo tar -C /usr/local -xzf go1.9.2.linux-amd64.tar.gz
+#Put it in the path
+export PATH=$PATH:/usr/local/go/bin
+#sudo apt-get install -y golang
+}
+installdockerwslrelay() {
+#https://blogs.msdn.microsoft.com/commandline/2017/12/08/cross-post-wsl-interoperability-with-docker/
+installgolang
+go get -d github.com/jstarks/npiperelay
+GOOS=windows go build -o /mnt/c/Users/<your_user_name>/go/bin/npiperelay.exe github.com/jstarks/npiperelay
+sudo ln -s /mnt/c/Users/$userid/go/bin/npiperelay.exe /usr/local/bin/npiperelay.exe
+sudo apt install -y socat docker.io
+#make the file
+touch ~/docker-relay
+#add execution privileges
+chmod +x ~/docker-relay
+echo '#!/bin/sh' | tee ~/docker-relay
+echo 'exec socat UNIX-LISTEN:/var/run/docker.sock,fork,group=docker,umask=007 EXEC:"npiperelay.exe -ep -s //./pipe/docker_engine",nofork' | tee -a ~/docker-relay
+sudo adduser $userid docker
+}
+
+installdockeruv10() {
+##https://unix.stackexchange.com/questions/4897/providing-bin-and-lib-inside-a-chroot-jailt
+#mount --bind /bin /chroot/bin
+#mount --bind /lib /chroot/lib
+#chroot /chroot
+#echo "/bin /chroot/bin none bind
+#/lib /chroot/lib none bind" | tee -a /etc/fstab
+#https://vsupalov.com/docker-arg-env-variable-guide/
+#https://stackoverflow.com/questions/44331836/apt-get-install-tzdata-noninteractive
+#https://stackoverflow.com/questions/16296753/can-you-run-gui-apps-in-a-docker-container
+#https://unix.stackexchange.com/questions/317053/x11vnc-change-resolution
+#https://stackoverflow.com/questions/8928224/trying-to-retrieve-first-5-characters-from-string-in-bash-error
+#https://markhneedham.com/blog/2013/06/26/unixawk-extracting-substring-using-a-regular-expression-with-capture-groups/
+#https://www.unix.com/shell-programming-and-scripting/41734-how-print-specific-lines-awk.html
+#https://forums.docker.com/t/how-do-i-send-runs-output-to-env-in-dockerfile/16106/3
+sudo apt-get install -y vncviewer
+rmall=$(cat <<EOF
+[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ;
+[[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q) ;
+#sudo docker-machine rm -f $(sudo docker-machine ls -q) ;
+EOF
+for f in {2..6} ; do
+contid=$(awk 'NR=='$f <<< "$(sudo docker images -q)")
+echo $contid
+sudo docker rmi $contid
+done
+)
+[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ; [[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q)
+builduv10=$(cat <<EOF
+FROM ubuntu:18.04
+#ARG ORIBGPIC=/usr/share/backgrounds/xfce/xfce-teal.jpg
+#ENV ORIBGPIC=/usr/share/backgrounds/xfce/xfce-teal.jpg
+MAINTAINER py
+RUN export DEBIAN_FRONTEND=noninteractive \
+&& echo $ORIBGPIC \
+&& apt-get update \
+&& apt install -y sudo nano \
+&& apt-get install -y xterm \
+perl \
+curl \
+wget \
+bless \
+gedit \
+python3 \
+python \
+python-pip \
+idle \
+git \
+imagemagick \
+x11vnc \
+xfce4 \
+xvfb \
+thunar \
+zathura &&\
+ln -fs /usr/share/zoneinfo/Australia/Melbourne /etc/localtime \
+&& dpkg-reconfigure --frontend noninteractive tzdata \
+&& echo "exec xfce4-session" | tee /root/.xinitrc \
+&& export ORIBGPIC=/usr/share/backgrounds/xfce/xfce-blue.jpg \
+&& echo $ORIBGPIC \
+&& sudo curl -o /root/black.jpg https://wallpapercave.com/wp/DTvUQor.jpg \
+&& sudo mv /usr/share/backgrounds/xfce/xfce-teal.jpg /usr/share/backgrounds/xfce/xfce-teal.jpgbk \
+&& sudo mv /root/black.jpg /usr/share/backgrounds/xfce/xfce-teal.jpg \
+&& pip install pyscreenshot
+EOF
+)
+#RUN touch /etc/rc.local &&\
+#sudo chmod +x /etc/rc.local &&\
+#perl -pi -e "s/^(x11vnc -forever -create)//g" /etc/rc.local &&\
+#perl -pi -e "s/^(exit 0)/x11vnc -forever -create\n\1/g" /etc/rc.local &&\
+#echo "sudo mount -a && sudo python3 /media/Surface2/Automate/FN30.py & exec xfce4-session" | tee /root/.xinitrc
+
+dfname="Dockerfile"
+cd ~
+mkdir -p Dockerfileuxv ;
+cd Dockerfileuxv
+echo "$builduv10" | tee $dfname
+awk '{gsub(/(\\EOF)/,"EOF");print}' $dfname >> $dfname\bk
+mv $dfname\bk $dfname
+#--build-arg oribgpic="/usr/share/backgrounds/xfce/xfce-teal.jpg"
+contname="uv10"
+$buildcont
+contid=$($runcont)
+scontid=$(awk '{print substr($0,0,12)}' <<< "$contid")
+#scontid=$(getsubstr "0" "12" "$contid")
+lcport=$(awk 'match($0, /0.0.0.0([^ ])/) {gsub("0.0.0.0|->5900/tcp","");print substr($0, RSTART, RLENGTH)}' <<< "$(sudo docker ps -a | grep \"$scontid\")")
+echo $scontid $lcport
+vncviewer $lcport & disown $!
+#scontid=$(sudo docker ps -aql)
+#sudo docker exec -it $contid bash
+
+##DOCKER
+#ENV HOME /root
+#docker build -t . -f-<<\EOF
+#ENV HOME /root
+#RUN echo "hello world"
+#COPY . /my-copied-files
+#\EOF
+##sudo docker load -i /home/user/Documents/Docs/Tech/uv10.tar
+##old /home/user/Documents/Docs/Tech/Automate/FiiNote/@pagkly/notes:/media/Surface2/Tech/
+##-v c:/Users/SP3/Documents/Docs:/media/Surface2
+##-v /home/user/Documents/Docs:/media/Surface2
+#$cn="adoring_fermat"; docker start $cn; docker exec -it $cn bash
+#sudo docker exec -it hungry_bartik bash
+
+#Container
+#~/.xinitrc
+#/etc/rc.local
+#/etc/fstab
+#wine /media/Surface2/Tech/Automate/SumatraPDF-3.1.2/SumatraPDF.exe
+}
+xfcecustom() {
+#https://askubuntu.com/questions/380550/xubuntu-how-to-set-the-wallpaper-using-the-command-line
+xfconf-query --channel xfce4-desktop --list
+#xfconf-query --channel xfce4-desktop --property /backdrop/screen0/monitor0/image-path --set /usr/share/backgrounds/xfce/xfce-teal.jpg
+#export DISPLAY=:0.0 && firefox &
+return 0
+}
+installblender() {
+#sudo cp ~/blender /usr/lib/blender -r
+#sudo add-apt-repository ppa:thomas-schiex/blender
+uname -m
+sudo apt-get remove -y blender ;
+sudo apt update && sudo apt-get install -y blender
+}
+installadobeflash() {
+#https://askubuntu.com/questions/765480/how-can-i-install-the-flash-player-for-chromium-in-ubuntu-16-04
+#sed -rn "s/[\] \n/[\]/g"
+sudo add-apt-repository -y "deb http://archive.canonical.com/ubuntu $(lsb_release -sc) partner" ;
+sudo add-apt-repository -y "deb-src http://archive.canonical.com/ubuntu $(lsb_release -sc) partner" ;
+sudo apt update ;
+sudo apt install -y adobe-flashplugin
+}
+installaltflash() {
+sudo apt-get remove -y flashplugin-installer adobe-flashplugin
+sudo add-apt-repository -y ppa:nilarimogard/webupd8
+sudo apt-get update ;
+sudo apt-get install -y freshplayerplugin
+sudo apt-get install -y pepperflashplugin-nonfree
+sudo update-pepperflashplugin-nonfree --install
+}
+installdiscord() {
+sudo apt install -y libgconf-2-4 libappindicator1 libc++1
+cd ~/Downloads
+wget -O discord-0.0.1.deb https://discordapp.com/api/download?platform=linux&format=deb
+sudo dpkg -i discord-0.0.1.deb
+}
+installthemescript() {
+#https://itsfoss.com/gnome-layout-manager/
+wget https://raw.githubusercontent.com/bill-mavromatis/gnome-layout-manager/master/layoutmanager.sh
+chmod +x layoutmanager.sh
+sudo apt-get install -y curl
+./layoutmanager.sh
+}
+installgnirehtet() {
+sudo apt-get install -y adb openjdk-9-jre-headless
+#wget https://github.com/Genymobile/gnirehtet/releases/download/v2.2.1/gnirehtet-rust-linux64-v2.2.1.zip
+wget https://github.com/Genymobile/gnirehtet/releases/download/v2.2.1/gnirehtet-java-v2.2.1.zip
+unzip gnirehtet*.zip
+cd $userhomedir/gnirehtet*
+newg=$(
+cat <<EOF
+#!/bin/bash
+sudo apt-get install -y adb openjdk-9-jre-headless
+andphonecheck=""
+until [[ -n $andphonecheck ]] ; do
+andphonecheck=$(adb devices | sed -r "s/(devices)//g" | grep "device")
+done
+java -jar gnirehtet.jar "\$@"
+EOF
+)
+echo "$newg" | tee gnirehtet
+gdesktop=$(cat <<EOF
+[Desktop Entry]
+Version=1.0
+Name=startandt
+Comment=startandt
+Exec=xterm -hold -e "gdir="~/gnirehtet-java" && sudo chmod +x $gdir/gnirehtet && $gdir/gnirehtet run"
+Terminal=false
+Type=Application
+Categories=Utility;Development;
+EOF
+)
+echo "$gdesktop" | tee ./startandt.desktop
+}
+installrunbootrepair() {
+sudo add-apt-repository -y ppa:yannubuntu/boot-repair
+sudo rm -f /var/lib/apt/lists/lock ;\
+sudo apt-get update
+sudo apt-get install -y boot-repair && boot-repair
+#bcdedit /set {bootmgr} path \EFI\ubuntu\shimx64.efi
+}
+installwine() {
+#https://askubuntu.com/questions/316025/how-to-install-and-configure-wine
+wget -nc https://dl.winehq.org/wine-builds/Release.key
+sudo apt-key add Release.key
+sudo apt-add-repository -y https://dl.winehq.org/wine-builds/ubuntu/
+sudo apt update
+sudo apt install -y wine-devel winehq-devel winetricks
+sudo dpkg --add-architecture i386
+export WINEARCH=win32
+winecfg
+}
+installpy() {
+#https://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install -y build-essential cmake pkg-config
+sudo apt-get install -y libjpeg8-dev libtiff5-dev libjasper-dev libpng12-dev
+sudo apt-get install -y libavcodec-dev libavformat-dev libswscale-dev libv4l-dev
+sudo apt-get install -y libxvidcore-dev libx264-dev
+sudo apt-get install -y libgtk-3-dev
+sudo apt-get install -y libatlas-base-dev gfortran
+sudo apt-get install -y python2.7-dev python3.5-dev idle
+sudo apt-get install -y python-pip
+sudo pip install numpy
+#cd ~
+#wget https://bootstrap.pypa.io/get-pip.py
+#sudo python get-pip.py
+sudo pip install virtualenv virtualenvwrapper
+#sudo rm -rf ~/get-pip.py ~/.cache/pip
+# virtualenv and virtualenvwrapper
+export WORKON_HOME=$HOME/.virtualenvs
+source /usr/local/bin/virtualenvwrapper.sh
+echo -e "\n# virtualenv and virtualenvwrapper" >> ~/.bashrc
+echo "export WORKON_HOME=$HOME/.virtualenvs" >> ~/.bashrc
+echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bashrc
+##OR
+#pip install opencv-python opencv_contrib-python
+cd ~
+wget -O opencv.zip https://github.com/Itseez/opencv/archive/3.4.1.zip
+unzip opencv.zip
+wget -O opencv_contrib.zip https://github.com/Itseez/opencv_contrib/archive/3.4.1.zip
+unzip opencv_contrib.zip
+
+source ~/.bashrc
+cd ~/opencv-3.4.1/
+mkdir build
+cd build
+cmake -D CMAKE_BUILD_TYPE=RELEASE \
+    -D CMAKE_INSTALL_PREFIX=/usr/local \
+    -D INSTALL_PYTHON_EXAMPLES=ON \
+    -D INSTALL_C_EXAMPLES=OFF \
+    -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib-3.1.0/modules \
+    -D PYTHON_EXECUTABLE=~/.virtualenvs/cv/bin/python \
+    -D BUILD_EXAMPLES=ON ..
+}
+
+upgradetobionic() {
+##https://linuxconfig.org/how-to-upgrade-to-ubuntu-18-04-lts-bionic-beaver
+sudo apt update 
+sudo apt upgrade
+sudo apt dist-upgrade
+sudo apt autoremove
+sudo apt install update-manager-core
+sudo do-release-upgrade
+##No new release found; 0718
+awk '{gsub(/Prompt=.*/,"Prompt=lts");print}' /etc/update-manager/release-upgrades >> /etc/update-manager/release-upgradesbk
+mv /etc/update-manager/release-upgradesbk /etc/update-manager/release-upgrades
+sudo apt update && sudo apt -y dist-upgrade
+##sudo do-release-upgrade -d
+##FORDEBIAN
+#sudo sed -i 's/xenial/bionic/g' /etc/apt/sources.list
+#sudo sed -i 's/xenial/bionic/g' /etc/apt/sources.list.d/
+}
+
+#####INSTALLH
+installaircrackng() {
+sudo apt-get install -y aircrack-ng
+}
+installjava() {
+sudo add-apt-repository -y ppa:webupd8team/java
+sudo apt-get update ;
+sudo apt-get install -y oracle-java8-installer
+}
+installmsf() {
+#https://www.darkoperator.com/installing-metasploit-in-ubunt/
+sudo apt-get update ;
+sudo apt-get upgrade ;
+sudo apt-get install -y build-essential libreadline-dev libssl-dev libpq5 libpq-dev libreadline5 libsqlite3-dev libpcap-dev git-core autoconf postgresql pgadmin3 curl zlib1g-dev libxml2-dev libxslt1-dev vncviewer libyaml-dev curl zlib1g-dev
+
+cd /opt
+sudo git clone https://github.com/rapid7/metasploit-framework.git
+sudo chown -R `whoami` /opt/metasploit-framework
+
+cd metasploit-framework
+# If using RVM set the default gem set that is create when you navigate in to the folder
+rvm --default use ruby-${RUByVERSION}@metasploit-framework
+gem install bundler
+bundle install
+
+cd metasploit-framework
+sudo bash -c 'for MSF in $(ls msf*); do ln -s /opt/metasploit-framework/$MSF /usr/local/bin/$MSF;done'
+
+echo "production:
+ adapter: postgresql
+ database: msf
+ username: msf
+ password: 
+ host: 127.0.0.1
+ port: 5432
+ pool: 75
+ timeout: 5"| sudo tee -a /opt/metasploit-framework/config/database.yml
+
+sudo sh -c "echo export MSF_DATABASE_CONFIG=/opt/metasploit-framework/config/database.yml >> /etc/profile"
+
+source /etc/profile
+msfconsole
+}
+installruby() {
+cd ~
+git clone git://github.com/sstephenson/rbenv.git .rbenv
+echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+exec $SHELL
+
+git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
+echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> ~/.bashrc
+
+# sudo plugin so we can run Metasploit as root with "rbenv sudo msfconsole" 
+git clone git://github.com/dcarley/rbenv-sudo.git ~/.rbenv/plugins/rbenv-sudo
+
+exec $SHELL
+
+RUBYVERSION=$(wget https://raw.githubusercontent.com/rapid7/metasploit-framework/master/.ruby-version -q -O - )
+rbenv install $RUBYVERSION
+rbenv global $RUBYVERSION
+ruby -v
+}
+installnmap() {
+mkdir $userhomedir/Development
+cd $userhomedir/Development
+git clone https://github.com/nmap/nmap.git
+cd nmap 
+./configure
+make
+sudo make install
+make clean
+}
+installarmitage() {
+curl -# -o /tmp/armitage.tgz http://www.fastandeasyhacking.com/download/armitage150813.tgz
+sudo tar -xvzf /tmp/armitage.tgz -C /opt
+sudo ln -s /opt/armitage/armitage /usr/local/bin/armitage
+sudo ln -s /opt/armitage/teamserver /usr/local/bin/teamserver
+sudo sh -c "echo java -jar /opt/armitage/armitage.jar \$\* > /opt/armitage/armitage"
+sudo perl -pi -e 's/armitage.jar/\/opt\/armitage\/armitage.jar/g' /opt/armitage/teamserver
+}
+configpostgresql() {
+sudo -s
+su postgres
+createuser msf -P -S -R -D
+createdb -O msf msf
+exit
+exit
+}
+
+#####RUNSTART
+startandroidstudio() {
+#userid="user"
+loc1="Documents/Docs/Tech"
+locandroids="android-studio/bin/studio.sh"
+#xterm -hold -e "/home/$user/$loc1/$locandroids" &
+nohup /home/$userid/$loc1/$locandroids & disown
+sleep 2
+}
+startkompastv() {
+nohup google-chrome -hold --tab "https://www.kompas.tv/live" & disown
+##xdotool key F11;
+sleep 15
+echo "start"
+xdotool windowactivate $(xdotool search kompas) 
+sleep 1
+for i in {1..5} ; do xdotool click 5 ; done 
+sleep 0.5 
+xdotool mousemove --sync 2274 655
+xdotool click 1
+#while true ; do sleep 1000 ; done
+}
+
+#####updaten6p
+##https://forum.xda-developers.com/showthread.php?t=921169
+##https://itsfoss.com/restore-android-factory-nexus-7-2013-linux/
+##https://developers.google.com/android/images#angler
+##https://forum.xda-developers.com/google-nexus-5/general/tutorial-how-to-flash-factory-image-t2513701
+##https://forum.xda-developers.com/nexus-6p/general/tutorial-how-to-flash-factory-image-t3252931
+##https://android.gadgethacks.com/how-to/sideload-flashable-zips-android-with-twrp-0176529/
+##https://www.apkmonk.com/app/com.google.android.apps.genie.geniewidget/
+prep() {
+updateromdir="/home/$userid/Documents/Docs/angler-opm3.171019.016-factory-08de5265/angler-opm3.171019.016"
+installapkdir="$updateromdir/install"
+sudo add-apt-repository -y ppa:sun-java-community-team/sun-java6 
+sudo apt-get update 
+sudo apt-get install -y sun-java6-jre sun-java6-bin sun-java6-jdk 
+sudo apt-get install -y android-tools-adb android-tools-fastboot
+}
+downloadapk() {
+wget MAGISK 
+wget https://dl.twrp.me/angler/twrp-3.2.1-0-angler.img.html
+}
+flashbase() {
+cd $updateromdir
+if ! grep -q dtbo.sig $(which fastboot); then
+  echo "fastboot too old"
+  exit 1
+fi
+##fastboot flashing unlock 
+##fastboot oem unlock 
+##fastboot -w update $installapkdir/Magisk.zip
+adb start-server 
+adb reboot bootloader
+fastboot flash bootloader bootloader-angler-angler-03.79.img 
+fastboot reboot-bootloader 
+sleep 5 
+fastboot flash radio radio-angler-angler-03.85.img 
+fastboot reboot-bootloader 
+sleep 5
+}
+flashall() {
+flashbase
+fastboot -w update image-angler-opm3.171019.016.zip 
+echo "SETUP"
+}
+installapknsetup() {
+adb reboot bootloader 
+fastboot flash recovery $installapkdir/twrp*.img 
+fastboot boot $installapkdir/twrp*.img
+adb sideload $installapkdir/Magisk-v16.0.zip 
+adb reboot 
+#adb shell enabledevmode
+#adb shell enableusbdebugging
+#adb shell pattern/fingerprint
+#adb shell notifuithemer
+#adb turn off mobile data
+#turnoffnfc
+#adb su -c "cp wallpaper"
+adb install $installapkdir/MagiskManager-v5.6.4.apk 
+adb install $installapkdir/Titanium*.apk 
+adb install $installapkdir/BusyBox*.apk 
+#adb install $installapkdir/Nova*.apk 
+adb uninstall com.google.android.apps.docs.editors.docs 
+adb uninstall com.google.android.apps.docs.editors.slides 
+adb uninstall com.google.android.apps.docs.editors.sheets 
+adb uninstall com.google.android.talk 
+adb uninstall com.google.android.videos 
+adb uninstall com.google.android.apps.books 
+adb uninstall com.google.android.apps.genie.geniewidget 
+adb shell service call bluetooth_manager 8
+adb shell su -c "service call bluetooth_manager 6"
+}
+startupdaten6p() {
+prep
+#downloadapk
+flashall
+installapknsetup
+}
+#startupdate
+noteonun6p() {
+##adb reboot recovery 
+/
+fastboot flash bootloader C:/images/bootloader.img
+fastboot reboot-bootloader
+fastboot flash radio C:/images/radio.img
+fastboot reboot-bootloader
+/
+fastboot flash system C:/images/system.img
+##fastboot flash vendor C:/images/vendor.img
+fastboot flash userdata C:/images/userdata.img 
+fastboot flash boot C:/images/boot.img
+fastboot flash recovery C:/images/recovery.img
+fastboot erase cache
+fastboot flash cache C:/images/cache.img
+}
+
+
+#####previewsplash
+setvarps() {
+userid=$(awk -F: '!/root/ && /(\/bin\/bash)/ {print $1}' /etc/passwd)
+tpfolder="ubuntu-text"
+tpfile="ubuntu-text.plymouth"
+defaultgfile="default.grub"
+defaultpfile="default.plymouth"
+textpfile="text.plymouth"
+pthemedir="/usr/share/plymouth/themes"
+}
+setpthemedir() {
+pthemedir=$1
+echo "$pthemedir"
+echo "$custompname"
+defaultgfiledir="$pthemedir/$defaultgfile"
+defaultpfiledir="$pthemedir/$defaultpfile"
+textpfiledir="$pthemedir/$textpfile"
+custompfolderdirbefore="$custompdir/$custompname"
+custompfolderdir="$pthemedir/$custompname"
+custompfiledir="$custompfolderdir/$custompname.plymouth"
+customgfiledir="$custompfolderdir/$custompname.grub"
+return 0
+}
+custompfile() {
+custompdir="$3"
+custompname="$1"
+setpthemedir "$2"
+sudo rm -rf $custompfolderdir ;
+sudo cp -r $custompfolderdirbefore $pthemedir
+sudo rm -f $defaultgfiledir ;
+sudo rm -f $defaultpfiledir ;
+sudo rm -f $textpfiledir ;
+sudo ln -s $custompfiledir $defaultpfiledir ;
+sudo ln -s $custompfiledir $textpfiledir ;
+if [[ -f $customgfiledir ]]; then
+sudo ln -s $customgfiledir $defaultgfiledir ;
+fi
+return 0
+}
+custompfile3() {
+custompdir="$4"
+custompname="$1"
+setpthemedir "$2"
+command=$(cat <<EOF
+rm -rf $custompfolderdir ;
+cp -r $custompfolderdirbefore $pthemedir
+rm -f $defaultgfiledir ;
+rm -f $defaultpfiledir ;
+rm -f $textpfiledir ;
+EOF
+)
+#sudo su -c "$command"
+su -c "$command"
+setpthemedir "$3"
+command=$(cat <<EOF
+ln -s $custompfiledir $2/$defaultpfile ;
+ln -s $custompfiledir $2/$textpfile ;
+if [[ -f $customgfiledir ]]; then
+ln -s $customgfiledir $2/$defaultgfile ;
+fi
+EOF
+)
+#sudo su -c "$command"
+su -c "$command"
+return 0
+}
+installsplashwua() {
+plymouthdir="/usr/share/plymouth/themes" 
+whichsplash="default" 
+splashname="win10" 
+pscriptname="win10text" 
+sudo update-alternatives --install $plymouthdir/$whichsplash.plymouth $whichsplash.plymouth $plymouthdir/$splashname/$pscriptname.plymouth 100 
+sudo update-alternatives --config $whichsplash.plymouth
+}
+installnewsplash() {
+setvarps
+#ln -s /usr/share/plymouth/themes/win10/win10.plymouth ./default.plymouth
+#ln -s /usr/share/plymouth/themes/win10/win10textonly.plymouth ./text.plymouth
+#ln -s /usr/share/plymouth/themes/win10/win10.grub ./default.grub
+sudo apt-get install -y plymouth-x11
+#"ubuntu-logo"
+#"win10"
+##custompdir="/home/$userid/Documents/Docs/mlinuxproject/usbboot/TW"
+#pthemedir1="$chrootdir/usr/share/plymouth/themes"
+#pthemedir2="/usr/share/plymouth/themes"
+#custompfile2 "win10" "$pthemedir1" "$pthemedir2"
+#pthemedir1="/home/user/Documents/Docs/mlinuxproject/usbboot/initrdlz/usr/share/plymouth/themes"
+#pthemedir1="/home/user/Documents/Docs/mlinuxproject/usbboot/lztempdir/usr/share/plymouth/themes"
+##pthemedir2="/usr/share/plymouth/themes"
+##custompfile3 "win10" "$pthemedir1" "$pthemedir2"
+
+#pthemedir="/usr/share/plymouth/themes"
+custompdir="/home/$userid/Documents/Documentsv2/TW/splash"
+pthemedir1="/home/ubuntu/Documents/lztempdir/usr/share/plymouth/themes"
+pthemedir2="/usr/share/plymouth/themes"
+custompfile3 "win10" "$pthemedir1" "$pthemedir2" "$custompdir"
+
+#custompfile3 "spinnerblank" "/usr/share/plymouth/themes"
+#updatesplash
+showsplash
+
+#a=1 ; while [[ $a -lt 10 ]] ; do sudo mv $a".png" animation-000$a".png" ; ((a++)) ; done
+#a=10 ; while [[ $a -lt 37 ]] ; do sudo mv $a".png" animation-00$a".png" ; ((a++)) ; done
+#a=1 ; while [[ $a -lt 10 ]] ; do sudo mv $a".png" throbber-000$a".png" ; ((a++)) ; done
+#a=10 ; while [[ $a -lt 43 ]] ; do sudo mv $a".png" throbber-00$a".png" ; ((a++)) ; done
+#sudo nautilus "/home/user/Documents/Docs/mlinuxproject/usbboot/Documents3/allnotes" &
+#sudo nautilus "/home/user/Documents/Docs/mlinuxproject" &
+#sudo nautilus "/usr/share/plymouth/themes" &
+#sudo nautilus "$chrootdir/usr/share/plymouth/themes" &
+#sudo nautilus "/home/user/Documents/Docs/mlinuxproject/usbboot/initrdlz/usr/share/plymouth/themes" &
+#"/usr/share/plymouth/themes"
+#"$chrootdir"
+#"/home/user/Documents/Docs/mlinuxproject/usbboot/initrdlz"
+#--new-root-dir="$chrootdir"
+#--get-splash-plugin-path
+#/usr/lib/x86_64-linux-gnu/plymouth/
+}
+updatesplash() {
+sudo update-initramfs -u
+sudo update-grub
+}
+choosesplash() {
+sudo update-alternatives --config default.plymouth
+sudo update-alternatives --config text.plymouth
+#here, choose the number of the theme you want to use then hit enter
+}
+showsplash() {
+sudo apt-get install -y plymouth-x11 plymouth-themes ;
+if [[ -z $1 ]] ; then
+DURATION=5
+fi
+#DURATION=$5 
+sudo killall plymouthd ;
+sudo plymouthd ; sudo plymouth --show-splash ; for ((I=0; I<$DURATION; I++)); do sudo plymouth --update=test$I ; sleep 1; done ; sudo plymouth quit
+}
+switchsplashpp() {
+pdir="/usr/share/plymouth/themes"
+dg="default.grub"
+dp="default.plymouth"
+tp="text.plymouth"
+dpdir="$pdir/$dp"
+tpdir="$pdir/$tp"
+scpdir="$1"
+ncpdir="$pdir/$2"
+sudo mv $dgdir $dgdir\bk ;
+sudo mv $dpdir $dpdir\bk ;
+sudo mv $tpdir $tpdir\bk ;
+sudo rm -rf $ncpdir\bk ;
+sudo mv $ncpdir $ncpdir\bk ;
+sudo rm -rf $ncpdir ;
+sudo mkdir $ncpdir
+sudo cp -rv $scpdir/* $ncpdir/
+#exit
+if [[ -n $3 ]] ; then
+sudo ln -s $ncpdir/$3 /$dpdir
+else
+sudo ln -s $ncpdir/$2.plymouth /$dpdir
+fi
+}
+afterssplash() {
+sudo rm -rf $ncpdir ;
+sudo mv $ncpdir\bk $ncpdir ;
+sudo mv $dgdir\bk $dgdir ;
+sudo mv $dpdir\bk $dpdir ;
+sudo mv $tpdir\bk $tpdir ;
+}
+cpdir="$USBMBIOSdir/notes/Documentsv2/TW/splash/w10"
+###showsplashpp $cpdir "win10" "win10.plymouth"
+###showsplash
+#afterssplash
+#cpdir="$USBMBIOSdir/notes/Documentsv2/TW/splash/spinnerblankw10"
+#showsplashpp $cpdir "spinnerblankw10" "spinnerblankw10.plymouth"
+##previewsplashend
+
+
+#####W10Plymouth
+cropwin() {
+#http://www.intowindows.com/hackbgrt-windows-10-uefi-boot-logo-changer/
+#https://www.deskmodder.de/wiki/index.php/Windows_8_Bootscreen_%C3%A4ndern
+#https://stackoverflow.com/questions/12424018/how-to-replace-white-background-color-with-transparent-of-an-image-in-imagemagic
+#http://www.fmwconcepts.com/imagemagick/magicwand/
+win10logo="Windows10"
+oripicname="$win10logo.jpg"
+newpicname="$win10logo.png"
+win10logolink="http://fx-dollaryen.up.n.seesaa.net/fx-dollaryen/image/Windows8.1.jpg?d=a1"
+curl -o $oripicname $win10logolink
+lc=$1
+rc=$[$wori-$3]
+tc=$2
+bc=$[$hori-$4]
+wnew=$[$wori-$lc-rc]
+hnew=$[$hori-$tc-$bc]
+cd ~/Downloads
+convert $oripicname -crop "$wnew"x"$hnew"+"$lc"+"$tc" $oripicname
+#convert $oripicname -transparent black -transparent gray -transparent grey -fuzz 5000  $newpicname
+convert $oripicname -fuzz 20% -fill none -draw 'color 1,1 floodfill' $newpicname
+}
+#cropwin 120 70 238 185
+
+cropimg2() {
+#sudo apt-get update
+#sudo apt-get install -y imagemagick gimp
+#crop
+#https://askubuntu.com/questions/631689/cropping-images-using-command-line-tools-only
+#padding
+#https://stackoverflow.com/questions/8789729/how-to-zero-pad-a-sequence-of-integers-in-bash-so-that-all-have-the-same-width
+for f in {1..42} ; do
+oripicname="$f.png"
+#oripicname="1.png"
+orisize=$(identify $oripicname | awk '{gsub("(+0)",""); printf $4}')
+wori=$(awk -F"x" '{printf $1}' <<< $orisize)
+hori=$(awk -F"x" '{printf $2}' <<< $orisize)
+echo "$oripicname $wori x $hori"
+if [[ $1 -eq 1 ]] ; then
+tc=$2
+bc=$3
+lc=$4
+rc=$5
+elif [[ $1 -eq 2 ]] ; then
+lc=$2
+rc=$[$wori-$4]
+tc=$3
+bc=$[$hori-$5]
+fi
+wnew=$[$wori-$lc-rc]
+hnew=$[$hori-$tc-$bc]
+padno=$(printf "%04d" $f)
+newpicname="animation-$padno.png"
+#newpicname="$f.png"
+rm -f animation-$f.png ;
+rm -f $newpicname ;
+echo "$newpicname $lc $rc $tc $bc "
+echo "$newpicname $wnew x $hnew + $lc + $tc"
+#convert 1.png -crop 703x470+3+5 output.png
+convert $oripicname -crop "$wnew"x"$hnew"+"$lc"+"$tc" $newpicname
+#identify $newpicname
+done
+}
+#cropimg2 2 930 825 990 867
+#cropimg2 1 700 200 529 529
+
+renametothrobber() {
+for f in {1..12} ; do
+padno=$(printf "%04d" $f)
+repstr="throbber"
+cp animation-$padno.png $repstr-$padno.png
+done
+}
+#renametothrobber
+remanim() {
+for f in {1..42} ; do
+padno=$(printf "%04d" $f)
+repstr="throbber"
+mv animation-$padno.png $f.png
+done
+}
+#remanim
+#####TOOLS
+getcolnumberofstring() {
+command=$1
+#https://stackoverflow.com/questions/32612859/bash-retrieve-column-number-from-column-name
+#head -1 table | tr -s ' ' '\n' | nl -nln |  grep "Target" | cut -f1
+#awk -v RS=' ' '/NAMES/{print NR; exit}' <<< $(sudo docker ps -a)
+#awk -F '\t' -v col='NAMES' 'NR==1{for (i=1; i<=NF; i++) if ($i==col) {print i;exit}}' <<< $(sudo docker ps -a)
+#colno=$(awk -F' ' -v col='NAMES' 'NR==1{for (i=1; i<=NF; i++) if ($i==col) {print i;exit}}' <<< $(sudo docker ps -a))
+colno=$(awk -v RS=' ' '/NAMES/{print NR; exit}' <<< $($command))
+}
+listallappsbydate() {
+##https://askubuntu.com/questions/599219/chronological-list-of-installed-packages
+ls -l --time=ctime --time-style=long-iso /usr/share/applications|sort -r -k6|grep "\.desktop"|sed s/'\.desktop.*'//g|awk '{print $6" "$7" "$8}'
+}
+lastmodfile() {
+#https://askubuntu.com/questions/651714/get-the-last-modification-time-of-file
+for i in $1 ; do echo "$i: $(date '+%b-%d' -r "$i")"; done
+}
+lastmodfolder() {
+#https://stackoverflow.com/questions/4997242/in-linux-terminal-how-do-i-show-the-folders-last-modification-date-taking-its
+find $1 -type f -exec stat \{} --printf="%y\n" \; | 
+     sort -n -r | 
+     head -n 1
+}
+feature() {
+ls -l awk '{
+    n = split($0, f, " ", sep)
+    f[6] = substr(f[6], 1, 2)
+    line = sep[0]
+    for (i = 1; i <= n; ++i) line = line f[i] sep[i]
+    print line
+}'
+}
+turnoffapport() {
+sudo rm /var/crash/* ;
+sudo sed -ri "s/(enabled=1)/(enabled=0)/g" /etc/default/apport
+sudo systemctl restart apport
+}
+removerefind() {
+##https://askubuntu.com/questions/856773/how-to-remove-refind-drivers-completely-from-my-ubuntu
+sudo dpkg -P refind
+sudo rm -rf /boot/efi/EFI/refind ;
+sudo update-grub
+}
+downloadinstallfile() {
+##https://stackoverflow.com/questions/15548277/get-the-characters-after-the-last-index-of-a-substring-from-a-string
+link="$1"
+downdir="$2"
+if [[ ! -d $downdir ]] ; then
+mkdir $downdir
+fi
+filename=$(awk -F"/" '{print $NF}' <<< "$link")
+#echo "$downdir $link $filename"
+fndowndir="$downdir/$filename"
+if [[ -f "$fndowndir" ]] ; then
+rm -f "$fndowndir"
+fi
+#wget -O "$fndowndir" "$link"
+curl -o "$fndowndir" "$link"
+}
+installtgb() {
+tgblink="http://dlied6.qq.com/invc/xfspeed/qqpcmgr/other/GameDownload_PUBG_MOBILE_100103_1.0.5226.123.exe"
+#userid="$(whoami)"
+#destdir="/home/$userid/Downloads"
+destdir=~/Downloads
+downloadinstallfile "$tgblink" "$destdir"
+}
+#installtgb
+winsilentinstaller() {
+cmddir="/mnt/Windows/System/cmd.exe"
+if [[ $exefile =~ (.msi) ]] ; then
+$cmddir $exefile /S /vqn
+elif [[ $exefile =~ (.exe) ]] ; then
+$cmddir $exefile /a /r /
+fi
+}
+aiplan() {
+aiplan=$(cat <<EOF
+land on the furthest point from flight
+or
+safe points
+cape town
+
+get a shotgun
+get rifle
+get armor
+get helmets
+get medkits
+get mushroom
+get a car
+
+EOF
+)
+}
+#####USBOFF(NOTWORKing)
+usbpwr() {
+usbno=$1
+usbbusdir="/sys/bus/usb"
+usbpwrdir="/sys/bus/usb/devices/usb${usbno}/power"
+lsusb
+cat $usbpwrdir/autosuspend ;\
+cat $usbpwrdir/power/autosuspend_delay_ms ;\
+cat $usbpwrdir/power/level ;\
+cat $usbpwrdir/power/control ;\
+cat $usbpwrdir/power/wakeup ;\
+#cat /sys/bus/usb/drivers/usb/unbind
+#sudo apt install powertop
+#sudo powertop
+#uhubctl
+#turnon
+#echo "0" > $usbpwrdir/autosuspend ;
+echo "0" | sudo tee $usbpwrdir/autosuspend ;
+echo "0" | sudo tee $usbpwrdir/autosuspend_delay_ms ;
+if [[ $2 =~ (turnon) ]] ; then
+#turnoff
+echo "suspend" | sudo tee $usbpwrdir/level ;
+elif [[ $2 =~ (turnoff) ]] ; then
+#turnon
+echo "on" | sudo tee $usbpwrdir/level ;
+fi
+echo "auto" | sudo tee $usbpwrdir/control ;
+echo "disabled" | sudo tee $usbpwrdir/wakeup ;
+echo "1-4.4.4" | sudo tee /sys/bus/usb/drivers/usb/unbind ;
+return 0
+}
+#usbpwr 1 turnoff
+
+##HOSTS
+hostlocals() {
+sudo apt-get install apache2
+return 0
+}
+hostinters() {
+sudo apt-get install apache2
+return 0
+}
+webserver() {
+return 0
+}
+myweb() {
+return 0
+}
+communityforum() {
+return 0
+}
+securitysettings() {
+return 0
+}
+testecho() {
+echo "test"
+}
+p2xl=$(
+cat <<EOF
+250;;broken googlep2xl 
+200;;lcd digitizer
+30;;back glass;;https://www.aliexpress.com/wholesale?catId=0&initiative_id=SB_20180525231139&SearchText=pixel+2+xl+back+housing
+https://www.lifehacker.com.au/2010/10/make-your-own-vinyl-screen-protector/
+https://www.lifehacker.com.au/2009/11/brush-your-iphones-bezel-to-hide-scuffs-and-scratches/
+EOF
+)
+}
+###UBUNTU
+###WINDOWS
+WINDOWS() {
+echo "WIN"
+}
+###WINDOWS
+
+
+
+
+##https://all3dp.com/1/best-free-3d-printing-software-3d-printer-program/
+##Blender	3D Design, CAD	Professional	PC, Mac, Linux
+##Onshape	3D Design, CAD	Professional	Web Browser
+##MeshLab	STL Editor, STL Repair	Professional	PC, Mac, Linux
+##Meshmixer	STL Checker, STL Repair, STL Editor	Professional	PC, Mac
+##Slic3r
+##Onshape
+#INFONOTES
+##LINK
+#####SCRIPT
+webscraper() {
+##https://stackoverflow.com/questions/7361229/data-scraping-with-wget-and-regex
+#wget -q http://en.wiktionary.org/wiki/robust -q -O - | ...
+#wget -q http://en.wiktionary.org/wiki/robust -O - | tr '\n' ' ' | grep -o '<ol>.*</ol>'
+sudo apt-get install -y html-xml-utils lynx
+wget -qO- http://en.wiktionary.org/wiki/robust | 
+  hxnormalize -x | 
+  hxselect "ol" | 
+  lynx -stdin -dump -nolist
+}
+#####3gsnit
+
+#####0rubootlusb
+asksudo() {
+echo "$(whoami)"
+[ "$UID" -eq 0 ] || exec sudo "$DIR0" "$@"
+}
+
+setvar() {
+userid=$(awk -F: '!/root/ && /(\/bin\/bash)/ {print $1}' /etc/passwd)
+mdir="/media/$userid"
+userhomedir="/home/$userid"
+c=("MBIOS" "MB1" "MB2" "MB3" "MB4" "MB5" "MB6" "MB7")
+USBMBIOSdir="$mdir/${c[0]}"
+#resquashgenvar
+usbbootdir="$userhomedir/Documents/Docs/mlinuxproject/usbboot"
+usbpart="/dev/sd$part"
+echo "$usbpart"
+
+curlabel=$(sed -rn "/(\/media\/$userid)/p" <<< "$(lsblk)" | awk '{printf($7)}' | awk -F"/" '{printf($4)}')
+echo "/media/$userid/$curlabel"
+}
+
+detectusb() {
+mountno=($(awk '/(\/media\/'$userid$usbr')/ {gsub("└─","");printf $1"\n"}' <<< "$(lsblk)"))
+}
+umountusb() {
+if [[ -n $1 ]] ; then
+usbr="\/$1"
+else
+usbr=""
+fi
+#mtypeaddc="/(MBIOS)/d;"
+#mountno=($(sed -rn -e "s/(└─)//g;$mtypeaddc/(MB)/p" <<< "$(lsblk)" | awk '{printf("%s\n",$1)}'))
+mountno=($(awk '/(\/media\/'$userid$usbr')/ {gsub("└─","");printf $1"\n"}' <<< "$(lsblk)"))
+mount=($(for f in ${mountno[@]} ; do echo ${f} | sed -e "s,[0-9],,g" ; done))
+for f in ${!mountno[@]} ; do udisksctl unmount -b /dev/${mountno[f]} && udisksctl power-off -b /dev/${mount[f]} ; done
+#for f in ${mountno[@]} ; do echo $f ; done
+#for f in ${mount[@]} ; do echo $f ; done
+#lsblk | grep $mdir/MB | sed -e "s,└─,,g" | awk '{printf $1"\n"}' | while read x; do echo $x; done
+}
+checkinet() {
+return 0
+}
+
+
+blankisocreate() {
+sudo rm -R ~/blank-img ;\
+mkdir ~/blank-img &&\
+cd ~/blank-img &&\
+mkdir mnt &&\
+sudo mount -o loop ~/Documents/Docs/ubuntu-gnome-16.04.3-desktop-amd64.iso mnt &&\
+mkdir extract &&\
+sudo rsync --exclude=/casper/filesystem.squashfs -a mnt/ extract &&\
+#sudo unsquashfs mnt/casper/filesystem.squashfs &&\
+#sudo mv squashfs-root edit
+
+#cd extract &&\
+#sudo rm md5sum.txt &&\
+#find -type f -print0 | sudo xargs -0 md5sum | grep -v isolinux/boot.cat | sudo tee md5sum.txt &&\
+#sudo genisoimage -D -r -V "$IMAGE_NAME" -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-#size 4 -boot-info-table -o ../blank.iso .
+
+#echo "deb http://ppa.launchpad.net/rockowitz/ddcutil/ubuntu xenial main 
+#deb-src http://ppa.launchpad.net/rockowitz/ddcutil/ubuntu xenial main" | sudo tee -a /etc/apt/sources.list
+#sudo apt-get install -y asus-nb-wmi ddcutil
+return 0
+}
+
+detectinstall() {
+appname="$1"
+[[ -z $(dpkg -l | grep "$appname" ) ]] && sudo apt-get install -y $appname || echo "$appname installed"
+}
+torrentdl() {
+detectinstall "transmission-cli"
+if [[ ! -d $downdir ]] ; then
+mkdir $downdir
+fi
+transmission-cli $1 -w $2
+}
+###resquash
+resquashfromthebeginning() {
+#https://www.backblaze.com/blog/10-rules-for-how-to-write-cross-platform-code/
+#https://www.maketecheasier.com/how-to-download-torrents-from-the-command-line-in-ubuntu/
+#cimgdir=/home/$USER/customimg
+#downdir=/home/$USER/Downloads
+#userid="$(whoami)"
+cimgdir=/media/$userid/SED/customimg
+downdir=/media/$userid/SED/Downloads
+uisolink1804lts="http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso"
+uisolink1804ltst="$uisolink1804lts.torrent"
+uisolink1604lts="http://releases.ubuntu.com/16.04/ubuntu-16.04.4-desktop-amd64.iso"
+uisolink1604ltsg="http://cdimage.ubuntu.com/ubuntu-gnome/releases/16.04/release/ubuntu-gnome-16.04.4-desktop-amd64.iso"
+uisolink="$uisolink1804lts"
+uisolinkt="$uisolink1804ltst"
+uisofn="$(awk -F "/" '{print $NF}' <<< $uisolink)"
+uisodir=$downdir/$uisofn
+#sudo apt-get install -y transmission-cli
+#awk '{gsub("/","\n");print} /.iso/' <<< $uisolink
+
+if [[ ! -f $ubuntuiso ]]; then
+#downloadinstallfile "$uisolink" "$downdir"
+torrentdl $uisolinkt $downdir
+fi
+
+chrootdir="$cimgdir/edit"
+startnonchrootprep "$cimgdir" "$uisodir"
+resquashchrootmountlib "$cimgdir"
+sudo chroot $chrootdir su -c "$resquashaddrepo"
+sudo chroot $chrootdir su -c "$resquashinstallnremove"
+sudo chroot $chrootdir su -c "$resquashblacklist"
+sudo chroot $chrootdir su -c "$grubsplashplymouthg"
+
+if [[ ! -d $cimgdir ]]; then
+mkdir -p $cimgdir ;
+startnonchrootprep "$cimgdir" "$uisodir"
+resquashchrootmountlib "$cimgdir"
+sudo chroot $chrootdir su -c "$resquashaddrepo"
+sudo chroot $chrootdir su -c "$resquashinstallnremove"
+sudo chroot $chrootdir su -c "$resquashblacklist"
+sudo chroot $chrootdir su -c "$grubsplashplymouthg"
+#installr8169driver
+sudo chroot edit su -c "$installb43driver"
+installinteldriver "$downdir"
+installnvidiadriver "$downdir"
+#resquashaddcommand
+resquashrclocal
+resquashfinishing
+elif [[ -d $customimg ]]; then
+resquashonly
+fi
+return 0
+}
+startnonchrootprep() {
+#isodir="~/Documents/Docs/ubuntu-gnome-16.04.3-desktop-amd64.iso"
+isodir=$2
+cimgdir=$1
+##sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
+sudo apt-get update
+sudo apt-get install -y unetbootin squashfs-tools genisoimage
+##cp ~/Documents/Docs/ubuntu-gnome-16.04.3-desktop-amd64.iso $cimgdir &&\
+sudo rm -R "$cimgdir" ;
+mkdir "$cimgdir"
+cd "$cimgdir"
+mkdir $cimgdir/mnt
+sudo mount -o loop $isodir $cimgdir/mnt
+mkdir $cimgdir/extract
+sudo rsync --exclude=/casper/filesystem.squashfs -a $cimgdir/mnt/ $cimgdir/extract
+sudo unsquashfs $cimgdir/mnt/casper/filesystem.squashfs
+sudo mv squashfs-root $chrootdir ;
+
+#sudo rm -R $chrootdir/home/Documents ;\
+#sudo cp -a /home/user/Documents/Documents $chrootdir/home &&\
+#ls $chrootdir/home/Documents &&\
+#cat $chrootdir/home/Documents/mstart
+return 0
+}
+resquashchrootmountlib() {
+cimgdir="$1"
+chrootdir="$cimgdir/edit"
+#sudo umount $chrootdir/dev ;
+#cd "$cimgdir"
+sudo cp /etc/resolv.conf $chrootdir/etc/ ;
+sudo cp /etc/hosts $chrootdir/etc/ ;
+sudo mount --bind /dev/ $chrootdir/dev ;
+#sudo mount --bind ~/Documents/Docs/XMRnonchroot $cimgdir/mnt ;\
+sudo chroot $chrootdir su -c "mount -t proc none /proc ;\
+mount -t sysfs none /sys ;\
+mount -t devpts none /dev/pts ;\
+export HOME=/root ;\
+export LC_ALL=C ;\
+dbus-uuidgen > /var/lib/dbus/machine-id ;\
+dpkg-divert --local --rename --add /sbin/initctl ;\
+ln -s /bin/true /sbin/initctl ;"
+return 0
+}
+resquashaddrepo=$(cat <<EOF
+sudo apt update --fix-missing -y
+sudo apt-get update --fix-missing ;
+sudo apt-get purge -y nvidia* bcmwl-kernel-source ;
+sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe multiverse restricted" ;
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' | sudo tee /etc/apt/sources.list.d/google-chrome.list
+sudo add-apt-repository -y ppa:graphics-drivers ;
+sudo rm /etc/X11/xorg.conf ;
+sudo dpkg --add-architecture i386 ;
+#sudo add-apt-repository -y ppa:caffeine-developers/ppa &&\
+#sudo apt install -y curl wget git caffeine &&\
+#sudo docker pull cedricwalter/xmr-stak-nvidia:nodevfee &&\
+sudo apt-get update ;
+EOF
+)
+resquashinstallnremove=$(cat <<EOF
+sudo rm /usr/share/applications/ubuntu-amazon-default.desktop ;
+sudo rm /usr/share/unity-webapps/userscripts/unity-webapps-amazon/Amazon.user.js ;
+sudo rm /usr/share/unity-webapps/userscripts/unity-webapps-amazon/manifest.json ;
+sudo apt install -y linux-headers-$(uname -r) ;
+sudo apt-get install -y dkms \
+wget \
+curl ;
+sudo apt-get install -y git build-essential cmake ;
+sudo apt install -y libuv1-dev libmicrohttpd-dev libhwloc-dev libssl-dev ;
+sudo apt install -y amd64-microcode ;
+sudo apt-get install -y xnest \
+xdotool \
+wmctrl \
+google-chrome-stable \
+intel-microcode \
+openvpn ;\
+#grub-efi-ia32 \
+#grub-efi-ia32-bin ;\
+#ubuntu-desktop \
+#ubuntu-gnome-desktop \
+#unity-tweak-tool;\
+sudo apt-get remove -y --allow-change-held-packages firefox \
+thunderbird \
+libreoffice-* \
+gnome-mahjongg \
+gnome-mines \
+gnome-sudoku \
+gnomine \
+gbrainy \
+checkbox-ng \
+byobu \
+imagemagick \
+unity-scope-* \
+unity-scope-home+ \
+webbrowser-app \
+gnome-contacts \
+gnome-getting-started* ;
+#sudo apt-get remove firefox-globalmenu thunderbird-globalmenu &&\
+#sudo apt-get remove indicator-appmenu &&\
+#sudo apt-get autoremove appmenu-gtk appmenu-gtk3 appmenu-qt
+EOF
+)
+resquashblacklist=$(cat <<EOF
+echo "blacklist nouveau 
+options nouveau modeset=0" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf ;
+echo "blacklist nouveau
+blacklist lbm-nouveau
+options nouveau modeset=0
+alias nouveau off
+alias lbm-nouveau off" | sudo tee -a /etc/modprobe.d/blacklist.conf
+echo "options nouveau modeset=0" | sudo tee -a /etc/modprobe.d/nouveau-kms.conf
+EOF
+)
+
+grubsplashplymouthg=$(cat <<EOF
+#sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash\"*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet\"/g' "/etc/default/grub"
+desk=$XDG_CURRENT_DESKTOP
+echo "$desk"
+pdir="/usr/share/plymouth/themes"
+bgdir="/usr/share/backgrounds"
+blackbg="/home/Documents/TW/black.jpg"
+if [[ $desk =~ (GNOME) ]] ; then
+gcolor="45,51,53"
+dpdir="ubuntu-gnome-logo"
+gpdir="$dpdir.grub"
+dbg="$bgdir/Greenish_by_EstebanMitnick.jpg"
+dbg2="$bgdir/gnome/adwaita-morning.jpg"
+dbg3="$bgdir/gnome/adwaita-day.jpg"
+elif [[ $desk =~ (UNITY) ]] ; then
+gcolor="44,0,30"
+dpdir="ubuntu-logo"
+gpdir="$dpdir.grub"
+fi
+sudo sed -i 's/'$gcolor'*/0,0,0/g' "$pdir/$dpdir/$gpdir"
+#UBUNTUISO
+#sudo cp /usr/share/backgrounds/warty-final-ubuntu.png /usr/share/backgrounds/warty-final-ubuntu-old.png
+#sudo rm -f /usr/share/backgrounds/warty-final-ubuntu.png
+#sudo cp /mnt/Documents/TW/black.jpg /usr/share/backgrounds/warty-final-ubuntu.png
+sudo mv $dbg $dbg\bk
+sudo cp $blackbg $dbg
+sudo mv $dbg2 $dbg2\bk
+sudo cp $blackbg $dbg2
+sudo mv $dbg3 $dbg3\bk
+sudo cp $blackbg $dbg3
+sudo sed -i "s,timeout 300,timeout 3,g" /etc/dhcp/dhclient.conf
+sudo rm -f /etc/resolvconf/resolv.conf.d/head
+echo "# Dynamic resolv.conf(5) file for glibc resolver(3) generated by resolvconf(8)
+#     DO NOT EDIT THIS FILE BY HAND -- YOUR CHANGES WILL BE OVERWRITTEN
+nameserver 8.8.8.8" | sudo tee -a "/etc/resolvconf/resolv.conf.d/head"
+sudo update-initramfs -u ;
+sudo update-grub
+sudo update-grub2
+#passwd
+#cp -a /home/Documents/Windows-10-master/. /usr/share/themes/Windows-10-master/ ;
+#cd /home/Documents/Shell-Scripts-master
+#sudo chmod +x ./transpack.sh
+#echo 1 | echo y | sudo ./transpack.sh
+EOF
+)
+#./3gsnit: line 1608: warning: here-document at line 1603 delimited by end-of-file (wanted `EOF')
+#echo 1 | echo y | sudo ./transpack.sh &&\
+
+
+installr8169driver=$(cat<<EOF
+#sh -c 'echo blacklist r8169 >> /etc/modprobe.d/blacklist.conf'
+echo "blacklist r8169" | sudo tee -a /etc/modprobe.d/blacklist.conf
+cd /home/Documents/Driver/r8168-8.045.08
+sudo chmod +x ./autorun.sh
+sudo sh ./autorun.sh
+EOF
+)
+
+installb43driver=$(cat<<EOF
+b43dir="/home/Documents/Driver/b43"
+sudo apt-get purge bcmwl-kernel-source ;
+cd $b43dir
+sudo rm -R broadcom-wl-5.100.138 ;
+sudo dpkg -i b43-fwcutter_019-2_amd64.deb
+tar xfvj broadcom-wl-5.100.138.tar.bz2
+sudo b43-fwcutter -w /lib/firmware broadcom-wl-5.100.138/linux/wl_apsta.o
+#sudo modprobe b43 -r &&\
+#sudo modprobe b43
+EOF
+)
+
+getsubstr() {
+result=$(awk '{print substr($0,'$1','$2')}' <<< "$3")
+echo "$result"
+}
+getlaststrdel() {
+thestr=$(awk -F"$1" '{print $NF}' <<< "$2")
+echo "$thestr"
+}
+installinteldriver() {
+error=$(cat <<EOF
+W: Possible missing firmware /lib/firmware/i915/kbl_dmc_ver1_01.bin for module i915
+/lib/firmware/i915/kbl_huc_ver02_00_1810.bin for module i915
+/lib/firmware/i915/bxt_huc_ver01_07_1398.bin for module i915
+/lib/firmware/i915/skl_huc_ver01_07_1398.bin for module i915
+EOF
+)
+#downdir="/home/Documents/Driver"
+#downdir="/home/$USER/Downloads"
+downdir="$1"
+intellinuxlink="https://01.org/sites/default/files/downloads/intelr-graphics-linux"
+inteldriverlink=$(cat <<EOF
+$intellinuxlink/kbldmcver101.tar_1.bz2;;kbl_dmc_ver1_01
+$intellinuxlink/kblhucver02001810.tar_1.bz2;;kbl_huc_ver02_00_1810
+$intellinuxlink/bxthucver01071398.tar_0.bz2;;bxt_huc_ver01_07_1398
+$intellinuxlink/sklhucver01071398.tar_0.bz2;;skl_huc_ver01_07_1398
+EOF
+)
+#endno=$(wc -l <<< "$inteldriverlink")
+#for ((i=1;i<=$endno;i++)) ; do
+#thelink=$(awk -F";;" 'NR=='$i'{printf $1}' <<< "$inteldriverlink")
+
+inteldriverlinka=($inteldriverlink)
+for i in ${!inteldriverlinka[@]} ; do
+thelink=$(awk -F";;" '{printf $1}' <<< "${inteldriverlinka[$i]}")
+thename=$(getlaststrdel "/" "$thelink")
+thename3=$(getsubstr "0" "3" "$thename")
+regname=$thename3\_*
+#done
+downloadinstallfile "$thelink" "$downdir"
+cd $downdir
+sudo rm -r $regname ;
+tar xf $thename
+cd $regname
+#break
+sudo bash ./install.sh
+sudo rm -rf $regname ;
+sudo rm -rf $thename ;
+done
+#vim install.sh  #check variables, mainly if you are in Android environment where you might need to edit the Linux Firmware Directory.
+return 0
+}
+#installinteldriver
+
+installnvidiadriver() {
+#http://ubuntuguide.net/install-latest-nvidia-graphics-drivers-in-ubuntu-linux
+wget http://us.download.nvidia.com/XFree86/Linux-x86_64/390.67/NVIDIA-Linux-x86_64-390.67.run
+sudo service lightdm stop ;\
+sudo service gdm stop ;\
+sudo apt-get install -y linux-headers-$(uname -r) build-essential gcc-multilib dkms xorg xorg-dev
+cd /home/Documents/Driver
+chmod u+x ./NVIDIA-Linux-x86_64-390.25.run
+
+sudo apt-get purge -y nvidia*
+sudo apt-get autoremove
+#sudo /etc/init.d/gdm stop
+#sudo service lightdm stop
+sudo rmmod nvidia
+sudo rm -r -f /lib/modules/$(uname -r)/kernel/drivers/video/nvidia
+sudo ./NVIDIA-Linux-x86_64-390.25.run --no-opengl-files --dkms -s
+#sudo service lightdm start
+}
+installcudatkdriver() {
+#CUDATOOLKIT INSTALLL
+#https://ubuntuforums.org/showthread.php?t=1594694
+#https://kislayabhi.github.io/Installing_CUDA_with_Ubuntu/
+#https://developer.nvidia.com/cuda-downloads
+# -P ~/cuda-repo-ubuntu1604-9-1-local_9.1.85-1_amd64.deb
+wget https://developer.nvidia.com/compute/cuda/9.1/Prod/local_installers/cuda-repo-ubuntu1604-9-1-local_9.1.85-1_amd64
+sudo dpkg -i cuda-repo-ubuntu1604-9-1-local_9.1.85-1_amd64.deb
+sudo apt-key add /var/cuda-repo-9-1-local/7fa2af80.pub
+sudo apt-get update
+sudo apt-get install -y cuda
+#-DCUDA_ENABLE=OFF 
+wget https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1604&target_type=runfilelocal
+sudo sh ~/Downloads/cuda_9.1.85_387.26_linux.run --silent
+sudo ldconfig
+sudo <CudaInstaller>.run -silent -driver
+return 0
+}
+installamddriver() {
+wget https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-17.40-492261.tar.xz
+tar -Jxvf amdgpu-pro-17.40-492261.tar.xz
+tar -xvJf amdgpu-pro-17.40-492261.tar.xz
+cd amdgpu-pro-17.40-492261
+./amdgpu-pro-install –y
+#sudo reboot
+return 0
+}
+
+resquashaddcommand() {
+sudo chroot $chrootdir su -c "$command"
+if [[ ! -z $addcommand ]]
+then
+sudo chroot $chrootdir su -c "$addcommand"
+fi
+#rm ~/lala ; echo "\$dir" | tee -a ~/lala && cat ~/lala
+return 0
+}
+
+
+resquashrclocal(){
+if [[ $type =~ ^(1)$ ]]
+then
+sudo chroot edit su -c "rm -f /etc/rc.local ;\
+echo '#!/bin/sh -e' | tee -a /etc/rc.local &&\
+echo \"#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will \"exit 0\" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+cddir=\"/cdrom/notes/Documentsv2\"
+startsc=\"\\\$cddir/1mstart2\"
+\\\$startsc ;
+\" | tee -a /etc/rc.local &&\
+echo \"exit 0\" | tee -a /etc/rc.local &&\
+cat /etc/rc.local ;\
+chmod +x /etc/rc.local ;"
+fi
+return 0
+}
+
+resquashfinishing() {
+sudo chroot $cimgdir su -c "aptitude clean ;\
+apt-get autoremove && apt-get autoclean &&\
+rm -rf /tmp/* ~/.bash_history ;\
+rm /etc/resolv.conf ;\
+rm /etc/hosts ;\
+rm /var/lib/dbus/machine-id ;\
+rm /sbin/initctl ;\
+dpkg-divert --rename --remove /sbin/initctl ;\
+umount /proc || umount -lf /proc ;\
+umount /sys ;\
+umount /dev/pts ;\
+umount /dev
+umount /mnt ;\
+rm -f /etc/resolv.conf ;\
+echo \"# Dynamic resolv.conf(5) file for glibc resolver(3) generated by resolvconf(8)
+#     DO NOT EDIT THIS FILE BY HAND -- YOUR CHANGES WILL BE OVERWRITTEN
+nameserver 127.0.1.1
+nameserver 8.8.8.8
+search gateway
+# search unimelb.edu.au\" | tee -a /etc/resolv.conf &&\
+chmod +x /etc/resolv.conf ;\
+cat /etc/resolv.conf ;"
+#exit"
+cd $cimgdir &&
+sudo rm -R $cimgdir/extract ;
+mkdir $cimgdir/extract &&
+mkdir $cimgdir/extract/casper &&
+sudo chroot edit dpkg-query -W --showformat='${Package} ${Version}\n' | sudo tee $cimgdir/extract/casper/filesystem.manifest &&
+sudo cp $cimgdir/extract/casper/filesystem.manifest $cimgdir/extract/casper/filesystem.manifest-desktop &&
+sudo sed -i '/ubiquity/d' $cimgdir/extract/casper/filesystem.manifest-desktop &&
+sudo sed -i '/casper/d' $cimgdir/extract/casper/filesystem.manifest-desktop &&
+sudo mksquashfs edit $cimgdir/extract/casper/filesystem.squashfs -b 1048576 &&
+sudo rsync --exclude=/casper/filesystem.squashfs -a $cimgdir/mnt/ $cimgdir/extract &&
+printf $(sudo du -sx --block-size=1 edit | cut -f1) | sudo tee $cimgdir/extract/casper/filesystem.size &&
+cd $cimgdir/extract &&
+sudo rm md5sum.txt ;
+find -type f -print0 | sudo xargs -0 md5sum | grep -v $cimgdir/isolinux/boot.cat | sudo tee md5sum.txt &&
+return 0
+}
+
+
+
+
+resquash() {
+step=""
+type="1"
+command="echo \"fine\""
+
+if [[ $type =~ ^(1)$ ]]
+then
+cimg="custom-img"
+ddir="Documents"
+fi
+resquashchrootmountlib
+resquashaddcommand
+resquashrclocal
+resquashfinishing
+
+##add
+if [[ $step =~ (e) ]] ; then
+copytombios
+fi
+if [[ $step =~ (f) ]] ; then
+poweroff
+fi
+if [[ $step =~ (g) ]] ; then
+#xterm -hold -e "echo 2 | sudo ./resquashcopy" &
+resquashcopy
+fi
+
+echo "done"
+return 0
+}
+
+copytombios() {
+cd /media/$userid/MBIOS/casper &&
+sudo rm -f filesystem.squashfs ;
+sudo cp $cimgdir/extract/casper/filesystem.squashfs . &&
+echo "copytobios done"
+return 0
+}
+###resquash
+
+
+###resquashcopy
+restart() {
+echo "$run done"
+read -p "restart (y/n)" restart
+if [[ $restart =~ (y) ]] ; then
+echo "restart"
+elif [[ $restart =~ (n) ]] ; then
+exit
+fi
+}
+
+###regrub
+regrub() {
+MBgrub
+MUgrub
+}
+
+MBgrub() {
+grub1=$(cat <<EOF
+set default="$1"
+set timeout=$2
+EOF
+)
+grub2=$(cat <<\EOF
+menuentry "Ubuntu GUI from RAM" {
+linux /casper/vmlinuz.efi boot=casper quiet splash ignore_uuid toram nomodeset
+#Ubuntu in safe mode
+#linux /casper/vmlinuz.efi boot=casper xforcevesa quiet splash ignore_uuid
+#all_generic_ide pci=nommconf ide=nodma acpi=off
+initrd /casper/initrd.lz
+#initrd /casper/ori2initrd.lz
+#initrd /casper/oriinitrd.lz
+}
+
+menuentry "Ubuntu CLI from RAM" {
+linux /casper/vmlinuz.efi boot=casper systemd.unit=multi-user.target quiet splash ignore_uuid toram nomodeset
+initrd /casper/initrd.lz
+}
+
+menuentry "Ubuntu GUI persistent mode" {
+linux /casper/vmlinuz.efi boot=casper persistent quiet splash ignore_uuid
+initrd /casper/initrd.lz
+}
+
+menuentry "W10Legacy" {   
+  insmod fat
+  insmod ntfs
+  insmod ntldr
+  insmod part_gpt
+  insmod part_msdos
+  insmod search_fs_uuid
+  insmod chain
+  search --no-floppy --set=root --fs-uuid AE10175B10172A3B
+  #nltdr (${root})/Windows/Boot/PCAT/bootmgr
+  #chainloader (${root})/Windows/Boot/PCAT/bootmgr
+  chainloader +1
+  boot
+#nltdr (${root})/bootmgr (winreenv)
+}
+
+menuentry "Check Disk for Defects" {
+linux /casper/vmlinuz.efi boot=casper integrity-check quiet splash ignore_uuid
+initrd /casper/initrd.lz
+}
+
+menuentry "Memory Test" {
+linux16 /boot/memtest86+.bin
+}
+
+menuentry "Boot from the first hard disk" {
+set root=(hd0)
+chainloader +1
+}
+EOF
+)
+echo "$grub1
+$grub2" | sudo tee $3
+}
+
+MUgrub() {
+grub1=$(cat <<\EOF
+# The file must match what we use for the `.iso` file.
+EOF
+)
+grub2=$(cat <<EOF
+#search --set=root --file /DEBIAN_CUSTOM_ISO
+
+insmod all_video
+
+set default="$1"
+set timeout=$2
+EOF
+)
+grub3=$(cat <<\EOF
+insmod chain
+set check0="(hd0,msdos1)"
+set check1="(hd1,msdos1)"
+set check2="(hd2,msdos1)"
+menuentry "CHECK" {
+if [ -f $check0/casper/filesystem.squashfs ]; then
+set root=$check0
+elif [ -f $check1/casper/filesystem.squashfs ]; then
+set root=$check1
+elif [ -f $check2/casper/filesystem.squashfs ]; then
+set root=$check2
+
+else
+echo "NOT FOUND"
+sleep 10
+reboot
+fi
+
+echo "$root"
+sleep 2
+configfile /boot/grub/grub.cfg
+#set prefix=($root)/boot/grub
+#insmod normal
+#normal
+}
+
+menuentry "Boot DN HDD" {
+set prefix=(hd0,msdos1)/boot/grub
+insmod normal
+normal
+}
+
+menuentry "W10LUH(BCD-UEFI)" --class windows --class os {   
+  insmod fat
+  insmod ntfs
+  #insmod ntldr
+  insmod part_gpt
+  insmod part_msdos
+  insmod search_fs_uuid
+  insmod chain
+  #set root="hd0,msdos1"
+  if [ x$feature_platform_search_hint = xy ]; then
+      search --no-floppy --fs-uuid --set=root AE10175B10172A3B
+  else
+      search --no-floppy --fs-uuid --set=root AE10175B10172A3B
+  fi
+  #parttool ${root} hidden-
+  #drivemap -s (hd0) ${root}
+  #chainloader +1
+  #Legacy
+  #nltdr (${root})/Windows/Boot/PCAT/bootmgr
+  #chainloader (${root})/Windows/Boot/PCAT/bootmgr
+  #boot
+  #EFI
+  #chainloader (${root})/Windows/Boot/EFI/bootmgfw.efi
+  #chainloader (${root})/EFI/Microsoft/Boot/bootmgfw.efi
+  chainloader +1
+}
+
+menuentry "WinRE10" --class windows --class os {
+insmod fat
+insmod ntfs
+insmod part_gpt
+insmod part_msdos
+search --no-floppy --set=root --fs-uuid AE10175B10172A3B
+nltdr (${root})/bootmgr
+boot
+}
+#menuentry "Debian Live" {
+#    linux /vmlinuz boot=live quiet nomodeset
+#    initrd /initrd
+#}
+##chainloader (${root})/EFI/Microsoft/Boot/bootmgfw.efi
+##chainloader (${root})/Windows/Boot/EFI/bootmgfw.efi
+##chainloader (${root})/Windows/Boot/EFI/bootmgr.efi
+##chainloader (${root})/Boot/BCD
+##chainloader (${root})/bootmgr
+##chainloader (${root})/efi/Microsoft/Boot/bootmgfw.efi
+##--hint-bios=hd0,msdos2 --hint-efi=hd0,msdos2 --hint-baremetal=ahci0,msdos2
+##sudo blkid /dev/sdb1
+EOF
+)
+echo "$grub1
+$grub2
+$grub3" | sudo tee $3
+}
+
+###regrub
+
+###resquashcopy
+setdirrcp() {
+setvar
+read -p "dirtype=" dirtype
+if [[ $dirtype == "1" ]] ; then
+#MBP
+fsdir="$userhomedir/$sdir"
+usbbootdir="$userhomedir/Documents/Docs/mlinuxproject/usbboot"
+casperdir="$usbbootdir/MB/casper"
+ddir="Documents3"
+fi
+if [[ $dirtype == "2" ]] ; then
+#USBMBIOS
+sdir="$USBMBIOSdir/casper"
+fsdir="$USBMBIOSdir/casper"
+usbbootdir="$USBMBIOSdir"
+casperdir="$USBMBIOSdir/casper"
+ddir="notes/Documentsv2"
+fi
+}
+
+recheckgrub2() {
+extfunc="./func.sh"
+sed -n "/^copygrubcfg()/,/^}/p" ./rubootlusb | tee -a $extfunc
+source $extfunc
+copygrubcfg "$1" "$USBLABEL" "3"
+rm -f $extfunc
+}
+
+recheckgrub() {
+usbgrubcfgdir="$1/boot/grub/grub.cfg"
+if [[ $3 =~ (1) ]] ; then
+MUgrub "0" "7" "$usbgrubcfgdir"
+fi
+if [[ $3 =~ (3) ]] ; then
+if [[ $2 == "MBIOS" ]]
+then
+MBgrub "0" "5" "$usbgrubcfgdir"
+else
+MBgrub "1" "0" "$usbgrubcfgdir"
+fi
+fi
+}
+
+recopycasper() {
+sudo rsync -a $casperdir/ "$1/casper/"
+}
+
+recopydoc3dir() {
+usbnotesdir="$1/notes"
+docv2dir="$usbnotesdir/Documentsv2"
+sudo rm -R $docv2dir ;
+sudo mkdir $docv2dir
+sudo cp -av $usbbootdir/$ddir/* $docv2dir
+ls $docv2dir
+}
+
+recopysquashfs() {
+sudo rsync -a $fsdir/filesystem.squashfs "$1/casper/filesystem.squashfs"
+return 0
+}
+
+recopyinitrdmanual() {
+sudo rm -f $1/casper/initrd.lz ;
+sudo cp -v $sdir/initrd.lz $1/casper ;
+}
+
+recopysquashfsmanual() {
+sudo rm -f $1/casper/filesystem.squashfs ;
+sudo cp -v $sdir/filesystem.squashfs $1/casper ;
+}
+
+recopydoc3dirrsync() {
+sudo rsync -a "$usbbootdir/$ddir/" "$docv2dir/"
+return 0
+}
+
+
+resquashcopy() {
+while true
+do
+regrub
+clear
+echo $userid
+echo $(whoami)
+#bashzeroindex arraystart
+#${!c[@]}
+#MUEFI-yellow
+#source ./regrub
+c=$(
+cat <<EOF
+MBIOS;;SDB;;SanDisk Corp. Cruzer Blade;;
+MB1;;
+MB2;;Suit
+MB3;;SDCSwitch;;SanDisk Corp.
+MB4;;Green
+MB5;;BlackMonash
+MB6;;BlueUSB3.0
+MB7;;BlueUSB2Slim
+MUEFI;;
+EOF
+)
+#dirtype=2
+if [[ $dirtype == "1" ]] ; then
+#MBP
+a=0
+fi
+if [[ $dirtype == "2" ]] ; then
+#USBMBIOS
+a=1
+fi
+#while [ $a -lt ${#c[@]} ]
+endno=$[${#c[@]}-1]
+for ((a=0;a<=$endno;a++)) ; do
+#${c[$a]}
+#$[$a+1]
+USBLABEL=$(printf '%s\n' "$c" | sed -n $[$a+1]p | awk -F";;" '{printf $1}')
+USBDIR="$mdir/$USBLABEL"
+echo "$a $USBDIR"
+
+if [[ -d $USBDIR ]]; then
+
+if [[ $USBLABEL =~ (MUEFI) ]]; then
+recheckgrub "$USBDIR" "$USBLABEL" "1"
+else
+recopydoc3dir "$USBDIR"
+#recopysquashfs "$USBDIR"
+recopyinitrdmanual "$USBDIR"
+recopysquashfsmanual "$USBDIR"
+recheckgrub "$USBDIR" "$USBLABEL" "3"
+#recopycasper "$USBDIR"
+fi
+
+umountusb "MB"
+else
+echo "$USBLABEL Not DETECTED"
+fi
+done
+#((a++))
+#done
+
+restart
+done
+}
+
+rcp() {
+setdirrcp
+resquashcopy
+}
+###resquashcopy
+
+###rubootlusb
+usbmountdir="/mnt/usb"
+installtools() {
+if [[ $1 =~ (y) ]]
+then
+sudo apt-get purge -y grub-pc grub-common
+#sudo rm -r /etc/grub.d/
+sudo apt-get install -y grub-pc grub-common
+sudo apt-get -y install \
+    debootstrap \
+    squashfs-tools \
+    xorriso \
+    grub-pc-bin \
+    grub-efi-amd64-bin \
+    mtools ;\
+fi
+return 0
+}
+unmountcurdisk() {
+export disk=$usbpart &&\
+sudo umount /mnt/{usb,efi} ;\
+sudo umount /media/$userid/$curlabel ;\
+return 0
+}
+installgrubpc() {
+sudo grub-install \
+    --target=i386-pc \
+    --boot-directory=$usbmountdir/boot \
+    --recheck \
+    $disk
+return 0
+}
+installgrubefi() {
+sudo grub-install \
+    --target=x86_64-efi \
+    --efi-directory=$usbmountdir \
+    --boot-directory=$usbmountdir/boot \
+    --removable \
+    --recheck
+return 0
+}
+copygrubcfg() {
+usbgrubcfgdir="$1/boot/grub/grub.cfg"
+if [[ $3 =~ (1) ]] ; then
+MUgrub "0" "7" "$usbgrubcfgdir"
+elif [[ $3 =~ (3) ]] ; then
+if [[ $2 == "MBIOS" ]] ; then
+MBgrub "0" "5" "$usbgrubcfgdir"
+else
+MBgrub "1" "0" "$usbgrubcfgdir"
+fi
+elif [[ $3 =~ (4) ]] ; then
+MUgrub "0" "7" "$usbgrubcfgdir"
+fi
+}
+relabelusb() {
+if [[ $mode =~ (1) ]]
+then
+echo mtools_skip_check=1 >> ~/.mtoolsrc ;\
+sudo mlabel -i ${disk}3 ::$MBlabel ;\
+elif [[ $mode =~ (2|3) ]]
+then
+echo mtools_skip_check=1 >> ~/.mtoolsrc ;\
+sudo mlabel -i ${disk}1 ::$MBlabel ;\
+fi
+return 0
+}
+
+input(){
+lsblk
+read -p "
+1) which part?(sda/b/c/etc)
+2) new MB label?
+3) type?
+1.GPTLUH
+2.MSDOSLUH
+3.MSDOSLO
+4.MSDOSUO
+4) install tools (y/n)
+" part MBlabel mode confirminstallt
+}
+
+arubootlusb() {
+input
+setvar
+installtools ${confirminstallt:-n}
+unmountcurdisk
+
+if [[ $mode =~ (1) ]]
+then
+sudo mkdir -p /mnt/{usb,efi}
+sudo parted --script $disk \
+    mklabel gpt \
+    mkpart primary fat32 2048s 4095s \
+        name 1 BIOS \
+        set 1 bios_grub on \
+    mkpart ESP fat32 4096s 413695s \
+        name 2 EFI \
+        set 2 esp on \
+    mkpart primary fat32 413696s 100% \
+        name 2 LINUX \
+        set 2 msftdata on
+
+
+sudo gdisk $disk << EOF
+r     # recovery and transformation options
+h     # make hybrid MBR
+1 2 3 # partition numbers for hybrid MBR
+N     # do not place EFI GPT (0xEE) partition first in MBR
+EF    # MBR hex code
+N     # do not set bootable flag
+EF    # MBR hex code
+N     # do not set bootable flag
+83    # MBR hex code
+Y     # set the bootable flag
+x     # extra functionality menu
+h     # recompute CHS values in protective/hybrid MBR
+w     # write table to disk and exit
+Y     # confirm changes
+EOF
+
+#sudo gdisk $disk << EOF
+#r     # recovery and transformation options
+#h     # make hybrid MBR
+#1 2 # partition numbers for hybrid MBR
+#N     # do not place EFI GPT (0xEE) partition first in MBR
+#EF    # MBR hex code
+#N     # do not set bootable flag
+#83    # MBR hex code
+#Y     # set the bootable flag
+#x     # extra functionality menu
+#h     # recompute CHS values in protective/hybrid MBR
+#w     # write table to disk and exit
+#Y     # confirm changes
+#EOF
+
+sudo mkfs.vfat -F32 ${disk}2 && \
+sudo mkfs.vfat -F32 ${disk}3
+
+#sudo mount ${disk}2 /mnt/efi && \
+sudo mount ${disk}3 $usbmountdir
+
+elif [[ $mode =~ (2|3|4) ]]
+then
+sudo mkdir -p $usbmountdir
+sudo parted --script $disk \
+    mklabel msdos \
+    mkpart primary fat32 1MiB 100%
+sudo mkfs.vfat -F32 ${disk}1
+
+sudo mount ${disk}1 $usbmountdir
+fi
+
+if [[ $mode =~ (1|2) ]]
+then
+installgrubpc
+installgrubefi
+fi
+
+if [[ $mode =~ (3) ]]
+then
+installgrubpc
+fi
+
+if [[ $mode =~ (4) ]]
+then
+installgrubefi
+fi
+
+sudo mkdir -p $usbmountdir/{casper,notes/Documentsv2}
+if [[ $mode =~ (3) ]]
+then
+squashdir="$userhomedir/custom-img/extract/casper/filesystem.squashfs"
+casperdir="$usbbootdir/MB/casper"
+notesdir="$usbbootdir/Documents3"
+sudo cp -rv $casperdir $usbmountdir
+sudo cp -fv $squashdir $usbmountdir/casper
+sudo cp -rv $notesdir/* $usbmountdir/notes/Documentsv2
+fi
+
+copygrubcfg "$usbmountdir" "$MBlabel" "$mode"
+relabelusb
+}
+
+#####EXTRACTINITRD
+initrdlzfoldername="lztempdir"
+sourceinit="oriinitrd.lz"
+newinit="initrd.lz"
+extractinitrd() {
+mkdir -p $initrdlzfoldername &&\
+cd $initrdlzfoldername &&\
+lzma -dc -S .lz ../$sourceinit | cpio -imvd --no-absolute-filenames
+}
+
+repackinitrd() {
+#sdir="/home/user/Documents/Docs/mlinuxproject/usbboot/allnotes"
+sdir="/home/user/Documents/Docs/mlinuxproject"
+pthemedir="/usr/share/plymouth/themes"
+copypthemedir="/home/user/Documents/Docs/mlinuxproject/usbboot/Documents3/TW/splash"
+win10p="$copypthemedir/win10"
+cd $sdir
+sudo rm -rf ./lztempdir/$pthemedir/win10 ;
+sudo rm -f ./lztempdir/$pthemedir/default.grub ;
+sudo rm -f ./lztempdir/$pthemedir/default.plymouth ;
+sudo rm -f ./lztempdir/$pthemedir/text.plymouth ;
+sudo cp -r $win10p ./lztempdir/$pthemedir/
+sudo ln -s $pthemedir/win10/win10.grub ./lztempdir/$pthemedir/default.grub
+sudo ln -s $pthemedir/win10/win10.plymouth ./lztempdir/$pthemedir/default.plymouth
+sudo ln -s $pthemedir/win10/win10text.plymouth ./lztempdir/$pthemedir/text.plymouth
+
+#cpdir="$USBMBIOSdir/notes/Documentsv2/TW/splash/w10"
+#showsplashpp -sdir $cpdir -fn "win10" -d "win10.plymouth" -t "win10text.plymouth" -g "win10.grub"
+
+ls ./lztempdir/$pthemedir/win10
+ls ./lztempdir/$pthemedir
+cat ./lztempdir/$pthemedir/default.plymouth
+read -p "check1"
+cat ./lztempdir/$pthemedir/text.plymouth
+read -p "check2"
+cd $sdir
+initrdlzusb="$USBMBIOSdir/casper/initrd.lz"
+cd ./$initrdlzfoldername &&\
+cp ../$newinit ../inird.lz.orig ;\
+rm -f ../$newinit ;\
+find . | cpio --quiet --dereference -o -H newc | lzma -7 > ../$newinit ;\
+#rm -rf ./$initrdlzfoldername ;
+rm $initrdlzusb ;
+cd ..
+cp ./$newinit $initrdlzusb ;
+sleep 5
+umountusb "MB"
+#sleep 5
+#reboot
+return 0
+}
+
+showsplashpp() {
+pdir="/usr/share/plymouth/themes"
+dg="default.grub"
+dp="default.plymouth"
+tp="text.plymouth"
+dpdir="$pdir/$dp"
+tpdir="$pdir/$tp"
+scpdir="$1"
+ncpdir="$pdir/$2"
+sudo mv $dgdir $dgdir\bk ;
+sudo mv $dpdir $dpdir\bk ;
+sudo mv $tpdir $tpdir\bk ;
+sudo rm -rf $ncpdir\bk ;
+sudo mv $ncpdir $ncpdir\bk ;
+sudo rm -rf $ncpdir ;
+sudo mkdir $ncpdir
+sudo cp -rv $scpdir/* $ncpdir/
+#exit
+if [[ -n $3 ]] ; then
+sudo ln -s $ncpdir/$3 /$dpdir
+else
+sudo ln -s $ncpdir/$2.plymouth /$dpdir
+fi
+}
+
+fastcopy() {
+echo "example=
+/home/user/Documents/Docs/mlinuxproject/usbboot/allnotes/initrd.lz
+/home/user/Documents/Docs/mlinuxproject/usbboot/Documents3/1mstart2"
+read -p "originalfile=" sourceftocopy
+userid="user"
+mediadir="/media/$userid"
+allusb=($(ls $mediadir | grep MB))
+echo "$allusb"
+
+for f in ${!allusb[@]} ; do echo ${allusb[f]} ; done
+if [[ -n "$allusb" ]] ; then
+if [[ $sourceftocopy =~ (initrd) ]] ; then
+destfolder="casper"
+filename="initrd.lz"
+elif [[ $sourceftocopy =~ (1mstart2) ]] ; then
+destfolder="notes/Documentsv2"
+filename="1mstart2"
+fi
+for f in ${!allusb[@]} ; do
+usbname=${allusb[f]}
+currentfile="$mediadir/$usbname/$destfolder/$filename"
+targetfolder="$mediadir/$usbname/$destfolder"
+echo "remove $currentfile"
+sudo rm -f $currentfile ;
+echo "copyto $targetfolder"
+sudo cp $sourceftocopy $targetfolder ;
+sleep 10
+done
+fi
+echo "All done"
+umountusb "MB"
+}
+#####EXTRACTINITRD
+#####NOTES
+#addcommand="sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet\"*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash\"/g' /etc/default/grub &&\
+#sudo update-initramfs -u ;\
+#sudo update-grub &&\
+#sudo update-grub2"
+
+SCREENBACKLIT() {
+sudo dpkg-reconfigure lightdm &&\
+echo "deb http://ppa.launchpad.net/rockowitz/ddcutil/ubuntu xenial main 
+deb-src http://ppa.launchpad.net/rockowitz/ddcutil/ubuntu xenial main " | sudo tee -a /etc/apt/sources.list &&\
+sudo apt-get update ;\
+sudo apt-get install ddcutil
+# ddcutil capabilities | grep Brightness
+#  Feature: 10 (Brightness)
+# ddcutil getvcp 10
+#VCP code 0x10 (Brightness                    ): current value =    60, max value =   100
+# ddcutil setvcp 10 70
+sudo nano /usr/lib/xorg/modules/extensions/libglx.so
+/etc/init/lightdm.conf
+/var/log/Xorg.0.log
+/var/log/lightdm.log
+}
+
+CPUMININGONRAM() {
+##CPUMININGONLYRAM
+git clone https://github.com/cedricwalter/docker-xmr-stak-nvidia.git &&\
+cd docker-xmr-stak-nvidia && \
+sudo docker build -t xmr-stak-nvidia . &&\
+
+#//normal ppa:caffeine-developers/ppa
+#//ppa:caffeine-developers/caffeine-dev
+sudo firefox hotmail.com
+sudo apt-get update --fix-missing &&\
+sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe" &&\
+sudo add-apt-repository -y ppa:caffeine-developers/ppa &&\
+sudo apt-get update &&\
+sudo apt install -y curl wget git caffeine &&\
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&\
+sudo add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&\
+sudo apt-get update &&\
+apt-cache policy docker-ce &&\
+sudo apt-get install -y docker-ce &&\
+sudo rm -rf docker-xmr-stak-cpu ;\
+sudo docker rm -f mc2 ;\
+sudo docker rmi mc1 ;\
+git clone https://github.com/minecoins/docker-xmr-stak-cpu.git &&\
+cd docker-xmr-stak-cpu &&\
+mv Dockerfile Dockerfileold &&\
+rm -f Dockerfile &&\
+mv Dockerfile-nodevfee Dockerfile &&\
+sed -i 's/\([\/]\\1\"\)\(.\{95\}\)\(\"\)/\145kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo\3/g' "Dockerfile" &&\
+sed -i 's,xmr.mypool.online:3333,pool.supportxmr.com:3333,' "Dockerfile" &&\
+sudo docker build -t mc1 .&&\
+sudo docker run -d --name mc2 mc1 &&\
+sudo rm -f ~/Desktop/screen-off ;\
+sudo echo ' #!/bin/bash
+screenOffLockFile=/tmp/screen-off-lock
+if [ -f $screenOffLockFile ];
+then
+        rm $screenOffLockFile
+    notify-send "Screen on." -i /usr/share/icons/gnome/48x48/devices/display.png
+else
+        touch $screenOffLockFile
+        sleep .5
+        while [ -f  $screenOffLockFile ]
+        do
+                xset dpms force off
+                sleep .5
+        done
+        xset dpms force on
+fi' > ~/Desktop/screen-off &&\
+sudo chmod +x ~/Desktop/screen-off && \
+killall firefox ;\
+killall gedit ;\
+}
+
+xnest() {
+Xnest -ac :10.0
+#DISPLAY=:10.0 gnome-session --session=ubuntu
+#startkde
+#unity-control-center
+#xhost +local:
+sudo chroot /mnt
+export DISPLAY=:0
+return 0
+}
+
+rebuildxmrign() {
+link="https://github.com/xmrig/xmrig-nvidia.git"
+install="git build-essential cmake libmicrohttpd-dev libuv1-dev nvidia-cuda-dev nvidia-cuda-toolkit "
+sudo apt-get install $install
+git clone $link
+cd xmrig-nvidia
+mkdir build
+cd build
+cmake .. -DCUDA_ARCH="30;50"
+make
+return 0
+}
+
+gitclone() {
+sudo apt install -y $2
+git clone $1
+}
+rebuildxmrstak() {
+link="https://github.com/fireice-uk/xmr-stak.git"
+install="git build-essential cmake libmicrohttpd-dev libhwloc-dev libssl-dev"
+username="fireice-uk"
+#appname=$(echo $link | sed -rn "s/^(uk)(*)(.git)$/\2/p")
+username=$(awk -F"/" '{printf $4}' <<< "$link")
+appname=$(awk -F"/" '{gsub("(.git)","",$5) ; printf($5)}' <<< "$link")
+#| sed -r "s/.git//g")
+gitclone $link $install
+cd $appname
+sudo nano donation-level.hpp
+## If you don't have nvidia card add -DCUDA_ENABLE=OFF -DMICROHTTPD_ENABLE=OFF
+## If you don't have i5/i7/xeon processor add -DHWLOC_ENABLE=OFF
+cmake . -DOpenCL_ENABLE=OFF -DCUDA_ARCH="30;35;37;50;52"
+make install
+#CUDA_ARCH:STRING=30;35;37;50;52;20;60;61;62
+}
+
+rebuildxmrigv7() {
+cd ~ &&\
+sudo rm -rf ~/xmrig ;\
+sudo apt-get install git build-essential cmake libuv1-dev libmicrohttpd-dev &&\
+git clone https://github.com/xmrig/xmrig.git &&\
+sudo killall xmrig ;\
+sudo sed -i "s,constexpr const int kDonateLevel = 5,constexpr const int kDonateLevel = 0,g" ~/xmrig/src/donate.h &&\
+cat ~/xmrig/src/donate.h &&\
+cd ~/xmrig &&\
+mkdir ./build &&\
+cd ./build &&\
+cmake .. &&\
+make &&\
+sudo chmod +x ~/xmrig/build/xmrig &&\
+xterm -hold -e "sudo ~/xmrig/build/xmrig -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo --donate-level=0% -p 1" &\
+}
+
+rebuildxmrignpov7() {
+cd ~ &&\
+sudo rm -rf ~/xmrig-nvidia ;\
+sudo apt-get install git build-essential cmake libuv1-dev libmicrohttpd-dev gcc-5 g++-5 &&\
+##nvidia-cuda-dev nvidia-cuda-toolkit \
+git clone https://github.com/xmrig/xmrig-nvidia.git &&\
+##sudo killall xmrig-nvidia ;\
+sudo sed -i "s,constexpr const int kDonateLevel = 5,constexpr const int kDonateLevel = 0,g" ~/xmrig-nvidia/src/donate.h &&\
+cat ~/xmrig-nvidia/src/donate.h &&\
+cd ~/xmrig-nvidia &&\
+mkdir ./build &&\
+cd ./build &&\
+cmake .. -DCUDA_ARCH="30;50" &&\
+make &&\
+sudo chmod +x ~/xmrig-nvidia/build/xmrig-nvidia &&\
+xterm -hold -e "sudo ~/xmrig-nvidia/build/xmrig-nvidia -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo --donate-level=0% -p 1" ;
+}
+
+rebuildxmrstakpov7() {
+cd ~ &&\
+sudo rm -rf ~/xmr-stak ;\
+sudo apt install libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev &&\
+git clone https://github.com/fireice-uk/xmr-stak.git &&\
+sudo killall xmr-stak ;\
+sudo sed -i "s,fDevDonationLevel = 2.0,fDevDonationLevel = 0.0,g" ~/xmr-stak/xmrstak/donate-level.hpp &&\
+cat ~/xmr-stak/xmrstak/donate-level.hpp &&\
+mkdir xmr-stak/build &&\
+cd xmr-stak/build &&\
+cmake .. -DOpenCL_ENABLE=OFF &&\
+make install &&\
+sudo chmod +x ~/xmr-stak/build/bin/xmr-stak &&\
+xterm -hold -e "sudo ~/xmr-stak/build/bin/xmr-stak -r \"\" -i 0 --currency monero7 -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo -p t1" ;\
+}
+
+checkxmr() {
+google-chrome --tab "supportxmr.com/#/dashboard" --tab "google.com/45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo" &
+return 0
+}
+
+##ADDITIONAL
+##nvidia-384 \
+##wget 
+##tar xfvj 0005-r8168-8.042.00.tar.bz2
+##lsmod | grep nvidia 
+##gsettings get org.gnome.desktop.background picture-uri
+## gsettings set org.gnome.desktop.background picture-uri file:///media/ubuntu/USB8A/ALL/black.jpg
+
+## cp /mnt/Documents/black.jpg /home
+##gsettings set org.gnome.desktop.background picture-uri file:///home/black.jpg
+#sudo apt-get upgrade ;\
+##sudo apt-get install dkms build-essential linux-headers-generic
+# echo "chmod +x /home/Documents/minenow && sudo /home/Documents/minenow" | sudo tee -a /etc/rc.local
+
+##sudo mount --bind ~/Documents/Docs/XMRchroot $chrootdir/mnt
+##sudo mount --bind $mdir/USB8A $chrootdir/mnt
+
+###git clone https://github.com/B00merang-Project/Shell-Scripts.git
+###gsettings get org.gnome.desktop.background picture-uri
+
+#https://community.rackspace.com/products/f/25/t/4315
+#service --status-all
+#update-rc.d SERVICENAME defaults
+#update-rc.d -f  SERVICENAME remove
+
+#https://askubuntu.com/questions/9382/how-can-i-configure-a-service-to-run-at-startup
+#sudo echo "">> /etc/rc.local
+#https://superuser.com/questions/136646/how-to-append-to-a-file-as-sudo
+#echo "output" | sudo tee -a file
+
+
+#####PPGIT
+gitcred() {
+email="ajsgisayid@gmail.com"
+username="pagkly"
+pwd="Myloxyloto2012"
+git config --global user.email "$email"
+git config --global user.name "$username"
+}
+gitaskdir() {
+#read -p "localdir" localdir
+#read -p "remotegit" remotegit
+#localdir="/home/ubuntu/Documents/Documentsv2/usbboot"
+localdir="/cdrom/notes/Documentsv2/usbboot"
+remotegit="generaluse"
+}
+gitaddprep() {
+localdir=$1
+remotegit=$2
+gitremotelink="https://$username:$pwd@github.com/$username/$remotegit.git"
+rm -rf "$localdir" ;
+rm -f "$localdir" ;
+#sleep 1
+git clone "$gitremotelink"
+#sleep 3600
+cd $localdir
+git remote add origin "$gitremotelink"
+}
+gitadd() {
+#https://stackoverflow.com/questions/15612003/how-to-push-a-new-folder-containing-other-folders-and-files-to-an-existing-git
+localdir=$1
+remotegit=$2
+gitremotelink="https://$username:$pwd@github.com/$username/$remotegit.git"
+cd $localdir
+git remote add origin "$gitremotelink"
+#sleep 3600
+#git fetch --all
+#rm -rf $localdir/.git ;
+if [[ ! -d $localdir/.git ]] ; then
+echo "dirnotexists;init"
+cd $localdir
+git init
+else
+echo "direxists"
+fi
+readmefn="README.md"
+if [[ -n $3 ]] ; then
+#rm -f README.md
+echo "$3" | tee $readmefn
+else
+echo '#'"$remotegit" | tee $readmefn
+fi
+cd $localdir
+
+git add $localdir/*
+date="$(date)"
+git commit -m "$(date) commit"
+#git checkout -b experiments
+git push --force-with-lease origin master
+#git push -f origin master
+}
+gitrecover() {
+#https://evilmartians.com/chronicles/git-push---force-and-how-to-deal-with-it
+#+ deadbeef...f00f00ba master -> master (forced update)
+git push --force origin deadbeef:master
+#s2
+#https://github.com/org/repo/tree/deadbeef
+#git fetch
+#From github.com:org/repo
+# * [new branch]      master-before-force-push -> origin/master-before-force-push
+#git push --force origin origin/master-before-force-push:master
+#git rebase origin/master
+}
+gitremove() {
+git remote add origin https://$username:$pwd@github.com/pagkly/$remotegit.git
+cd $localdir
+#git pull origin master
+git rm --cached 1mstart2
+git rm --cached README.md
+git commit -m "$(date) commit"
+git push -f origin master
+}
+gitcred
+#gitaskdir
+
+gitpush1m() {
+#https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
+usbfiledir="$USBMBIOSdir/notes/Documentsv2/1mstart2"
+curfiledir="$userhomedir/Documents/Documentsv2/1mstart2"
+if [[ -f "$usbfiledir" ]] ; then
+dfiledir="$usbfiledir"
+else
+dfiledir="$userhomedir/Documents/Documentsv2/1mstart2"
+fi
+#read -p "example=$filedir" dfiledir
+filedir=${filedir:-$dfiledir}
+localdir="$userhomedir/1mstart2"
+remotedir="1mstart2"
+gitaddprep $localdir $remotedir
+rm $localdir/1mstart2 ;
+cp $filedir $localdir
+gitadd $localdir $remotedir
+
+if [[ "$filedir" == "$usbfiledir" ]] ; then
+mv $curfiledir $curfiledir\bk
+cp $usbfiledir $curfiledir
+sudo chmod +x $curfiledir
+sudo chown $userid $curfiledir
+fi
+}
+#gitpush1m
+gitpush3gsnit() {
+usbfiledir="$USBMBIOSdir/notes/3gsnit"
+dfiledir="$userhomedir/Documents/3gsnit"
+#read -p "example=$filedir" filedir
+filedir=${filedir:-$dfiledir}
+localdir="$userhomedir/3gsnit"
+remotedir="3gsnit"
+
+gitaddprep $localdir $remotedir
+rm $localdir/3gsnit ;
+cp $filedir $localdir
+gitadd $localdir $remotedir
+
+if [[ -f $usbfiledir ]] ; then
+rm -f $usbfiledir ;
+cp $filedir $usbfiledir
+fi
+}
+#gitpush3gsnit
+#https://github.com/RajuKoushik/Automated-Login/blob/master/login.sh
+#https://help.github.com/articles/basic-writing-and-formatting-syntax/
+gitpushuv10df() {
+filedir=~/Dockerfileuxv
+localdir=~/Dockerfileuxv
+readmedir=$localdir/README.md
+remotedir="uv10"
+contname="uv10"
+buildcont="sudo docker build -t $contname ."
+runcont="sudo docker run -it --user 0 --restart=always -d -p 5900 --privileged --cap-add SYS_ADMIN --cap-add DAC_READ_SEARCH --security-opt seccomp=unconfined $contname sudo su -c \"x11vnc -forever -create -scale 1024x768\""
+ls $localdir
+dockercont="$remotedir"
+rmmessage=$(cat <<EOF
+# $remotedir
+Docker container with :
+- xfce4
+- x11vnc
+- thunar
+- bless
+- ...some other tools
+
+BUILD container :
+\`\`\`
+git clone https://github.com/$username/$remotedir
+cd ./$remotedir
+$buildcont
+\`\`\`
+
+RUN container as root with vnc @ 1024x768:
+\`\`\`
+$runcont
+\`\`\`
+
+RUN vnc :
+\`\`\`
+sudo apt-get install -y vncviewer
+vncviewer :port
+\`\`\`
+EOF
+)
+#rmmessageedit=$(awk 'NR>0 {print $0"\r\n"}' <<< "$rmmessage")
+#echo "$rmmessageedit" | tee $readmedir2
+gitadd $localdir $remotedir "$rmmessage"
+}
+#gitpushuv10df
+#gitremove
+
+nvidianotes() {
+#REBOOT LOGIN
+http://in.download.nvidia.com/XFree86/Linux-x86_64/367.27/NVIDIA-Linux-x86_64-367.27.run
+sudo ./NVIDIA-Linux-x86_64-367.27.run --no-opengl-files
+sudo ./cuda-linux64-rel-6.0.37-18176142.run
+sudo ./cuda-samples-linux-6.0.37-18176142.run
+export PATH=/usr/local/cuda-7.5/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-7.5/lib64:$LD_LIBRARY_PATH
+
+cat /proc/driver/nvidia/version
+#My current resutls are:
+#NVRM version: NVIDIA UNIX x86_64 Kernel Module  367.27  Thu Jun  9 18:53:27 PDT 2016
+#GCC version:  gcc version 5.3.1 20160413 (Ubuntu 5.3.1-14ubuntu2.1)
+nvcc -V
+sudo service lightdm start
+sudo vim /usr/local/cuda/include/host_config.h
+cd /usr/local/cuda/samples
+grep -r nvidia-352 -l --null . | sudo xargs -0 sed -i 's#nvidia-352#nvidia-367#g'
+cd /usr/local/cuda/samples/1_Utilities/deviceQuery
+sudo make
+./deviceQuery
+
+#NEW INSTALL
+https://developer.nvidia.com/cuda-downloads?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1604&target_type=deblocal
+sudo dpkg -i cuda-repo-ubuntu1604-9-1-local_9.1.85-1_amd64.deb
+sudo apt-key add /var/cuda-repo-<version>/7fa2af80.pub
+sudo apt-get update
+sudo apt-get install cuda
+https://moneroocean.blogspot.com.au/2017/11/setting-up-linux-nvidia-gpu-monero-miner.html
+http://www.easycryptomining.com/monero_ubuntu_16.html
+http://in.download.nvidia.com/XFree86/Linux-x86_64/367.27/NVIDIA-Linux-x86_64-367.27.run
+sudo ./NVIDIA-Linux-x86_64-384.98.run --no-opengl-files
+
+echo "Section \"ServerLayout\"
+    Identifier \"layout\"
+    Screen 0 \"intel\"
+    Screen 1 \"nvidia\"
+EndSection
+
+Section \"Device\"
+    Identifier \"intel\"
+    Driver \"intel\"
+    BusID \"PCI:0@0:2:0\"
+    Option \"AccelMethod\" \"SNA\"
+EndSection
+
+Section \"Screen\"
+    Identifier \"intel\"
+    Device \"intel\"
+EndSection
+
+Section \"Device\"
+    Identifier \"nvidia\"
+    Driver \"nvidia\"
+    BusID \"PCI:1@0:0:0\"
+    Option \"ConstrainCursor\" \"off\"
+EndSection
+
+Section \"Screen\"
+    Identifier \"nvidia\"
+    Device \"nvidia\"
+    Option \"AllowEmptyInitialConfiguration\" \"on\"
+    Option \"IgnoreDisplayDevices\" \"CRT\"
+EndSection" | sudo tee -a /etc/X11/xorg.conf
+
+sudo nvidia-xconfig
+mesa-utils x11-xserver-utils
+
+echo "$appendt" | sudo tee -a /etc/X11/xorg.conf
+
+sudo apt-get install nvidia-modprobe xorg xorg-dev
+sudo nano /etc/X11/xorg.conf
+xserver-xorg-video-intel 
+
+sudo sed -i 's/exit 0$/sudo service gdm3 stop ;\nsudo rmmod noveau ;\nsudo modprobe nvidia ;\nsudo service gdm3 start ;\nexit 0/g' /etc/rc.local &&\
+
+sudo sed -i 's/exit 0$/echo \"xterm -hold -e \\\"sudo chmod +x /home/Documents/mstart && /home/Documents/mstart\\\" &\" | sudo tee -a /home/ubuntu/.bashrc ;\necho \"xterm -hold -e \\\"sudo chmod +x /home/Documents/FOVPN/FreeVPNconnect.sh && /home/Documents/FOVPN/FreeVPNconnect.sh\\\" &\" | sudo tee -a /home/ubuntu/.bashrc ;\nexit 0/g' /etc/rc.local &&\
+
+sudo sed -i 's/exit 0$/xterm -hold -e "sudo chmod +x /home/Documents/mstart ; /home/Documents/mstart ;" | sudo tee -a /home/ubuntu/.bashrc ;\nxterm -hold -e "sudo chmod +x /home/Documents/FOVPN/FreeVPNconnect.sh ; /home/Documents/FOVPN/FreeVPNconnect.sh ;" | sudo tee -a /home/ubuntu/.bashrc ;\nexit 0/g' /etc/rc.local &&\
+
+sudo sed -i 's/exit 0$//g' /etc/rc.local &&\
+echo "echo \"xterm -hold -e \\\"sudo chmod +x /home/Documents/mstart ; /home/Documents/mstart\\\" &\" | sudo tee -a /home/ubuntu/.bashrc ;" | sudo tee -a /etc/rc.local &&\
+echo "echo \"xterm -hold -e \\\"sudo chmod +x /home/Documents/FOVPN/FreeVPNconnect.sh ; /home/Documents/FOVPN/FreeVPNconnect.sh\\\" &\" | sudo tee -a /home/ubuntu/.bashrc ;" | sudo tee -a /etc/rc.local &&\
+echo "exit 0" | sudo tee -a /etc/rc.local
+
+echo "echo \"sleep 5 && xterm -hold -e \\\"sudo chmod +x /home/Documents/FOVPN/FreeVPNconnect.sh ; /home/Documents/FOVPN/FreeVPNconnect.sh\\\" &\" | sudo tee -a /home/ubuntu/.xinitrc ;" | sudo tee -a /etc/rc.local &&\
+echo "exit 0" | sudo tee -a /etc/rc.local
+
+touch /home/ubuntu/.xinitrc ;
+chmod +x /home/ubuntu/.xinitrc ;
+echo "#!/usr/bin/env bash" | tee -a /home/ubuntu/.xinitrc ;
+echo "xterm -hold -e \"sudo chmod +x /home/Documents/mstart ; /home/Documents/mstart\" &" | tee -a /home/ubuntu/.xinitrc ;
+echo "xterm -hold -e \"sudo chmod +x /home/Documents/FOVPN/FreeVPNconnect.sh ; /home/Documents/FOVPN/FreeVPNconnect.sh\" &" | tee -a /home/ubuntu/.xinitrc ;
+#| sudo tee -a /etc/X11/xinit/xinitrc &&\
+
+sudo apt install -y nvidia-387 ;\
+sudo apt-get install lightdm &&\
+sudo dpkg-reconfigure lightdm ;\
+echo "blacklist r8169" | sudo tee -a /etc/modprobe.d/blacklist.conf &&\
+cd /home/Documents/Driver/r8168-8.045.08 &&\
+sudo chmod +x ./autorun.sh &&\
+sudo sh ./autorun.sh &&\
+sudo apt-get remove --purge -y *4.10.0-28 *4.10.0-28* &&\
+sudo apt-get install linux-headers-4.13.0-32 \
+linux-headers-4.13.0-32-generic \
+linux-image-4.13.0-32-generic \
+linux-image-extra-4.13.0-32-generic \
+linux-signed-image-4.13.0-32-generic \
+
+sudo apt-get install nvidia-390 ;\
+sudo apt-get install nvidia-387 xserver-xorg-core bumblebee
+
+sudo apt-get remove --purge -y *4.13.0-32 *4.13.0-32* &&\
+sudo apt update --fix-missing -y &&\
+sudo apt-get install linux-headers-4.10.0-28 \
+linux-headers-4.10.0-28-generic \
+linux-image-4.10.0-28-generic \
+linux-image-extra-4.10.0-28-generic \
+linux-signed-image-4.10.0-28-generic
+echo "nameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf &&\
+\
+sudo rm -f /etc/X11/xinit/xinitrc ;\
+echo '#!/bin/sh' | sudo tee -a /etc/X11/xinit/xinitrc ;\
+echo "
+# /etc/X11/xinit/xinitrc
+#
+# global xinitrc file, used by all X sessions started by xinit (startx)
+
+# invoke global X session script
+. /etc/X11/Xsession
+
+# /home/Documents/mstart2 ;\
+" | sudo tee -a /etc/X11/xinit/xinitrc ;\
+sudo chmod +x /etc/X11/xinit/xinitrc ;\
+cat /etc/X11/xinit/xinitrc ;
+
+#NVIDIA
+sudo nano /var/lib/dpkg/info/nvidia-prime.prerm
+
+#!/bin/sh
+set -e
+# Automatically added by dh_installinit
+if [ -x "/etc/init.d/nvidia-prime" ] || [ -e "/etc/init/nvidia-prime.conf" ]; then
+        invoke-rc.d nvidia-prime stop || exit $?
+fi
+# End automatically added section
+
+/etc/init.d/nvidia-prime
+ls /var/cache/apt/archives/nvidia-387
+sudo rm -f /var/cache/apt/archives/nvidia-387_387.34-0ubuntu0~gpu16.04.2_amd64.deb ;\
+sudo rm -f /var/cache/apt/archives/nvidia-opencl-icd-387_387.34-0ubuntu0~gpu16.04.2_amd64.deb ;\
+sudo rm -f /var/cache/apt/archives/nvidia-prime_0.8.2_amd64.deb ;\
+sudo rm -f /var/cache/apt/archives/nvidia-settings_390.25-0ubuntu0~gpu16.04.1_amd64.deb ;\
+
+sudo rm -f /var/lib/dpkg/info/nvidia-387.postrm ;\
+sudo rm -f /var/lib/dpkg/info/nvidia-387.postinst ;\
+sudo rm -f /var/lib/dpkg/info/libcuda1-387.postrm ;\
+sudo rm -f /var/lib/dpkg/info/libcuda1-387.postinst ;\
+sudo rm -f /var/lib/dpkg/info/nvidia-opencl-icd-387.postrm ;\
+sudo rm -f /var/lib/dpkg/info/nvidia-opencl-icd-387.postinst
+
+
+nvidia-387
+ libcuda1-387
+ nvidia-opencl-icd-387
+
+nvidia-387.conffiles
+nvidia-387.list
+nvidia-387.md5sums
+nvidia-387.postinst
+nvidia-387.postrm
+libcryptui0a:amd64.postinst			nvidia-387.preinst
+libcryptui0a:amd64.postrm			nvidia-387.prerm
+libcryptui0a:amd64.shlibs			nvidia-387.shlibs
+libcuda1-387.list				nvidia-387.triggers
+libcuda1-387.md5sums				nvidia-opencl-icd-387.conffiles
+libcuda1-387.shlibs				nvidia-opencl-icd-387.list
+libcuda1-387.triggers				nvidia-opencl-icd-387.md5sums
+libcups2:amd64.list				nvidia-opencl-icd-387.shlibs
+libcups2:amd64.md5sums				nvidia-opencl-icd-387.triggers
+libcups2:amd64.shlibs				nvidia-prime.conffiles
+libcups2:amd64.symbols				nvidia-prime.list
+libcups2:amd64.triggers				nvidia-prime.md5sums
+libcupscgi1:amd64.list				nvidia-prime.postinst
+libcupscgi1:amd64.md5sums			nvidia-prime.postrm
+libcupscgi1:amd64.shlibs			nvidia-prime.preinst
+libcupscgi1:amd64.symbols			nvidia-prime.prerm
+libcupscgi1:amd64.triggers			nvidia-settings.conffiles
+libcupsfilters1:amd64.list			nvidia-settings.list
+libcupsfilters1:amd64.md5sums			nvidia-settings.md5sums
+libcupsfilters1:amd64.shlibs			nvidia-settings.preinst
+libcupsfilters1:amd64.symbols			nvidia-settings.shlibs
+libcupsfilters1:amd64.triggers			nvidia-settings.triggers
+
+echo "gsettings set org.gnome.shell favorite-apps \"['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.gedit.desktop']\"" | sudo tee -a ~/.xinitrc
+dconf write /org/gnome/shell/favorite-apps "['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.gedit.desktop']"
+gdm gsettings get org.gnome.desktop.screensaver picture-uri
+
+echo -e "\nHidden=true\n" | sudo tee --append /etc/xdg/autostart/tracker-extract.desktop /etc/xdg/autostart/tracker-miner-apps.desktop /etc/xdg/autostart/tracker-miner-fs.desktop /etc/xdg/autostart/tracker-miner-user-guides.desktop /etc/xdg/autostart/tracker-store.desktop > /dev/null
+gsettings set org.freedesktop.Tracker.Miner.Files crawling-interval -2 ;
+gsettings set org.freedesktop.Tracker.Miner.Files enable-monitors false ;
+tracker reset --hard ;
+
+sudo sed -i 's,xmr.mypool.online:3333,pool.supportxmr.com:3333,' "Dockerfile"
+##UNUSED
+/home/user/Documents/Docs/mlinuxproject/usbboot/initrdlz/usr/share/plymouth/themes/ubuntu-logo
+$chrootdir/usr/share/plymouth/themes/ubuntu-gnome-logo
+
+sudo cp -r /home/Documents/TW/blank /usr/share/plymouth/themes
+cd /usr/share/plymouth/themes/ubuntu-gnome-logo
+sudo mv ubuntu-gnome-logo.plymouth oldubuntu-gnome-logo.plymouth
+sudo cp /usr/share/plymouth/themes/blank/blank.plymouth ubuntu-gnome-logo.plymouth
+ls /usr/share/plymouth/themes/blank
+cat /usr/share/plymouth/themes/default.plymouth
+sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/ubuntu-gnome-logo/ubuntu-gnome-logo.plymouth 100
+sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/ubuntu-gnome-logo/ubuntu-gnome-logo.plymouth 100
+
+##sudo apt-get install nvidia-current nvidia-settings
+##gsettings set com.canonical.Unity.Launcher launcher-position Bottom &&\
+##wget https://raw.githubusercontent.com/bill-mavromatis/gnome-layout-manager/master/layoutmanager.sh
+
+#https://ubuntuforums.org/showthread.php?t=1644967
+echo "append  file=/cdrom/preseed/mint.seed boot=casper  initrd=/casper/initrd.lz nouveau.modeset=0 rdblacklist=nouveau  blacklist=vga16fb nouveau.noaccel=1 --" | sudo tee -a ./extract/isolinux/isolinux.cfg
+#https://askubuntu.com/questions/47488/how-to-change-the-purple-background-color-in-grub
+#INET
+currentkernel=$(uname -a)
+lspci -vvnn | grep Ethernet
+sudo lshw -C network
+route
+tracepath -n ubuntu.com
+sudo dhclient
+nmcli dev list iface eth0 | grep IP4
+nmcli dev show eth0
+ipconfig/all
+}
+#####0rubootlusb
+
+
+##MACOSX
+MACOSX() {
+installbrew() {
+#https://null-byte.wonderhowto.com/how-to/mac-for-hackers-set-up-homebrew-install-update-open-source-tools-0174511/
+sudo /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+#echo ‘export HOMEBREW_GITHUB_API_TOKEN="YOUR_TOKEN_HERE”’ | sudo tee -a ~/.bashrc
+#echo ’source .bashrc’ | sudo tee -a ~/.bash_profile
+}
+installtools() {
+##sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+install brew
+brew install wget
+brew install gptfdisk
+brew cask install caffeine
+brew install ssh-copy-id
+brew install watch
+brew cask install dockertoolbox
+brew cask install docker-toolbox
+}
+installgnutools() {
+#https://www.topbug.net/blog/2013/04/14/install-and-use-gnu-command-line-tools-in-mac-os-x/
+echo ‘export PATH=”$(brew --prefix coreutils)/libexec/gnubin:/usr/local/bin:$PATH”’ | sudo tee -a .bashrc
+#https://gist.github.com/quickshiftin/9130153
+#HOMEBREW_PREFIX=“/usr/local”
+#$HOMEBREW_PREFIX/opt/coreutils/libexec/gnuman
+#alias man='_() { echo $1; man -M $(brew --prefix)/opt/coreutils/libexec/gnuman $1 1>/dev/null 2>&1;  if [ "$?" -eq 0 ]; then man -M $(brew --prefix)/opt/coreutils/libexec/gnuman $1; else man $1; fi }; _'
+#export MANPATH="/usr/local/opt/coreutils/libexec/gnuman:$MANPATH"
+#.zshrc
+brew tap homebrew/dupes
+brew install coreutils
+brew install binutils
+brew install diffutils
+brew install ed --with-default-names
+brew install findutils --with-default-names
+brew install gawk
+brew install gnu-indent --with-default-names
+brew install gnu-sed --with-default-names
+brew install gnu-tar --with-default-names
+brew install gnu-which --with-default-names
+brew install gnutls
+brew install grep --with-default-names
+brew install gzip
+brew install screen
+brew install watch
+brew install wdiff --with-gettext
+brew install wget
+#newver
+brew install bash
+brew install emacs
+brew install gdb  # gdb requires further actions to make it work. See `brew info gdb`.
+brew install gpatch
+brew install less
+brew install m4
+brew install make
+brew install nano
+#newver2
+brew install file-formula
+brew install git
+brew install openssh
+brew install perl
+brew install python
+brew install rsync
+brew install svn
+brew install unzip
+brew install vim --override-system-vi
+brew install macvim --override-system-vim --custom-system-icons
+brew install zsh
+}
+installrefind() {
+curl -s -L http://sourceforge.net/projects/refind/files/0.8.3/refind-bin-0.8.3.zip -o refind.zip
+unzip -q refind.zip
+cd refind-bin-*/
+sudo bash install.sh
+
+./refind-install
+refit
+cd /efi/refit
+./enable.sh
+./enable-always.sh
+}
+installxcode() {
+sudo xcodebuild -license
+}
+linkairport() {
+sudo ln -s /System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport /usr/local/bin/airport
+}
+installaircrackb() {
+brew install aircrack-ng
+#sudo /usr/local/sbin/airodump-ng
+}
+installaircrackgh() {
+wget http://download.aircrack-ng.org/aircrack-ng-1.2.tar.gz
+tar -zxvf aircrack-ng-1.2.tar.gz
+cd aircrack-ng-1.2
+autoreconf -i
+./configure --with-experimental
+make
+make install
+}
+sniffp() {
+#https://danielmiessler.com/blog/entering-promiscuous-mode-os-x/
+#https://diogomonica.com/2011/04/10/sniffing-in-monitor-mode-with-airport/
+#tcpdump -Ii en0
+sudo airport sniff
+tcpdump -r /tmp/airportSniff*
+#sudo /usr/local/sbin/airodump-ng en1
+}
+installmacports() {
+#https://www.macports.org/install.php
+return 0
+}
+installdocker() {
+brew cask install docker-toolbox
+brew cask install dockertoolbox
+sudo systemctl start docker
+docker status
+docker images
+return 0
+}
+uninstalldocker() {
+boot2docker stop
+boot2docker delete
+sudo rm -rf /Applications/boot2docker ;
+sudo rm -rf /Applications/Docker ;
+sudo rm -f /usr/local/bin/docker ;
+sudo rm -f /usr/local/bin/boot2docker ;
+sudo rm -f /usr/local/bin/docker-machine ;
+sudo rm -r /usr/local/bin/docker-machine-driver* ;
+sudo rm -r /usr/local/bin/docker-compose ;
+sudo pkgutil --forget io.docker.pkg.docker
+sudo pkgutil --forget io.docker.pkg.dockercompose
+sudo pkgutil --forget io.docker.pkg.dockermachine
+sudo pkgutil --forget io.boot2dockeriso.pkg.boot2dockeriso
+sudo pkgutil --forget io.docker.pkg.docker
+sudo pkgutil --forget io.docker.pkg.dockercompose
+sudo pkgutil --forget io.docker.pkg.dockermachine
+sudo pkgutil --forget io.boot2dockeriso.pkg.boot2dockerisosudo rm -rf /usr/local/share/boot2docker
+rm -rf ~/.boot2docker ;
+rm ~/.ssh/id_boot2docker* ;
+sudo rm -f /private/var/db/receipts/io.boot2docker.* ;
+sudo rm -f /private/var/db/receipts/io.boot2dockeriso.* ;
+rm -rf ~/.docker ;
+}
+installdockerkali() {
+#docker-machine create -d virtualbox kali
+#eval "$(docker-machine env kalilinux)"
+docker pull kalilinux/kali-linux-docker
+docker run -t -i kalilinux/kali-linux-docker /bin/bash
+#docker commit fccc212c2d14 kalilinux:1
+#docker run -it --net="host" --privileged kalilinux:1 /bin/bash
+#docker run -it --net="host" --privileged --name aircrack kalilinux:1 bash
+#sudo docker run -d -t -i -p 6080:6080 jgamblin/kalibrowser
+#diskutil list
+#diskutil unmount /dev/disk2
+#sudo dd if=kali-linux-2016.2-amd64.iso of=/dev/disk6 bs=1m/Users/arthur/Desktop/kali-#linux-2016.2-amd64.iso 
+#sudo dd if=/Users/arthur/Desktop/kali-linux-2016.2-amd64.iso of=/dev/disk2 bs=1m
+}
+removeimage() {
+sudo docker rm -f $(sudo docker ps -aq)
+sudo docker rmi -f $(sudo docker images -q)
+sudo docker-machine rm -f $(sudo docker-machine ls -q);
+}
+others() {
+#/Volumes/NON/notesp ; exit;
+#/Volumes/BOOTCAMP/Users/arthuryamin/Desktop/notesp ; exit;
+#/usr/sbin/networksetup -detectnewhardware
+#cd ~/Library/Preferences/
+#rm com.apple.desktop.plist
+killall Dock
+#/Volumes/iBeeZz\ 2.9.1/Extras/uninstall.sh ; exit;
+#/Volumes/Parche\ Tuxera\ NTFS\ for\ Mac\ 2016\ RC/keygen ; exit;
+chmod +x /Users/arthur/Desktop/drivemaker.bash
+bash /Users/arthur/Desktop/drivemaker.bash
+sudo fdisk -e /dev/disk0
+y
+diskutil list
+diskutil cs list
+sudo fdisk /dev/disk0
+sudo mount_ntfs /dev/disk0s5 /Volumes/BOOTCAMP
+sudo mount_ntfs /dev/disk0s5
+sudo fdisk list
+diskutil list disk0s5
+sudo gdisk /dev/disk0
+sudo fdisk /dev/disk0
+sudo fdisk -e /dev/disk0
+sudo gpt
+sudo gpt -r -vv show disk0
+sudo gdisk /dev/disk0
+diskutil list
+gdisk /dev/disk0
+sudo gdisk /dev/disk0
+}
+}
+###MACOSX
+
+
+#####LINK
+#####n6pts
+n6pts() {
+link=$(cat<<EOF
+https://android.stackexchange.com/questions/197315/troubleshooting-hard-bricked-nexus-6p
+https://www.reddit.com/r/Nexus6P/comments/8sz6hv/troubleshooting_hardbricked_n6p/
+https://forum.xda-developers.com/nexus-6p/help/troubleshooting-hard-bricked-nexus-6p-t3807387/post76883833#post76883833
+EOF
+)
+rungc "$link"
+}
+#n6pts
+onlinesop() {
+if [[ -z $1 ]] ; then
+link=$(cat<<EOF
+ebay.com.au
+aliexpress.com
+gumtree.com.au
+webshop.cashconverters.com.au
+www.banggood.com
+EOF
+)
+elif [[ $1 =~ (gp2xl) ]] ; then
+searchfor="google+pixel+2+xl"
+##https://www.ebay.com.au/sch/i.html?_from=R40&_nkw=google+pixel+2&_sacat=0&LH_TitleDesc=0&LH_TitleDesc=0&_sop=15
+link=$(cat<<EOF
+https://www.ebay.com.au/sch/i.html?_from=R40&_trksid=p2380057.m570.l1313.TR11.TRC1.A0.H0.X$searchfor.TRS0&_nkw=google+pixel+2+xl&_sacat=0
+https://www.aliexpress.com/wholesale?catId=0&initiative_id=SB_20180621231644&SearchText=$searchfor
+https://www.gumtree.com.au/s-android-phones/$searchfor/k0c21113
+https://webshop.cashconverters.com.au/items/?searchFor=$searchfor&categoryID=&regionID=&storeID=
+https://www.banggood.com/search/$searchfor.html
+EOF
+)
+fi
+rungc "$link"
+}
+rungc() {
+#\\
+alllinks="nohup google-chrome -hold "
+link="$1"
+linka=($link)
+endno=$[${#linka[@]}-1]
+for ((i=0;i<=$endno;i++)) ; do
+linkno=$i
+linke="--tab ${linka[$linkno]} "
+alllinks="${alllinks}"$'\n'"$linke"
+done
+echo "$alllinks"
+$alllinks & disown
+}
+
+
+
+
+
+
+#####PWN
+xycoord() {
+avgclosead="176 465"
+avgplay="459 592"
+jfwnow="699 758"
+jfs2="371 769"
+jfclosead="512 659"
+jfplay="527 539"
+}
+xycoord
+prevtab() {
+xdotool key ctrl+shift+Tab
+sleep 1
+}
+forwtab() {
+xdotool key ctrl+Tab
+sleep 1
+}
+getwindowname() {
+xdotool windowactivate $(xdotool search avgle) && sleep 1 && xdotool getwindowname
+}
+getcurlink() {
+sleep 2
+xdotool key ctrl+l
+sleep 1
+xdotool key ctrl+c
+sleep 1
+foclink=$(xclip -o)
+}
+lavgle() {
+xdotool windowactivate $(xdotool search avgle)
+sleep 2
+xdotool key ctrl+r
+#waituntilr
+sleep 10
+xdotool key Home
+sleep 1
+#detectblue
+xdotool mousemove --sync $avgclosead
+sleep 1
+#detectblue2
+xdotool click 1
+sleep 1
+xdotool mousemove --sync $avgplay
+sleep 1
+xdotool click 1
+sleep 3
+xdotool key space
+sleep 3
+xdotool key 8
+sleep 1
+forwtab
+}
+jvfrw() {
+xdotool windowactivate $(xdotool search JAV)
+#s2
+sleep 1
+xdotool mousemove --sync $jfs2
+sleep 1
+xdotool click 1
+sleep 1
+#s4
+for ((i=1;i<2;i++)) ; do
+xdotool key Tab
+sleep 1
+done
+xdotool key Return
+sleep 2
+#skipad
+xdotool mousemove --sync $jfclosead
+sleep 2
+xdotool click 1
+sleep 2
+#play
+xdotool mousemove --sync $jfplay
+sleep 2
+xdotool click 1
+}
+ljfor() {
+xdotool windowactivate $(xdotool search JAV)
+sleep 2
+xdotool key Home
+sleep 5
+for ((i=1;i<7;i++)) ; do
+xdotool key Down
+sleep 0.2
+done
+#wnow
+sleep 1
+xdotool mousemove --sync $jfwnow
+sleep 1
+xdotool click 1
+jvfrw
+
+xdotool windowactivate $(xdotool search JAV)
+sleep 1
+getcurlink
+foclink2=$foclink
+if [[ $foclink2 =~ ($foclink) ]] ; then
+prevtab
+getcurlink
+foclink3=$foclink
+if [[ $foclink3 =~ ($foclink2) ]] ; then
+forwtab
+xdotool key ctrl+w
+fi
+
+elif [[ ! $foclink2 =~ ($foclink) ]] ; then
+prevtab
+fi
+
+jvfrw
+}
+refreshall() {
+#sudo apt-get install -y xclip xdotool
+xdotool windowactivate $(xdotool search avgle)
+sleep 3
+#xdotool key ctrl+1
+while true ; do
+getcurlink
+if [[ $foclink =~ (avgle) ]] ; then
+lavgle
+elif [[ $foclink =~ (javfor) ]] ; then
+ljfor
+else
+break
+fi
+done
+}
+
+
+#####FNENGINE
+traprestart() {
+trap SIGINT
+gnome-terminal -e "$DIR0" & disown
+sleep 0.5
+exit
+return 0
+}
+populatefn() {
+if [[ -n "$3" ]] ; then
+startno="$3"
+else
+startno="0"
+fi
+allfn=$(awk '/(^'$1'\(\) {)/ {gsub("([(){])","");print}' $2)
+popfn="${popfn}"$'\n'"$allfn"
+allfnarray=($allfn)
+popfnarray=($popfn)
+totalallfn=$[${#allfnarray[@]}+$startno]
+echo "$totalallfn"
+}
+printallfn() {
+if [[ -z $1 ]] ; then
+begno=0
+endno=$[${#popfnarray[@]}-1]
+elif [[ -n $1 ]] ; then
+begno=$1
+endno=$[${#popfnarray[@]}-1]
+fi
+echo $numberfn
+for ((f=$begno;f<=$endno;f++)) ; do
+echo $[$f+1]".${popfnarray[f]}"
+done
+}
+prechoosefn() {
+if [[ -n $1 ]] ; then
+fnno1=$1
+elif [[ -z $1 ]] ; then
+read fnno1
+fi
+
+if [[ $fnno1 =~ (8\&9|89|gsm) ]] ; then
+choosefn 8
+choosefn 9
+else
+choosefn $fnno1
+fi
+}
+choosefn() {
+fnno2=$1
+n=$[$fnno2-1]
+fn="${popfnarray[$[$fnno2-1]]}"
+echo "$n.$fn"
+$fn
+}
+runlistfno() {
+setvar
+popfn=""
+populatefn "$listthisfn" "$DIR0"
+printallfn
+echo "------------"
+lastno="$totalallfn"
+populatefn "(arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM|fastcopy)" "$DIR0" "$lastno"
+printallfn $lastno
+echo "------------"
+lastno="$totalallfn"
+populatefn "(n6pts|onlinesop|refreshall)" "$DIR0" "$lastno"
+printallfn $lastno
+prechoosefn $1
+}
+runlistfnwd() {
+while true ; do
+trap "traprestart" INT
+runlistfno
+trap SIGINT
+done
+}
+runlistfn() {
+#if [[ "$1" =~ (^[0-9]*)$ ]] ; then
+if [[ -n "$1" ]] ; then
+#echo "$1 this cmd"
+if [[ "$1" =~ (once) ]] ; then
+#echo "$1 this cmd2"
+cmdno="$(awk '{gsub("once","");print}' <<< "$1")"
+#echo "cmd "$cmdno
+runlistfno $cmdno
+exit
+else
+runlistfno $1
+runlistfnwd
+fi
+else
+runlistfnwd
+fi
+}
+#thisos="linux-gnu"
+thisos=""
+echo "$thisos"
+detectos "$thisos"
+echo "$0 bla"
+runlistfn $1
+
+
+tgb() {
+return 0
+}
+sourcel=$(cat <<EOF
+https://help.ubuntu.com/community/MakeALiveCD/DVD/BootableFlashFromHarddiskInstall
+https://alexcabal.com/turn-your-laptop-screen-off-with-a-keyboard-shortcut-in-ubuntu-karmic/
+https://moneroocean.blogspot.com.au/2017/11/setting-up-linux-nvidia-gpu-monero-miner.html
+http://www.easycryptomining.com/monero_ubuntu_16.html
+
+INSTALL CHROOT
+https://nathanpfry.com/how-to-customize-an-ubuntu-installation-disc/
+https://unixblogger.com/2016/08/11/how-to-get-your-realtek-rtl8111rtl8168-working-updated-guide/
+https://ubuntuforums.org/showthread.php?t=1644967
+EOF
+)
+notes=$(
+cat <<EOF
+resquash
+reinstallmbp
+reinstallsp3
+emulatewin10usb
+reinstallw10
+reinstallw10g
+rpi3:
+home automation
+voice assistant
+voltmeter
+receipt
+ocvr
+
+order parts
+nexus 6p glass back
+n6p daughterboard
+samsung s3 nand flash emmc chip
+
+3d print specs
+
+commandsummary
+pythonproject
+#https://msystechnologies.com/porting-custom-rom-to-android-device/
+
+soldering iron w adjustable temp ;; 20
+soldering stand
+soldering tip x5
+solder iron ;; 1
+curved tip pinset ;; 1
+desoldering pump
+
+multimeter w buzzer + lead ;; 2
+wick ;; 1
+wire cutter ;; 1
+
+case?
+tape?
+
+
+multimeter kit
+google pixel 2 xl
+nexus 6p glass back cover
+EOF
+)
+
