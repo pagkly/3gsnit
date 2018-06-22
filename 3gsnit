@@ -2775,19 +2775,22 @@ gitpush1m() {
 filedir=""
 usbfiledir="$USBMBIOSdir/notes/Documentsv2/1mstart2"
 curfiledir="$userhomedir/Documents/Documentsv2/1mstart2"
-if [[ -f "$usbfiledir" ]] ; then
-dfiledir="$usbfiledir"
-else
-dfiledir="$userhomedir/Documents/Documentsv2/1mstart2"
-fi
-if [[ "$usbfiledir" -nt "$curfiledir" ]]; then
+if [[ "$usbfiledir" -nt "$curfiledir" ]] ; then
 #cp -f "$file2" "$file1"
-dfiledir="$usbfiledir"
+sfiledir="$usbfiledir"
 elif [[ "$curfiledir" -nt "$usbfiledir" ]] ; then
-dfiledir="$userhomedir/Documents/Documentsv2/1mstart2"
+sfiledir="$curfiledir"
+elif [[ ! -f "$usbfiledir" ]] ; then
+sfiledir="$curfiledir"
+else
+echo "cancel"
+return 0
 fi
-#read -p "example=$filedir" dfiledir
-filedir=${filedir:-$dfiledir}
+#read -p "example=$filedir" sfiledir
+filedir=${filedir:-$sfiledir}
+echo "================"
+echo "pushing $filedir"
+echo "================"
 localdir="$userhomedir/1mstart2"
 remotedir="1mstart2"
 gitaddprep $localdir $remotedir
@@ -2806,9 +2809,21 @@ fi
 gitpush3gsnit() {
 filedir=""
 usbfiledir="$USBMBIOSdir/notes/3gsnit"
-dfiledir="$userhomedir/Documents/3gsnit"
+curfiledir="$userhomedir/Documents/3gsnit"
+if [[ -f "$curfiledir" ]] ; then
+sfiledir="$curfiledir"
+elif [[ ! -f "$usbfiledir" ]] || [[ ! -f "$curfiledir" ]] ; then
+echo "cancel"
+return 0
+else
+echo "cancel"
+return 0
+fi
 #read -p "example=$filedir" filedir
-filedir=${filedir:-$dfiledir}
+filedir=${filedir:-$sfiledir}
+echo "================"
+echo "pushing $filedir"
+echo "================"
 localdir="$userhomedir/3gsnit"
 remotedir="3gsnit"
 
