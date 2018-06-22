@@ -2834,6 +2834,11 @@ cp $usbfiledir $curfiledir
 sudo chmod +x $curfiledir
 sudo chown $userid $curfiledir
 fi
+
+if [[ ! "$filedir" == "$usbfiledir" ]] && [[ -f "$usbfiledir" ]] ; then
+mv $usbfiledir $usbfiledir\bk
+cp $filedir $usbfiledir
+fi
 }
 #gitpush1m
 gitpush3gsnit() {
