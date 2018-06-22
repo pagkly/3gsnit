@@ -2772,6 +2772,7 @@ gitcred
 
 gitpush1m() {
 #https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
+filedir=""
 usbfiledir="$USBMBIOSdir/notes/Documentsv2/1mstart2"
 curfiledir="$userhomedir/Documents/Documentsv2/1mstart2"
 if [[ -f "$usbfiledir" ]] ; then
@@ -2797,6 +2798,7 @@ fi
 }
 #gitpush1m
 gitpush3gsnit() {
+filedir=""
 usbfiledir="$USBMBIOSdir/notes/3gsnit"
 dfiledir="$userhomedir/Documents/3gsnit"
 #read -p "example=$filedir" filedir
