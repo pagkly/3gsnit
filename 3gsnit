@@ -2707,6 +2707,7 @@ gitremotelink="https://$username:$pwd@github.com/$username/$remotegit.git"
 rm -rf "$localdir" ;
 rm -f "$localdir" ;
 #sleep 1
+cd $userhomedir
 git clone "$gitremotelink"
 #sleep 3600
 cd $localdir
