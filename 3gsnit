@@ -1560,6 +1560,9 @@ echo "$desk"
 pdir="/usr/share/plymouth/themes"
 bgdir="/usr/share/backgrounds"
 blackbg="/home/Documents/TW/black.jpg"
+
+if [[ $(lsb_release -sc) =~ (bionic) ]] ; then
+fi
 if [[ $desk =~ (GNOME) ]] ; then
 gcolor="45,51,53"
 dpdir="ubuntu-gnome-logo"
