@@ -2780,6 +2780,12 @@ dfiledir="$usbfiledir"
 else
 dfiledir="$userhomedir/Documents/Documentsv2/1mstart2"
 fi
+if [[ "$usbfiledir" -nt "$curfiledir" ]]; then
+#cp -f "$file2" "$file1"
+dfiledir="$usbfiledir"
+elif [[ "$curfiledir" -nt "$usbfiledir" ]] ; then
+dfiledir="$userhomedir/Documents/Documentsv2/1mstart2"
+fi
 #read -p "example=$filedir" dfiledir
 filedir=${filedir:-$dfiledir}
 localdir="$userhomedir/1mstart2"
