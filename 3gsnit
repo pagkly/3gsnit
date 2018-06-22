@@ -1555,14 +1555,13 @@ EOF
 
 grubsplashplymouthg=$(cat <<EOF
 #sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash\"*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet\"/g' "/etc/default/grub"
-desk=$XDG_CURRENT_DESKTOP
+#desk=$XDG_CURRENT_DESKTOP
 echo "$desk"
 pdir="/usr/share/plymouth/themes"
 bgdir="/usr/share/backgrounds"
 blackbg="/home/Documents/TW/black.jpg"
 
-if [[ $(lsb_release -sc) =~ (bionic) ]] ; then
-fi
+if [[ $(lsb_release -sc) =~ (xenial) ]] ; then
 if [[ $desk =~ (GNOME) ]] ; then
 gcolor="45,51,53"
 dpdir="ubuntu-gnome-logo"
@@ -1570,16 +1569,20 @@ gpdir="$dpdir.grub"
 dbg="$bgdir/Greenish_by_EstebanMitnick.jpg"
 dbg2="$bgdir/gnome/adwaita-morning.jpg"
 dbg3="$bgdir/gnome/adwaita-day.jpg"
+
 elif [[ $desk =~ (UNITY) ]] ; then
 gcolor="44,0,30"
 dpdir="ubuntu-logo"
 gpdir="$dpdir.grub"
-fi
-sudo sed -i 's/'$gcolor'*/0,0,0/g' "$pdir/$dpdir/$gpdir"
+
 #UBUNTUISO
 #sudo cp /usr/share/backgrounds/warty-final-ubuntu.png /usr/share/backgrounds/warty-final-ubuntu-old.png
 #sudo rm -f /usr/share/backgrounds/warty-final-ubuntu.png
 #sudo cp /mnt/Documents/TW/black.jpg /usr/share/backgrounds/warty-final-ubuntu.png
+fi
+
+fi
+sudo sed -i 's/'$gcolor'*/0,0,0/g' "$pdir/$dpdir/$gpdir"
 sudo mv $dbg $dbg\bk
 sudo cp $blackbg $dbg
 sudo mv $dbg2 $dbg2\bk
