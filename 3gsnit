@@ -3077,12 +3077,8 @@ filedir=""
 usbfiledir="$liveusb3gsdir"
 curfiledir="$livecur3gsdir"
 sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$(datefile3gsnit)")"
-
 #read -p "example=$filedir" filedir
 filedir=${filedir:-$sfiledir}
-echo "$filedir"
-#sleep 3600
-read -p "continue?"
 localdir="$userhomedir/$threegsn"
 remotedir="$threegsn"
 
