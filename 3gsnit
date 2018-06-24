@@ -3042,22 +3042,20 @@ filedir=${filedir:-$sfiledir}
 notice "choose $filedir"
 }
 
-
-gitpush1m() {
+gitpushusbuniv() {
 #choosefile1m
 filedir=""
-usbfiledir="$liveusb1msdir"
-curfiledir="$livecur1msdir"
-sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$(datefile1m)")"
-#read -p "example=$filedir" sfiledir
+curfiledir="$1"
+usbfiledir="$2"
+sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$($3)")"
+#read -p "example=$filedir" filedir
 filedir=${filedir:-$sfiledir}
-localdir="$userhomedir/$onems2"
-remotedir="$onems2"
+localdir="$userhomedir/$4"
+remotedir="$4"
 
 gitaddprep $localdir $remotedir
-rm $localdir/$onems2 ;
+rm $localdir/$4 ;
 cp $filedir $localdir
-echo "$filedir $localdir"
 gitadd $localdir $remotedir
 
 if [[ "$filedir" == "$usbfiledir" ]] ; then
@@ -3067,30 +3065,16 @@ sudo chmod +x $curfiledir
 sudo chown $userid $curfiledir
 fi
 
-if [[ ! "$filedir" == "$usbfiledir" ]] && [[ -f "$usbfiledir" ]] ; then
+if [[ ! "$filedir" == "$usbfiledir" ]] && [[ -f $usbfiledir ]] ; then
 mv $usbfiledir $usbfiledir\bk
 cp $filedir $usbfiledir
 fi
 }
+gitpush1m() {
+gitpushusbuniv "$livecur1msdir" "$liveusb1msdir" "datefile1m" "$onems2"
+}
 gitpush3gsnit() {
-filedir=""
-usbfiledir="$liveusb3gsdir"
-curfiledir="$livecur3gsdir"
-sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$(datefile3gsnit)")"
-#read -p "example=$filedir" filedir
-filedir=${filedir:-$sfiledir}
-localdir="$userhomedir/$threegsn"
-remotedir="$threegsn"
-
-gitaddprep $localdir $remotedir
-rm $localdir/$threegsn ;
-cp $filedir $localdir
-gitadd $localdir $remotedir
-
-if [[ -f $usbfiledir ]] ; then
-rm -f $usbfiledir ;
-cp $filedir $usbfiledir
-fi
+gitpushusbuniv "$livecur3gsdir" "$liveusb3gsdir" "datefile3gsnit" "$threegsn"
 }
 #gitpush3gsnit
 #https://github.com/RajuKoushik/Automated-Login/blob/master/login.sh
@@ -3929,4 +3913,5 @@ google pixel 2 xl
 nexus 6p glass back cover
 EOF
 )
+
 
