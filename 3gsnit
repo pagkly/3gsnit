@@ -3805,13 +3805,14 @@ echo "$n.$fn"
 $fn
 }
 runlistfno() {
+if [[ $userid =~ (ubuntu) ]] && [[ -d "$USBMBIOSdir" ]] ; then
 #choosefile1m
 #datefile "$livecur1msdir" "$liveusb1msdir"
 #choosefile3gsnit
 #datefile "$livecur3gsdir" "$liveusb3gsdir"
 datefile1m
 datefile3gsnit
-
+fi
 popfn=""
 populatefn "$listthisfn" "$DIR0"
 printallfn
