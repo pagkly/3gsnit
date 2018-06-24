@@ -3043,6 +3043,8 @@ notice "choose $filedir"
 gitpush1m() {
 #choosefile1m
 filedir=""
+usbfiledir="$liveusb1msdir"
+curfiledir="$livecur1msdir"
 sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$(datefile1m)")"
 #read -p "example=$filedir" sfiledir
 filedir=${filedir:-$sfiledir}
@@ -3068,8 +3070,9 @@ cp $filedir $usbfiledir
 fi
 }
 gitpush3gsnit() {
-#choosefile3gsnit
 filedir=""
+usbfiledir="$liveusb3gsdir"
+curfiledir="$livecur3gsdir"
 sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$(datefile3gsnit)")"
 
 #read -p "example=$filedir" filedir
