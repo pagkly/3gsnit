@@ -2836,16 +2836,16 @@ gitcred
 
 datefile() {
 now=$(date)
-echo $now
+echo nowcdate=$now
 
 localf="$1"
 localfdate="$(stat -c %y "$localf")"
-echo $localfdate
+echo locfdate=$localfdate
 
 if [[ -n $2 ]] ; then
 usbf="$2"
 usbfdate="$(stat -c %y "$usbf")"
-echo $usbfdate
+echo usbfdate=$usbfdate
 fi
 }
 
