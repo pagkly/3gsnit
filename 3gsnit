@@ -2861,8 +2861,9 @@ newestname=${name[$i]}
 fi
 
 done
-notice "newestname $newestname
-newestfile $newestfile"
+#notice "newestname $newestname
+#newestfile $newestfile"
+
 
 errorlist=""
 correctlist=""
@@ -2880,6 +2881,10 @@ fi
 done
 correctlists="$(awk 'FNR>=2{print}' <<< "$correctlist")"
 #choosenewestfromcorrect
+
+filedir=""
+filedir=${filedir:-$newestfile}
+notice "choose $filedir"
 }
 later(){
 ##correction
@@ -3036,7 +3041,9 @@ notice "choose $filedir"
 
 
 gitpush1m() {
-choosefile1m
+#choosefile1m
+filedir=""
+sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$(datefile1m)")"
 #read -p "example=$filedir" sfiledir
 filedir=${filedir:-$sfiledir}
 localdir="$userhomedir/$onems2"
@@ -3045,6 +3052,7 @@ remotedir="$onems2"
 gitaddprep $localdir $remotedir
 rm $localdir/$onems2 ;
 cp $filedir $localdir
+echo "$filedir $localdir"
 gitadd $localdir $remotedir
 
 if [[ "$filedir" == "$usbfiledir" ]] ; then
@@ -3060,8 +3068,15 @@ cp $filedir $usbfiledir
 fi
 }
 gitpush3gsnit() {
-choosefile3gsnit
+#choosefile3gsnit
+filedir=""
+sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$(datefile3gsnit)")"
+
 #read -p "example=$filedir" filedir
+filedir=${filedir:-$sfiledir}
+echo "$filedir"
+#sleep 3600
+read -p "continue?"
 localdir="$userhomedir/$threegsn"
 remotedir="$threegsn"
 
