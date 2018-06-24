@@ -2822,7 +2822,7 @@ gitcred
 #gitaskdir
 
 
-gitpush1m() {
+choosefile1m() {
 #https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 filedir=""
 usbfiledir="$USBMBIOSdir/notes/Documentsv2/$onems2"
@@ -2841,10 +2841,17 @@ else
 echo "cancel"
 return 0
 fi
+filedir=${filedir:-$sfiledir}
+notice "choose $filedir"
+}
+
+gitpush1m() {
+choosefile1m
 #read -p "example=$filedir" sfiledir
 filedir=${filedir:-$sfiledir}
 localdir="$userhomedir/$onems2"
 remotedir="$onems2"
+
 gitaddprep $localdir $remotedir
 rm $localdir/$onems2 ;
 cp $filedir $localdir
@@ -2862,7 +2869,7 @@ mv $usbfiledir $usbfiledir\bk
 cp $filedir $usbfiledir
 fi
 }
-gitpush3gsnit() {
+choosefile3gsnit() {
 filedir=""
 usbfiledir="$USBMBIOSdir/notes/$threegsn"
 curfiledir="$userhomedir/Documents/$threegsn"
@@ -2875,8 +2882,12 @@ else
 echo "cancel"
 return 0
 fi
-#read -p "example=$filedir" filedir
 filedir=${filedir:-$sfiledir}
+notice "choose $filedir"
+}
+gitpush3gsnit() {
+choosefile3gsnit
+#read -p "example=$filedir" filedir
 localdir="$userhomedir/$threegsn"
 remotedir="$threegsn"
 
@@ -3656,8 +3667,10 @@ setvar
 #thisos="linux-gnu"
 thisos=""
 echo "OS : $thisos"
-echo "gitpush$threegsn"
 detectos "$thisos"
+choosefile1m
+choosefile3gsnit
+
 runlistfn $1
 
 
@@ -3716,8 +3729,7 @@ wire cutter ;; 1
 case?
 tape?
 
-
-multimeter kit
+#multimeter kit
 google pixel 2 xl
 nexus 6p glass back cover
 EOF
