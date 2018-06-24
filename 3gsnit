@@ -1,4 +1,19 @@
 #!/bin/bash
+#https://unix.stackexchange.com/questions/259974/what-is-the-bigger-difference-in-this-case-when-using-case-or-if
+testcase() {
+read -p "insertext:" text
+case $text in
+test)
+echo "a"
+;;
+test2)
+echo "b"
+;;
+test3)
+echo "c"
+sleep 60
+esac
+}
 #https://stackoverflow.com/questions/18660798/here-document-gives-unexpected-end-of-file-error
 getdirwh2() {
 #https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within
@@ -23,7 +38,12 @@ currentos="$1"
 fi
 
 if [[ "$currentos" == "linux-gnu" ]]; then
-listthisfn="(reinstallcomp|installdockeruv10|install|getspecs|testecho|showsplash|choosesplash|startupdaten6p|gitpush1m|gitpush3gsnit)"
+listthisfn="(reinstallcomp|installdockeruv10|install|getspecs|testecho|showsplash|choosesplash|startupdaten6p|gitpush1m|gitpush$threegsn)"
+if [[ -d "/mnt/c" ]]; then
+# POSIX compatibility layer and Linux environment emulation for Windows
+echo "cygwin"
+echo "WINDOWS"
+fi
 elif [[ "$currentos" == "darwin"* ]]; then
 listthisfn="(install)"
 elif [[ "$currentos" == "cygwin" ]]; then
@@ -119,7 +139,7 @@ sed -ri "s/(inetcafeiplist=[$][(]cat <<EOF)/\1\n$extip;;$cpu;;$GPUmodel;;$TPMRAM
 else
 sed -ri "s/(inetcafeiplist=[$][(]cat <<EOF)/\1\n$extip;;$cpu;;$GPUmodel;;$TPMRAMr\GB/g" $DIR0
 fi
-echo "check3gsnit"
+echo "check$threegsn"
 }
 
 getgeoloc() {
@@ -1315,6 +1335,9 @@ usbpart="/dev/sd$part"
 
 curlabel=$(sed -rn "/(\/media\/$userid)/p" <<< "$(lsblk)" | awk '{printf($7)}' | awk -F"/" '{printf($4)}')
 echo "/media/$userid/$curlabel"
+
+onems2="1mstart2"
+threegsn="3gsnit"
 }
 
 detectusb() {
@@ -1769,7 +1792,7 @@ echo \"#
 # By default this script does nothing.
 
 cddir=\"/cdrom/notes/Documentsv2\"
-startsc=\"\\\$cddir/1mstart2\"
+startsc=\"\\\$cddir/$onems2\"
 \\\$startsc ;
 \" | tee -a /etc/rc.local &&\
 echo \"exit 0\" | tee -a /etc/rc.local &&\
@@ -2462,7 +2485,7 @@ fi
 fastcopy() {
 echo "example=
 /home/user/Documents/Docs/mlinuxproject/usbboot/allnotes/initrd.lz
-/home/user/Documents/Docs/mlinuxproject/usbboot/Documents3/1mstart2"
+/home/user/Documents/Docs/mlinuxproject/usbboot/Documents3/$onems2"
 read -p "originalfile=" sourceftocopy
 userid="user"
 mediadir="/media/$userid"
@@ -2474,9 +2497,9 @@ if [[ -n "$allusb" ]] ; then
 if [[ $sourceftocopy =~ (initrd) ]] ; then
 destfolder="casper"
 filename="initrd.lz"
-elif [[ $sourceftocopy =~ (1mstart2) ]] ; then
+elif [[ $sourceftocopy =~ ($onems2) ]] ; then
 destfolder="notes/Documentsv2"
-filename="1mstart2"
+filename="$onems2"
 fi
 for f in ${!allusb[@]} ; do
 usbname=${allusb[f]}
@@ -2721,6 +2744,7 @@ gitaddprep() {
 localdir=$1
 remotegit=$2
 gitremotelink="https://$username:$pwd@github.com/$username/$remotegit.git"
+notice "preparing $localdir"
 rm -rf "$localdir" ;
 rm -f "$localdir" ;
 #sleep 1
@@ -2730,11 +2754,21 @@ git clone "$gitremotelink"
 cd $localdir
 git remote add origin "$gitremotelink"
 }
+
+#gitpush1m
+notice() {
+#getlineno
+echo "================"
+echo "$1"
+echo "================"
+}
+
 gitadd() {
 #https://stackoverflow.com/questions/15612003/how-to-push-a-new-folder-containing-other-folders-and-files-to-an-existing-git
 localdir=$1
 remotegit=$2
 gitremotelink="https://$username:$pwd@github.com/$username/$remotegit.git"
+notice "pushing $localdir"
 cd $localdir
 git remote add origin "$gitremotelink"
 #sleep 3600
@@ -2758,7 +2792,7 @@ cd $localdir
 
 git add $localdir/*
 date="$(date)"
-git commit -m "$(date) commit"
+git commit -m "$(date) commit by $userid"
 #git checkout -b experiments
 git push --force-with-lease origin master
 #git push -f origin master
@@ -2779,7 +2813,7 @@ gitremove() {
 git remote add origin https://$username:$pwd@github.com/pagkly/$remotegit.git
 cd $localdir
 #git pull origin master
-git rm --cached 1mstart2
+git rm --cached $onems2
 git rm --cached README.md
 git commit -m "$(date) commit"
 git push -f origin master
@@ -2787,11 +2821,12 @@ git push -f origin master
 gitcred
 #gitaskdir
 
+
 gitpush1m() {
 #https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 filedir=""
-usbfiledir="$USBMBIOSdir/notes/Documentsv2/1mstart2"
-curfiledir="$userhomedir/Documents/Documentsv2/1mstart2"
+usbfiledir="$USBMBIOSdir/notes/Documentsv2/$onems2"
+curfiledir="$userhomedir/Documents/Documentsv2/$onems2"
 if [[ "$usbfiledir" -nt "$curfiledir" ]] ; then
 #cp -f "$file2" "$file1"
 sfiledir="$usbfiledir"
@@ -2805,13 +2840,10 @@ return 0
 fi
 #read -p "example=$filedir" sfiledir
 filedir=${filedir:-$sfiledir}
-echo "================"
-echo "pushing $filedir"
-echo "================"
-localdir="$userhomedir/1mstart2"
-remotedir="1mstart2"
+localdir="$userhomedir/$onems2"
+remotedir="$onems2"
 gitaddprep $localdir $remotedir
-rm $localdir/1mstart2 ;
+rm $localdir/$onems2 ;
 cp $filedir $localdir
 gitadd $localdir $remotedir
 
@@ -2827,11 +2859,10 @@ mv $usbfiledir $usbfiledir\bk
 cp $filedir $usbfiledir
 fi
 }
-#gitpush1m
 gitpush3gsnit() {
 filedir=""
-usbfiledir="$USBMBIOSdir/notes/3gsnit"
-curfiledir="$userhomedir/Documents/3gsnit"
+usbfiledir="$USBMBIOSdir/notes/$threegsn"
+curfiledir="$userhomedir/Documents/$threegsn"
 if [[ -f "$curfiledir" ]] ; then
 sfiledir="$curfiledir"
 elif [[ ! -f "$usbfiledir" ]] || [[ ! -f "$curfiledir" ]] ; then
@@ -2843,14 +2874,11 @@ return 0
 fi
 #read -p "example=$filedir" filedir
 filedir=${filedir:-$sfiledir}
-echo "================"
-echo "pushing $filedir"
-echo "================"
-localdir="$userhomedir/3gsnit"
-remotedir="3gsnit"
+localdir="$userhomedir/$threegsn"
+remotedir="$threegsn"
 
 gitaddprep $localdir $remotedir
-rm $localdir/3gsnit ;
+rm $localdir/$threegsn ;
 cp $filedir $localdir
 gitadd $localdir $remotedir
 
@@ -3582,7 +3610,6 @@ echo "$n.$fn"
 $fn
 }
 runlistfno() {
-setvar
 popfn=""
 populatefn "$listthisfn" "$DIR0"
 printallfn
@@ -3592,7 +3619,7 @@ populatefn "(arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(n6pts|onlinesop|refreshall)" "$DIR0" "$lastno"
+populatefn "(n6pts|onlinesop|refreshall|testcase)" "$DIR0" "$lastno"
 printallfn $lastno
 prechoosefn $1
 }
@@ -3621,9 +3648,12 @@ else
 runlistfnwd
 fi
 }
+
+setvar
 #thisos="linux-gnu"
 thisos=""
 echo "OS : $thisos"
+echo "gitpush$threegsn"
 detectos "$thisos"
 runlistfn $1
 
