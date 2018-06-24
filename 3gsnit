@@ -2842,12 +2842,13 @@ choosenewest() {
 gettimenowinnumber
 echo nowcdate=$now
 
-listfilea=($1)
+errorlist=""
+correctlist=""
 newdatefile=0
+listfilea=($1)
 begno=0
 endno=$[${#listfilea[@]}-1]
 for ((i=$begno;i<=$endno;i++)) ; do
-#thisfile=${listfilea[$i]}
 name[$i]="$(awk -F ';;' '{printf $2}' <<< "${listfilea[$i]}")"
 thisfile[$i]="$(awk -F ';;' '{printf $1}' <<< "${listfilea[$i]}")"
 thisdatefile[$i]="$(stat -c %y "${thisfile[$i]}")"
@@ -2855,24 +2856,9 @@ thisfdate[$i]="$(awk -F" " '{printf $1" "$2}' <<< "${thisdatefile[$i]}")"
 formattedthisfdate[$i]="$(date -d "${thisfdate[$i]}" +%Y%m%d%H%M%S)"
 #echo "$thisfile"
 #echo $thisfdate
-
 echo ${name[$i]}"date=${formattedthisfdate[$i]}"
 
-if [[ ${formattedthisfdate[$i]} -gt $newdatefile ]] ; then
-newdatefile=${formattedthisfdate[$i]}
-newestfile=${thisfile[$i]}
-newestname=${name[$i]}
-fi
-
-done
-#notice "newestname $newestname
-#newestfile $newestfile"
-
-
-errorlist=""
-correctlist=""
-##correction
-for ((i=$begno;i<=$endno;i++)) ; do
+#correction
 nocur=$i
 noaft=$[$i+1]
 if [[ ${formattedthisfdate[$nocur]} -gt $now ]] ; then
@@ -2883,36 +2869,41 @@ elif [[ ${formattedthisfdate[$nocur]} -lt $now ]] ; then
 correctlist="${correctlist}"$'\n'"${thisfile[$i]}"
 fi
 done
-correctlists="$(awk 'FNR>=2{print}' <<< "$correctlist")"
-#choosenewestfromcorrect
 
+#choosecorrectnewest
+newdatefile=0
+correctlista=("$(awk 'FNR>=2{print}' <<< "$correctlist")")
+begno=0
+endno=$[${#correctlista[@]}-1]
+for ((i=$begno;i<=$endno;i++)) ; do
+if [[ ${formattedthisfdate[$i]} -gt $newdatefile ]] ; then
+newdatefile=${formattedthisfdate[$i]}
+newestfile=${thisfile[$i]}
+newestname=${name[$i]}
+fi
+done
+
+
+if [[ -n "$errorlist" ]] ; then
+#errorlist=$(cat<<EOF
+#bla1
+#bla2
+#EOF
+#)
+errorlista=($errorlist)
+for f in "${!errorlista[@]}" ; do
+echo "error ${errorlista[$f]}"
+done
+
+donenotice "check file manually
+current newest & correct $newestfile"
+sleep 36000
+
+elif [[ -z "$errorlist" ]] ; then
 filedir=""
 filedir=${filedir:-$newestfile}
 notice "choose $filedir"
-}
-later(){
-##correction
-for ((i=$begno;i<=$endno;i++)) ; do
-nocur=$i
-noaft=$[$i+1]
-if [[ ${formattedthisfdate[$nocur]} -gt $now ]] && [[ ${formattedthisfdate[$noaft]} -lt $now ]] ; then
-echo "correct ${name[$noaft]}
-error ${name[$nocur]}"
-#perffcor "$thisfile[$noaft]" "$thisfile[$nocur]"
-#echo "========new${name[$nocur]}========"
-elif [[ ${formattedthisfdate[$noaft]} -gt $now ]] && [[ ${formattedthisfdate[$nocur]} -lt $now ]] ; then
-echo "correct ${name[$nocur]}"
-echo "error ${name[$noaft]}"
-#perffcor "$thisfile[$nocur]" "$thisfile[$noaft]"
-#echo "========new${name[$noaft]}========"
-elif [[ ${formattedthisfdate[$nocur]} -gt $now ]] && [[ ${formattedthisfdate[$noaft]} -gt $now ]] ; then
-echo "botherror correct manually/choose"
-elif [[ ${formattedthisfdate[$nocur]} -lt $now ]] && [[ ${formattedthisfdate[$noaft]} -lt $now ]] ; then
-echo "bothcorrect"
 fi
-#choosenewest
-done
-echo "allcorrect"
 }
 
 datefile1m() {
@@ -2937,6 +2928,19 @@ newestf=$(choosenewest "$allfilesa")
 echo "$newestf"
 #correctdatefileb
 }
+
+datefiletestingerror() {
+#localvusb
+allfilesa=$(cat <<EOF
+$livecur3gsdir;;locf
+$liveusb3gsdir;;usbf
+EOF
+)
+newestf=$(choosenewest "$allfilesa")
+echo "$newestf"
+#correctdatefileb
+}
+
 
 
 
@@ -3817,7 +3821,7 @@ populatefn "(arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(n6pts|onlinesop|refreshall|testcase|checkxmr)" "$DIR0" "$lastno"
+populatefn "(n6pts|onlinesop|refreshall|testcase|datefiletestingerror|checkxmr)" "$DIR0" "$lastno"
 printallfn $lastno
 prechoosefn $1
 }
