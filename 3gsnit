@@ -1,4 +1,5 @@
 #!/bin/bash
+#test
 #https://unix.stackexchange.com/questions/259974/what-is-the-bigger-difference-in-this-case-when-using-case-or-if
 testcase() {
 read -p "insertext:" text
