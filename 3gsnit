@@ -2804,8 +2804,8 @@ fi
 cd $localdir
 
 git add $localdir/*
-date="$(date)"
-git commit -m "$(date) commit by $userid"
+gettimenowinnumber
+git commit -m "$now commit by $userid"
 #git checkout -b experiments
 git push --force-with-lease origin master
 #git push -f origin master
@@ -2834,8 +2834,11 @@ git push -f origin master
 gitcred
 #gitaskdir
 
-choosenewest() {
+gettimenowinnumber() {
 now=$(date +%Y%m%d%H%M%S)
+}
+choosenewest() {
+gettimenowinnumber
 echo nowcdate=$now
 
 listfilea=($1)
@@ -2941,7 +2944,7 @@ datefile() {
 #now=$(date)
 #AEST
 #now=$(date -u +%Y%m%d%H%M%S)
-now=$(date +%Y%m%d%H%M%S)
+gettimenowinnumber
 echo nowcdate=$now
 
 localf="$1"
