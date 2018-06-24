@@ -1338,6 +1338,10 @@ echo "/media/$userid/$curlabel"
 
 onems2="1mstart2"
 threegsn="3gsnit"
+liveusb1msdir="$USBMBIOSdir/notes/Documentsv2/$onems2"
+livecur1msdir="$userhomedir/Documents/Documentsv2/$onems2"
+liveusb3gsdir="$USBMBIOSdir/notes/$threegsn"
+livecur3gsdir="$userhomedir/Documents/$threegsn"
 }
 
 detectusb() {
@@ -2690,8 +2694,17 @@ xterm -hold -e "sudo ~/xmr-stak/build/bin/xmr-stak -r \"\" -i 0 --currency moner
 }
 
 checkxmr() {
-google-chrome --tab "supportxmr.com/#/dashboard" --tab "google.com/45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo" &
-return 0
+command=$(cat <<EOF
+/opt/google/chrome/chrome --password-store=basic --tab "supportxmr.com/#/dashboard" --tab "google.com/45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo"
+EOF
+)
+nohup xterm -hold -e "$command" & 
+#disown
+#cxmrsc="./checkxmr"
+#echo '#!/bin/bash' | tee "$cxmrsc"
+#echo "$command" | tee -a "$cxmrsc"
+#chmod +x $cxmrsc
+#$cxmrsc & disown
 }
 
 ##ADDITIONAL
@@ -2821,12 +2834,27 @@ git push -f origin master
 gitcred
 #gitaskdir
 
+datefile() {
+now=$(date)
+echo $now
+
+localf="$1"
+localfdate="$(stat -c %y "$localf")"
+echo $localfdate
+
+if [[ -n $2 ]] ; then
+usbf="$2"
+usbfdate="$(stat -c %y "$usbf")"
+echo $usbfdate
+fi
+}
+
 
 choosefile1m() {
 #https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 filedir=""
-usbfiledir="$USBMBIOSdir/notes/Documentsv2/$onems2"
-curfiledir="$userhomedir/Documents/Documentsv2/$onems2"
+usbfiledir="$liveusb1msdir"
+curfiledir="$livecur1msdir"
 if [[ -f "$usbfiledir" ]] ; then
 sfiledir="$curfiledir"
 if [[ "$usbfiledir" -nt "$curfiledir" ]] ; then
@@ -2847,6 +2875,23 @@ fi
 filedir=${filedir:-$sfiledir}
 notice "choose $whichdir $filedir"
 }
+choosefile3gsnit() {
+filedir=""
+usbfiledir="$liveusb3gsdir"
+curfiledir="$livecur3gsdir"
+if [[ -f "$curfiledir" ]] ; then
+sfiledir="$curfiledir"
+elif [[ ! -f "$usbfiledir" ]] || [[ ! -f "$curfiledir" ]] ; then
+echo "cancel"
+return 0
+else
+echo "cancel"
+return 0
+fi
+filedir=${filedir:-$sfiledir}
+notice "choose $filedir"
+}
+
 
 gitpush1m() {
 choosefile1m
@@ -2871,22 +2916,6 @@ if [[ ! "$filedir" == "$usbfiledir" ]] && [[ -f "$usbfiledir" ]] ; then
 mv $usbfiledir $usbfiledir\bk
 cp $filedir $usbfiledir
 fi
-}
-choosefile3gsnit() {
-filedir=""
-usbfiledir="$USBMBIOSdir/notes/$threegsn"
-curfiledir="$userhomedir/Documents/$threegsn"
-if [[ -f "$curfiledir" ]] ; then
-sfiledir="$curfiledir"
-elif [[ ! -f "$usbfiledir" ]] || [[ ! -f "$curfiledir" ]] ; then
-echo "cancel"
-return 0
-else
-echo "cancel"
-return 0
-fi
-filedir=${filedir:-$sfiledir}
-notice "choose $filedir"
 }
 gitpush3gsnit() {
 choosefile3gsnit
@@ -3628,7 +3657,9 @@ $fn
 }
 runlistfno() {
 choosefile1m
+datefile "$livecur1msdir" "$liveusb1msdir"
 choosefile3gsnit
+datefile "$livecur3gsdir" "$liveusb3gsdir"
 popfn=""
 populatefn "$listthisfn" "$DIR0"
 printallfn
@@ -3638,7 +3669,7 @@ populatefn "(arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(n6pts|onlinesop|refreshall|testcase)" "$DIR0" "$lastno"
+populatefn "(n6pts|onlinesop|refreshall|testcase|checkxmr)" "$DIR0" "$lastno"
 printallfn $lastno
 prechoosefn $1
 }
