@@ -3624,6 +3624,8 @@ echo "$n.$fn"
 $fn
 }
 runlistfno() {
+choosefile1m
+choosefile3gsnit
 popfn=""
 populatefn "$listthisfn" "$DIR0"
 printallfn
@@ -3668,9 +3670,6 @@ setvar
 thisos=""
 echo "OS : $thisos"
 detectos "$thisos"
-choosefile1m
-choosefile3gsnit
-
 runlistfn $1
 
 
