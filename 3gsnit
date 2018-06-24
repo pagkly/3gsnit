@@ -3053,6 +3053,7 @@ filedir=${filedir:-$sfiledir}
 localdir="$userhomedir/$4"
 remotedir="$4"
 
+notice "$filedir $localdir"
 gitaddprep $localdir $remotedir
 rm $localdir/$4 ;
 cp $filedir $localdir
