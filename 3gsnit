@@ -2835,18 +2835,62 @@ gitcred
 #gitaskdir
 
 datefile() {
-now=$(date)
+#now=$(date)
+#AEST
+#now=$(date -u +%Y%m%d%H%M%S)
+now=$(date +%Y%m%d%H%M%S)
 echo nowcdate=$now
 
 localf="$1"
-localfdate="$(stat -c %y "$localf")"
-echo locfdate=$localfdate
+#localfdate="$(stat -c %y "$localf")"
+localfdate="$(awk -F" " '{printf $1" "$2}' <<< $(stat -c %y "$localf"))"
+formattedlocalfdate="$(date -d "$localfdate" +%Y%m%d%H%M%S)"
+echo locfdate=$formattedlocalfdate
 
 if [[ -n $2 ]] ; then
 usbf="$2"
-usbfdate="$(stat -c %y "$usbf")"
-echo usbfdate=$usbfdate
+#usbfdate="$(stat -c %y "$usbf")"
+usbfdate="$(awk -F" " '{printf $1" "$2}' <<< $(stat -c %y "$usbf"))"
+formattedusbfdate="$(date -d "$usbfdate" +%Y%m%d%H%M%S)"
+echo usbfdate=$formattedusbfdate
+correctdatefile
+
 fi
+
+}
+
+perffcor() {
+copyfr="$1"
+copyto="$2"
+read -p "copy from $copyfr?" copycorrection
+if [[ ! $copycorrection =~ (n|N|No) ]] ; then
+echo "copy from $copyfr"
+mv $copyto $copyto\bk ;
+cp $copyfr $copyto
+fi
+}
+correctdatefile() {
+if [[ $formattedlocalfdate -gt $now ]] && [[ $formattedusbfdate -gt $now ]] ; then
+echo "errorboth"
+
+elif [[ $formattedlocalfdate -gt $now ]] ; then
+echo "errorloc"
+if [[ $formattedusbfdate -lt $now ]] ; then
+perffcor "$usbf" "$localf"
+echo "========newusbf========"
+datefile
+fi
+
+elif [[ $formattedusbfdate -gt $now ]] ; then
+echo "errorusb"
+if [[ $formattedlocalfdate -lt $now ]] ; then
+perffcor "$localf" "$usbf"
+echo "========newlocalf========"
+datefile
+fi
+
+fi
+
 }
 
 
