@@ -2831,18 +2831,21 @@ if [[ -f "$usbfiledir" ]] ; then
 sfiledir="$curfiledir"
 if [[ "$usbfiledir" -nt "$curfiledir" ]] ; then
 #cp -f "$file2" "$file1"
+whichdir="USB newer"
 sfiledir="$usbfiledir"
 elif [[ "$curfiledir" -nt "$usbfiledir" ]] ; then
+whichdir="LOCAL newer"
 sfiledir="$curfiledir"
 fi
 elif [[ ! -f "$usbfiledir" ]] ; then
+whichdir="USB didnt exist so LOCAL"
 sfiledir="$curfiledir"
 else
 echo "cancel"
 return 0
 fi
 filedir=${filedir:-$sfiledir}
-notice "choose $filedir"
+notice "choose $whichdir $filedir"
 }
 
 gitpush1m() {
