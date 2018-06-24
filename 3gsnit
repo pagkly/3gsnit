@@ -2859,12 +2859,12 @@ formattedthisfdate[$i]="$(date -d "${thisfdate[$i]}" +%Y%m%d%H%M%S)"
 echo ${name[$i]}"date=${formattedthisfdate[$i]}"
 
 #correction
-nocur=$i
-noaft=$[$i+1]
-if [[ ${formattedthisfdate[$nocur]} -gt $now ]] ; then
+#nocur=$i
+#noaft=$[$i+1]
+if [[ ${formattedthisfdate[$i]} -gt $now ]] ; then
 #echo "error ${name[$nocur]}"
 errorlist="${errorlist}"$'\n'"${thisfile[$i]}"
-elif [[ ${formattedthisfdate[$nocur]} -lt $now ]] ; then
+elif [[ ${formattedthisfdate[$i]} -lt $now ]] ; then
 ##echo "correct ${name[$nocur]}"
 correctlist="${correctlist}"$'\n'"${thisfile[$i]}"
 fi
@@ -2874,7 +2874,7 @@ done
 newdatefile=0
 correctlista=("$(awk 'FNR>=2{print}' <<< "$correctlist")")
 begno=0
-endno=$[${#correctlista[@]}-1]
+endno=$[${#correctlista[@]}]
 for ((i=$begno;i<=$endno;i++)) ; do
 if [[ ${formattedthisfdate[$i]} -gt $newdatefile ]] ; then
 newdatefile=${formattedthisfdate[$i]}
