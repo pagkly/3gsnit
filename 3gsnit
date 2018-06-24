@@ -2834,6 +2834,104 @@ git push -f origin master
 gitcred
 #gitaskdir
 
+choosenewest() {
+now=$(date +%Y%m%d%H%M%S)
+echo nowcdate=$now
+
+listfilea=($1)
+newdatefile=0
+begno=0
+endno=$[${#listfilea[@]}-1]
+for ((i=$begno;i<=$endno;i++)) ; do
+#thisfile=${listfilea[$i]}
+name[$i]="$(awk -F ';;' '{printf $2}' <<< "${listfilea[$i]}")"
+thisfile[$i]="$(awk -F ';;' '{printf $1}' <<< "${listfilea[$i]}")"
+thisdatefile[$i]="$(stat -c %y "${thisfile[$i]}")"
+thisfdate[$i]="$(awk -F" " '{printf $1" "$2}' <<< "${thisdatefile[$i]}")"
+formattedthisfdate[$i]="$(date -d "${thisfdate[$i]}" +%Y%m%d%H%M%S)"
+#echo "$thisfile"
+#echo $thisfdate
+
+echo ${name[$i]}"date=${formattedthisfdate[$i]}"
+
+if [[ ${formattedthisfdate[$i]} -gt $newdatefile ]] ; then
+newdatefile=${formattedthisfdate[$i]}
+newestfile=${thisfile[$i]}
+newestname=${name[$i]}
+fi
+
+done
+notice "newestname $newestname
+newestfile $newestfile"
+
+errorlist=""
+correctlist=""
+##correction
+for ((i=$begno;i<=$endno;i++)) ; do
+nocur=$i
+noaft=$[$i+1]
+if [[ ${formattedthisfdate[$nocur]} -gt $now ]] ; then
+#echo "error ${name[$nocur]}"
+errorlist="${errorlist}"$'\n'"${thisfile[$i]}"
+elif [[ ${formattedthisfdate[$nocur]} -lt $now ]] ; then
+##echo "correct ${name[$nocur]}"
+correctlist="${correctlist}"$'\n'"${thisfile[$i]}"
+fi
+done
+correctlists="$(awk 'FNR>=2{print}' <<< "$correctlist")"
+#choosenewestfromcorrect
+}
+later(){
+##correction
+for ((i=$begno;i<=$endno;i++)) ; do
+nocur=$i
+noaft=$[$i+1]
+if [[ ${formattedthisfdate[$nocur]} -gt $now ]] && [[ ${formattedthisfdate[$noaft]} -lt $now ]] ; then
+echo "correct ${name[$noaft]}
+error ${name[$nocur]}"
+#perffcor "$thisfile[$noaft]" "$thisfile[$nocur]"
+#echo "========new${name[$nocur]}========"
+elif [[ ${formattedthisfdate[$noaft]} -gt $now ]] && [[ ${formattedthisfdate[$nocur]} -lt $now ]] ; then
+echo "correct ${name[$nocur]}"
+echo "error ${name[$noaft]}"
+#perffcor "$thisfile[$nocur]" "$thisfile[$noaft]"
+#echo "========new${name[$noaft]}========"
+elif [[ ${formattedthisfdate[$nocur]} -gt $now ]] && [[ ${formattedthisfdate[$noaft]} -gt $now ]] ; then
+echo "botherror correct manually/choose"
+elif [[ ${formattedthisfdate[$nocur]} -lt $now ]] && [[ ${formattedthisfdate[$noaft]} -lt $now ]] ; then
+echo "bothcorrect"
+fi
+#choosenewest
+done
+echo "allcorrect"
+}
+
+datefile1m() {
+#localvusb
+allfilesa=$(cat <<EOF 
+$livecur1msdir;;locf
+$liveusb1msdir;;usbf
+EOF
+)
+newestf=$(choosenewest "$allfilesa")
+echo "$newestf"
+#correctdatefileb
+}
+datefile3gsnit() {
+#localvusb
+allfilesa=$(cat <<EOF
+$livecur3gsdir;;locf
+$liveusb3gsdir;;usbf
+EOF
+)
+newestf=$(choosenewest "$allfilesa")
+echo "$newestf"
+#correctdatefileb
+}
+
+
+
+
 datefile() {
 #now=$(date)
 #AEST
@@ -2842,15 +2940,16 @@ now=$(date +%Y%m%d%H%M%S)
 echo nowcdate=$now
 
 localf="$1"
-#localfdate="$(stat -c %y "$localf")"
-localfdate="$(awk -F" " '{printf $1" "$2}' <<< $(stat -c %y "$localf"))"
+thislocalfdate="$(stat -c %y "$localf")"
+localfdate="$(awk -F" " '{printf $1" "$2}' <<< "$thislocalfdate")"
 formattedlocalfdate="$(date -d "$localfdate" +%Y%m%d%H%M%S)"
 echo locfdate=$formattedlocalfdate
 
+
 if [[ -n $2 ]] ; then
 usbf="$2"
-#usbfdate="$(stat -c %y "$usbf")"
-usbfdate="$(awk -F" " '{printf $1" "$2}' <<< $(stat -c %y "$usbf"))"
+thisusbfdate="$(stat -c %y "$usbf")"
+usbfdate="$(awk -F" " '{printf $1" "$2}' <<< "$thisusbfdate")"
 formattedusbfdate="$(date -d "$usbfdate" +%Y%m%d%H%M%S)"
 echo usbfdate=$formattedusbfdate
 correctdatefile
@@ -2893,7 +2992,6 @@ fi
 
 }
 
-
 choosefile1m() {
 #https://stackoverflow.com/questions/2642585/read-a-variable-in-bash-with-a-default-value
 filedir=""
@@ -2909,7 +3007,7 @@ elif [[ "$curfiledir" -nt "$usbfiledir" ]] ; then
 whichdir="LOCAL newer"
 sfiledir="$curfiledir"
 fi
-elif [[ ! -f "$usbfiledir" ]] ; then
+elif [[ ! -f "$usbfiledir" ]] && [[ -f "$localfiledir" ]] ; then
 whichdir="USB didnt exist so LOCAL"
 sfiledir="$curfiledir"
 else
@@ -3700,10 +3798,13 @@ echo "$n.$fn"
 $fn
 }
 runlistfno() {
-choosefile1m
-datefile "$livecur1msdir" "$liveusb1msdir"
-choosefile3gsnit
-datefile "$livecur3gsdir" "$liveusb3gsdir"
+#choosefile1m
+#datefile "$livecur1msdir" "$liveusb1msdir"
+#choosefile3gsnit
+#datefile "$livecur3gsdir" "$liveusb3gsdir"
+datefile1m
+datefile3gsnit
+
 popfn=""
 populatefn "$listthisfn" "$DIR0"
 printallfn
