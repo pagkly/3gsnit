@@ -1327,8 +1327,22 @@ setvar() {
 userid=$(awk -F: '!/root/ && /(\/bin\/bash)/ {print $1}' /etc/passwd)
 mdir="/media/$userid"
 userhomedir="/home/$userid"
-c=("MBIOS" "MB1" "MB2" "MB3" "MB4" "MB5" "MB6" "MB7")
-USBMBIOSdir="$mdir/${c[0]}"
+
+c0=("MBIOS" "MUEFI" "MBT")
+c=("MB1" "MB2" "MB3" "MB4" "MB5" "MB6" "MB7")
+c1=()
+c1+=( "${c0[@]}" "${c[@]}" )
+c2=()
+c2+=( "${c0[0]}" "${c0[2]}" "${c[@]}" )
+USBMBIOSdir="$mdir/${c0[0]}"
+USBMUEFIdir="$mdir/${c0[1]}"
+#echo "${c0[@]}"
+#echo "${c[@]}"
+#echo "${c1[@]}"
+#echo "${c2[@]}"
+#echo "$USBMUEFIdir $USBMBIOSdir"
+#sleep 3600
+
 #resquashgenvar
 usbbootdir="$userhomedir/Documents/Docs/mlinuxproject/usbboot"
 usbpart="/dev/sd$part"
