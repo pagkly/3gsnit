@@ -25,8 +25,8 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
 scriptname="$(awk -F'/' '{print $NF}' <<< "$0")"
-DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-DIR0="$DIR/$scriptname"
+DIR1="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+DIR0="$DIR1/$scriptname"
 }
 getdirwh2
 echo "$DIR0"
@@ -1191,7 +1191,6 @@ tgblink="http://dlied6.qq.com/invc/xfspeed/qqpcmgr/other/GameDownload_PUBG_MOBIL
 destdir=~/Downloads
 downloadinstallfile "$tgblink" "$destdir"
 }
-#installtgb
 winsilentinstaller() {
 cmddir="/mnt/Windows/System/cmd.exe"
 if [[ $exefile =~ (.msi) ]] ; then
@@ -1251,39 +1250,6 @@ return 0
 }
 #usbpwr 1 turnoff
 
-##HOSTS
-hostlocals() {
-sudo apt-get install apache2
-return 0
-}
-hostinters() {
-sudo apt-get install apache2
-return 0
-}
-webserver() {
-return 0
-}
-myweb() {
-return 0
-}
-communityforum() {
-return 0
-}
-securitysettings() {
-return 0
-}
-testecho() {
-echo "test"
-}
-p2xl=$(
-cat <<EOF
-250;;broken googlep2xl 
-200;;lcd digitizer
-30;;back glass;;https://www.aliexpress.com/wholesale?catId=0&initiative_id=SB_20180525231139&SearchText=pixel+2+xl+back+housing
-https://www.lifehacker.com.au/2010/10/make-your-own-vinyl-screen-protector/
-https://www.lifehacker.com.au/2009/11/brush-your-iphones-bezel-to-hide-scuffs-and-scratches/
-EOF
-)
 }
 ###UBUNTU
 ###WINDOWS
@@ -1329,11 +1295,46 @@ mdir="/media/$userid"
 userhomedir="/home/$userid"
 
 c0=("MBIOS" "MUEFI" "MBT")
-c=("MB1" "MB2" "MB3" "MB4" "MB5" "MB6" "MB7")
+
+#bashzeroindex arraystart
+#${!c[@]}
+#MUEFI-yellow
+#source ./regrub
+usbdesc=$(
+cat <<EOF
+MBIOS;;ID 0781:5567 SanDisk Corp. Cruzer Blade;;SDB
+MUEFI;;ID 090c:1000 Silicon Motion, Inc. - Taiwan (formerly Feiya Technology Corp.) Flash Drive;;Yellow
+MBT;;ID 13fe:5500 Kingston Technology Company Inc.;;Blue
+MB2;;ID 090c:1000 Silicon Motion, Inc. - Taiwan (formerly Feiya Technology Corp.) Flash Drive;;Suit
+MB3;;ID 0781:5572 SanDisk Corp.;;SDCSwitch
+MB4;;ID 13fe:4200 Kingston Technology Company Inc.;;Green
+MB7;;ID abcd:1234 Unknown;;BlueUSB2Slim
+Broken256;;ID ffff:1201
+U160404;;SanDiskM
+U180401;;ID 048d:1176 Integrated Technology Express, Inc.;;MB5
+
+MT1;;ID 0781:5567 SanDisk Corp. Cruzer Blade
+DATA2;;ID 0781:5581 SanDisk Corp. Ultra
+USB32DT;;ID 0951:1666 Kingston Technology DataTraveler G4
+DATAS64;;ID 090c:1000 Silicon Motion, Inc. - Taiwan (formerly Feiya Technology Corp.) Flash Drive
+EOF
+)
+c=()
+begno=1
+endno=7
+for ((i=$begno;i<=$endno;i++)); do
+c=( "${c[@]}" "MB$i" )
+done
+#REMOVETHIS
+c=($(awk '{gsub(/MB1|MB5|MB6/,"");print}' <<< "${c[@]}"))
+echo "${c[@]}"
+
 c1=()
 c1+=( "${c0[@]}" "${c[@]}" )
 c2=()
 c2+=( "${c0[0]}" "${c0[2]}" "${c[@]}" )
+c3=()
+c3+=( "${c0[2]}" "${c[@]}" )
 USBMBIOSdir="$mdir/${c0[0]}"
 USBMUEFIdir="$mdir/${c0[1]}"
 #echo "${c0[@]}"
@@ -1357,6 +1358,15 @@ liveusb1msdir="$USBMBIOSdir/notes/Documentsv2/$onems2"
 livecur1msdir="$userhomedir/Documents/Documentsv2/$onems2"
 liveusb3gsdir="$USBMBIOSdir/notes/$threegsn"
 livecur3gsdir="$userhomedir/Documents/$threegsn"
+
+usbmbmsdir=""
+usbmbgsdir=""
+liveumsdir="$livecur1msdir"
+liveugsdir="$livecur3gsdir"
+liveuinitrddir=""
+localmsdir="$userhomedir/Documents/Docs/mlinuxproject/usbboot/Documents3/$onems2"
+localgsdir="$userhomedir/Documents/Docs/mlinuxproject/$threegsn"
+localinitrddir="$userhomedir/Documents/Docs/mlinuxproject/usbboot/allnotes/initrd.lz"
 }
 
 detectusb() {
@@ -2173,24 +2183,7 @@ do
 regrub
 clear
 echo $userid
-echo $(whoami)
-#bashzeroindex arraystart
-#${!c[@]}
-#MUEFI-yellow
-#source ./regrub
-c=$(
-cat <<EOF
-MBIOS;;SDB;;SanDisk Corp. Cruzer Blade;;
-MB1;;
-MB2;;Suit
-MB3;;SDCSwitch;;SanDisk Corp.
-MB4;;Green
-MB5;;BlackMonash
-MB6;;BlueUSB3.0
-MB7;;BlueUSB2Slim
-MUEFI;;
-EOF
-)
+
 #dirtype=2
 if [[ $dirtype == "1" ]] ; then
 #MBP
@@ -2501,17 +2494,108 @@ sudo ln -s $ncpdir/$2.plymouth /$dpdir
 fi
 }
 
+updateall() {
+updateallMBms
+updateallgsnit
+gitcloneall
+}
 fastcopy() {
+if [[ $userid =~ (ubuntu) ]] ; then
+msdir="$liveumsdir"
+gsdir="$liveugsdir"
+initrddir=""
+defdir="$gsdir
+$msdir"
+elif [[ $userid =~ (user) ]] ; then
+msdir="$localmsdir"
+initrddir="$localinitrddir"
+defdir="$gsdir
+$initrddir"
+fi
 echo "example=
-/home/user/Documents/Docs/mlinuxproject/usbboot/allnotes/initrd.lz
-/home/user/Documents/Docs/mlinuxproject/usbboot/Documents3/$onems2"
-read -p "originalfile=" sourceftocopy
-userid="user"
-mediadir="/media/$userid"
-allusb=($(ls $mediadir | grep MB))
-echo "$allusb"
+$userid
+$defdir"
+#read -p "originalfile (default=$defdir)=" sourceftocopy
 
+sourceftocopy=$msdir
+if [[ $sourceftocopy =~ (initrd) ]] ; then
+notdonecopytousb=("${c3[@]}")
+elif [[ $sourceftocopy =~ ($liveumsdir) ]] ; then
+notdonecopytousb=("${c2[@]}")
+else
+echo "restart again"
+return 0
+fi
+donecopytousb=""
+echo "$sourceftocopy ==to==> ${notdonecopytousb[@]}"
+read -p "entertocontinue"
+
+until [[ -z $notdonecopytousb ]] ; do
+for f in ${notdonecopytousb[@]} ; do
+USBLABEL="$mdir/$f"
+if [[ -d $USBLABEL ]] ; then
+echo "$USBLABEL"
+#read -p "enter"
+if [[ $sourceftocopy =~ (initrd) ]] ; then
+destfolder="$USBLABEL/casper"
+filename="initrd.lz"
+elif [[ $sourceftocopy =~ ($liveumsdir) ]] ; then
+destfolder="$USBLABEL/notes/Documentsv2"
+filename="$onems2"
+else
+echo "restart again"
+return 0
+fi
+curfile=$destfolder/$filename
+echo "remove $curfile"
+mv $curfile $curfile\bk ;
+echo "copyto $destfolder"
+cp $sourceftocopy $destfolder ;
+
+donecopytousb="$donecopytousb $f"
+notdonecopytousb=($(awk '{gsub("'$f'","");print}' <<< "${notdonecopytousb[@]}"))
+fi
+if [[ ! $f =~ (MBIOS) ]] ; then
+umountusb "$f"
+fi
+done
+
+if [[ -n "${notdonecopytousb[@]}" ]] ; then
+echo "NOTDONE=${notdonecopytousb[@]}"
+mountncont=""
+defmountncont="y"
+read -p "mounttherestncontinue" -t 20 mountncont
+mountncont=${mountncont:-$defmountncont}
+if [[ $mountncont =~ ^(y) ]] ; then
+echo "continue"
+elif [[ $mountncont =~ ^(n) ]] ; then
+return 0
+fi
+fi
+done
+}
+
+fastcopy0() {
+if [[ $userid =~ (ubuntu) ]] ; then
+gsdir=$usbmbgsdir
+msdir=$usbmbmsdir
+initrddir=""
+defdir="$gsdir
+$msdir"
+elif [[ $userid =~ (user) ]] ; then
+gsdir=$localgsdir
+initrddir=$localinitrddir
+defdir="$gsdir
+$initrddir"
+fi
+echo "example=
+$userid
+$defdir"
+read -p "originalfile (default=$defdir)=" sourceftocopy
+
+allusb=($(ls $mdir | grep MB))
 for f in ${!allusb[@]} ; do echo ${allusb[f]} ; done
+
 if [[ -n "$allusb" ]] ; then
 if [[ $sourceftocopy =~ (initrd) ]] ; then
 destfolder="casper"
@@ -2520,10 +2604,11 @@ elif [[ $sourceftocopy =~ ($onems2) ]] ; then
 destfolder="notes/Documentsv2"
 filename="$onems2"
 fi
+
 for f in ${!allusb[@]} ; do
 usbname=${allusb[f]}
-currentfile="$mediadir/$usbname/$destfolder/$filename"
-targetfolder="$mediadir/$usbname/$destfolder"
+currentfile="$mdir/$usbname/$destfolder/$filename"
+targetfolder="$mdir/$usbname/$destfolder"
 echo "remove $currentfile"
 sudo rm -f $currentfile ;
 echo "copyto $targetfolder"
@@ -3635,13 +3720,30 @@ $alllinks & disown
 
 
 #####PWN
+getscreenres() {
+#https://askubuntu.com/questions/584688/how-can-i-get-the-monitor-resolution-using-the-command-line
+#xdpyinfo  | grep -oP 'dimensions:\s+\K\S+'
+screenres=$(xdpyinfo | awk '/dimensions/{print $2}')
+}
 xycoord() {
+##MBP
+getscreenres
 avgclosead="176 465"
 avgplay="459 592"
 jfwnow="699 758"
 jfs2="371 769"
 jfclosead="512 659"
 jfplay="527 539"
+
+#BYD
+if [[ $screenres =~ (1920x1080) ]] ; then
+avgclosead="176 465"
+avgplay="459 592"
+jfwnow="699 758"
+jfs2="371 769"
+jfclosead="512 659"
+jfplay="527 539"
+fi
 }
 xycoord
 prevtab() {
@@ -3747,6 +3849,19 @@ fi
 
 jvfrw
 }
+
+skipthisweb() {
+skipwebs=$(cat<<EOF
+https://avgle.com/
+https://javfor.me/
+ebay.com
+google.com
+EOF
+for f in "${skipwebs[@]}" ; do
+echo "skipped"
+done
+)
+}
 refreshall() {
 #sudo apt-get install -y xclip xdotool
 xdotool windowactivate $(xdotool search avgle)
@@ -3754,12 +3869,18 @@ sleep 3
 #xdotool key ctrl+1
 while true ; do
 getcurlink
+if [[ $foclink == "https://avgle.com/" ]] || [[ $foclink == "https://javfor.me/" ]] ; then
+echo "skip"
+else
+
 if [[ $foclink =~ (avgle) ]] ; then
 lavgle
 elif [[ $foclink =~ (javfor) ]] ; then
 ljfor
 else
 break
+fi
+
 fi
 done
 }
@@ -3874,9 +3995,41 @@ detectos "$thisos"
 runlistfn $1
 
 
-tgb() {
+
+##TESTING
+##HOSTS
+hostlocals() {
+sudo apt-get install apache2
 return 0
 }
+hostinters() {
+sudo apt-get install apache2
+return 0
+}
+webserver() {
+return 0
+}
+myweb() {
+return 0
+}
+communityforum() {
+return 0
+}
+securitysettings() {
+return 0
+}
+testecho() {
+echo "test"
+}
+p2xl=$(
+cat <<EOF
+250;;broken googlep2xl 
+200;;lcd digitizer
+30;;back glass;;https://www.aliexpress.com/wholesale?catId=0&initiative_id=SB_20180525231139&SearchText=pixel+2+xl+back+housing
+https://www.lifehacker.com.au/2010/10/make-your-own-vinyl-screen-protector/
+https://www.lifehacker.com.au/2009/11/brush-your-iphones-bezel-to-hide-scuffs-and-scratches/
+EOF
+)
 sourcel=$(cat <<EOF
 https://help.ubuntu.com/community/MakeALiveCD/DVD/BootableFlashFromHarddiskInstall
 https://alexcabal.com/turn-your-laptop-screen-off-with-a-keyboard-shortcut-in-ubuntu-karmic/
@@ -3934,5 +4087,4 @@ google pixel 2 xl
 nexus 6p glass back cover
 EOF
 )
-
 
