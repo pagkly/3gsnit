@@ -3715,8 +3715,55 @@ $alllinks & disown
 }
 
 
+getml() {
+google-chrome "avgle.com" &
+xdotool getmouselocation
+xdotool getmouselocation
+google-chrome "http://javfor.me/100585.html" &
+xdotool getmouselocation
+xdotool getmouselocation
+xdotool getmouselocation
+xdotool getmouselocation
+}
 
+setxycoord() {
+begno=1
+endno=$(wc -l <<< "$xypos")
+for ((f=$begno;f<=$endno;f++)) ; do
+coordname=$(awk -F";;" 'NR=='$f'{printf $1}' <<< "$xypos")
+xycoord=$(awk -F";;" 'NR=='$f'{printf $2}' <<< "$xypos")
+xcoord=$(awk -F" " '{gsub("x:","");printf $1}' <<< "$xycoord")
+ycoord=$(awk -F" " '{gsub("y:","");printf $2}' <<< "$xycoord")
+echo "$coordname=\"$xcoord $ycoord\""
+export $coordname="$xcoord $ycoord"
+done
+}
 
+setxycoord2() {
+xypos=$(cat<<EOF
+avgclosead;;x:176 y:465;;
+avgplay;;x:459 y:592;;
+jfwnow;;x:699 y:758;;
+jfs2;;x:371 y:769;;
+jfclosead;;x:512 y:659;;
+jfplay;;x:527 y:539;;
+EOF
+)
+xyposa=("$xypos")
+#echo "${xyposa[@]}"
+begno=1
+endno=${#xyposa[@]}
+for f in "${!xyposa[@]}" ; do
+echo "$f"
+coordname=$(awk -F";;" '{printf $1}' <<< "${xyposa[$f]}")
+xycoord=$(awk -F";;" '{printf $2}' <<< "${xyposa[$f]}")
+xcoord=$(awk -F" " '{gsub("x:","");printf $1}' <<< "$xycoord")
+ycoord=$(awk -F" " '{gsub("y:","");printf $2}' <<< "$xycoord")
+echo "$coordname=\"$xcoord $ycoord\""
+export $coordname="$xcoord $ycoord"
+done
+}
+setxycoord2
 
 
 #####PWN
@@ -3735,16 +3782,36 @@ jfwnow="699 758"
 jfs2="371 769"
 jfclosead="512 659"
 jfplay="527 539"
+xypos=$(cat<<EOF
+avgclosead;;x:176 y:465;;
+avgplay;;x:459 y:592;;
+jfwnow;;x:699 y:758;;
+jfs2;;x:371 y:769;;
+jfclosead;;x:512 y:659;;
+jfplay;;x:527 y:539;;
+EOF
+)
+setxycoord "$xypos"
 fi
 
 #BYD
 if [[ $screenres =~ (1920x1080) ]] ; then
 avgclosead="467 422"
-avgplay="459 592"
-jfwnow="699 758"
-jfs2="371 769"
-jfclosead="512 659"
-jfplay="527 539"
+avgplay="747 539"
+jfwnow="1021 887"
+jfs2="657 648"
+jfclosead="824 538"
+jfplay="824 412"
+xypos=$(cat<<EOF
+avgclosead;;x:467 y:422;;
+avgplay;;x:747 y:539;;
+jfwnow;;x:1021 y:887;;
+jfs2;;x:657 y:648;;
+jfclosead;;x:824 y:538;;
+jfplay;;x:824 y:412;;
+EOF
+)
+setxycoord "$xypos"
 fi
 }
 xycoord
