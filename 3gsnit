@@ -3926,18 +3926,25 @@ read fnno1
 fi
 
 if [[ $fnno1 =~ (8\&9|89|gsm) ]] ; then
-choosefn 8
-choosefn 9
+choosefn gitpush1m
+choosefn gitpush$threegsn
 else
 choosefn $fnno1
 fi
 }
 choosefn() {
 fnno2=$1
+if [[ $fnno2 =~ ^([0-9]) ]] ; then
 n=$[$fnno2-1]
 fn="${popfnarray[$[$fnno2-1]]}"
-echo "$n.$fn"
+echo "run $n.$fn"
 $fn
+elif [[ $fnno2 =~ ^([a-z]) ]] ; then
+fn=$fnno2
+echo "run $fn"
+$fn
+fi
+
 }
 runlistfno() {
 if [[ $userid =~ (ubuntu) ]] && [[ -d "$USBMBIOSdir" ]] ; then
