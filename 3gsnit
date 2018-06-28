@@ -3728,16 +3728,18 @@ screenres=$(xdpyinfo | awk '/dimensions/{print $2}')
 xycoord() {
 ##MBP
 getscreenres
+if [[ $screenres =~ (1280x800) ]] ; then
 avgclosead="176 465"
 avgplay="459 592"
 jfwnow="699 758"
 jfs2="371 769"
 jfclosead="512 659"
 jfplay="527 539"
+fi
 
 #BYD
 if [[ $screenres =~ (1920x1080) ]] ; then
-avgclosead="176 465"
+avgclosead="467 422"
 avgplay="459 592"
 jfwnow="699 758"
 jfs2="371 769"
