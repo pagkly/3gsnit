@@ -3911,7 +3911,7 @@ echo "$coordname=\"$xcoord $ycoord\""
 export $coordname="$xcoord $ycoord"
 done
 }
-setxycoord2
+#setxycoord2
 
 
 #####PWN
