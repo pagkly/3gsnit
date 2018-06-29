@@ -2417,8 +2417,11 @@ sudo cp -rv $notesdir/* $usbmountdir/notes/Documentsv2
 elif [[ $userid =~ (ubuntu) ]] ; then
 sourcecasperdir="/cdrom/casper"
 sourcenotesdir="$userhomedir/Documents/Documentsv2"
-sudo cp -fv $sourcecasperdir $usbmountdir/casper
+sudo cp -rfv $sourcecasperdir $usbmountdir/casper
 sudo cp -rv $sourcenotesdir/* $usbmountdir/notes/Documentsv2
+sudo rm -f $usbmountdir/notes/Documentsv2/M*.desktop ;
+sudo rm -f $usbmountdir/notes/Documentsv2/1mcloned ;
+sudo rm -f $usbmountdir/notes/Documentsv2/setupdone ;
 fi
 
 
@@ -3158,6 +3161,21 @@ filedir=${filedir:-$sfiledir}
 notice "choose $filedir"
 }
 
+gitclonegsm() {
+if [[ $userid =~ (user) ]] ; then
+sudo rm -f $userhomedir/1mstart2 ;
+sudo rm -f $userhomedir/3gsnit ;
+cd $userhomedir
+git clone github.com/pagkly/1mstart2
+git clone github.com/pagkly/3gsnit
+user1ms="$userhomedir/Documents/Docs/mlinuxproject/3gsnit"
+user3gs="$userhomedir/Documents/Docs/mlinuxproject/usbboot/Documents3/1mstart2"
+mv $user1ms $user1ms\bk ;
+cp $userhomedir/1mstart2/1mstart2 $user1ms
+mv $user3gs $user3gs\bk ;
+cp $userhomedir/3gsnit/3gsnit $user3gs
+fi
+}
 gitpushusbuniv() {
 #choosefile1m
 filedir=""
@@ -4045,7 +4063,7 @@ populatefn "(arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(n6pts|onlinesop|refreshall|testcase|datefiletestingerror|checkxmr)" "$DIR0" "$lastno"
+populatefn "(n6pts|onlinesop|refreshall|testcase|datefiletestingerror|checkxmr|gitclonegsm)" "$DIR0" "$lastno"
 printallfn $lastno
 prechoosefn $1
 }
