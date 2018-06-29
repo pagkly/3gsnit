@@ -203,6 +203,9 @@ lynx -dump http://api.macvendors.com/$MA
 portand() {
 #https://forum.xda-developers.com/showthread.php?t=2284985
 #https://www.lineageosrom.com/2017/01/how-to-build-lineageos-rom-for-any.html
+platformlink="https://dl.google.com/android/repository/platform-tools-latest-linux.zip"
+platformfn="$(awk <<< "$platformlink")"
+curl -o 
 return 0
 }
 #203
@@ -417,11 +420,11 @@ read -p "label = " label
 
 installskype() {
 #https://askubuntu.com/questions/887389/how-to-install-skype-for-linux-in-ubuntu-16-04-via-console-only
-sudo apt install -y apt-transport-https curl
+sudo apt-get install -y apt-transport-https curl
 curl https://repo.skype.com/data/SKYPE-GPG-KEY | sudo apt-key add -
 echo "deb https://repo.skype.com/deb stable main" | sudo tee /etc/apt/sources.list.d/skypeforlinux.list
-sudo apt update
-sudo apt install -y skypeforlinux
+sudo apt-get update
+sudo apt-get install -y skypeforlinux
 }
 
 installvbox() {
