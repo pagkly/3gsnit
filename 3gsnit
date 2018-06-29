@@ -3141,7 +3141,8 @@ for f in "${!errorlista[@]}" ; do
 echo "error ${errorlista[$f]}"
 done
 
-donenotice "check file manually
+#done
+notice "check file manually
 current newest & correct $newestfile"
 sleep 36000
 
