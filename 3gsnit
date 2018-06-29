@@ -75,7 +75,6 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 }
 ###UBUNTU
-UBUNTU() {
 echo "$DIR0"
 getip() {
 extip="$(curl ipinfo.io/ip)"
@@ -415,7 +414,8 @@ fi
 read -p "label = " label
 #sudo dd if="$crbindir" of=/dev/sd${label} bs=4M
 }
-installskype(){
+
+installskype() {
 #https://askubuntu.com/questions/887389/how-to-install-skype-for-linux-in-ubuntu-16-04-via-console-only
 sudo apt install -y apt-transport-https curl
 curl https://repo.skype.com/data/SKYPE-GPG-KEY | sudo apt-key add -
@@ -423,6 +423,7 @@ echo "deb https://repo.skype.com/deb stable main" | sudo tee /etc/apt/sources.li
 sudo apt update
 sudo apt install -y skypeforlinux
 }
+
 installvbox() {
 #https://askubuntu.com/questions/367248/how-to-install-virtualbox-from-command-line/713526#713526
 sudo apt-add-repository -y "deb http://download.virtualbox.org/virtualbox/debian $(lsb_release -sc) contrib"
@@ -1286,12 +1287,9 @@ return 0
 }
 #usbpwr 1 turnoff
 
-}
 ###UBUNTU
 ###WINDOWS
-WINDOWS() {
-echo "WIN"
-}
+##echo "WIN"
 ###WINDOWS
 
 
@@ -2894,8 +2892,9 @@ localdir=$1
 remotegit=$2
 gitremotelink="https://$username:$pwd@github.com/$username/$remotegit.git"
 notice "preparing $localdir"
-rm -rf "$localdir" ;
-rm -f "$localdir" ;
+sudo chown $userid $localdir
+sudo rm -rf "$localdir" ;
+sudo rm -f "$localdir" ;
 #sleep 1
 cd $userhomedir
 git clone "$gitremotelink"
@@ -3195,13 +3194,15 @@ remotedir="$4"
 
 notice "$filedir $localdir"
 gitaddprep $localdir $remotedir
-rm $localdir/$4 ;
-cp $filedir $localdir
+sudo chown $userid $localdir/$4
+sudo rm -rf $localdir/$4 ;
+sudo cp $filedir $localdir
 gitadd $localdir $remotedir
 
 if [[ "$filedir" == "$usbfiledir" ]] ; then
-mv $curfiledir $curfiledir\bk
-cp $usbfiledir $curfiledir
+sudo chown $userid $curfiledir
+sudo mv $curfiledir $curfiledir\bk
+sudo cp $usbfiledir $curfiledir
 sudo chmod +x $curfiledir
 sudo chown $userid $curfiledir
 fi
@@ -3504,7 +3505,6 @@ ipconfig/all
 
 
 ##MACOSX
-MACOSX() {
 installbrew() {
 #https://null-byte.wonderhowto.com/how-to/mac-for-hackers-set-up-homebrew-install-update-open-source-tools-0174511/
 sudo /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
@@ -3694,7 +3694,6 @@ sudo gdisk /dev/disk0
 diskutil list
 gdisk /dev/disk0
 sudo gdisk /dev/disk0
-}
 }
 ###MACOSX
 
@@ -4069,7 +4068,7 @@ populatefn "(arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(n6pts|onlinesop|refreshall|testcase|datefiletestingerror|checkxmr|installskype|installvbox|downchromeos)" "$DIR0" "$lastno"
+populatefn "(n6pts|onlinesop|refreshall|testcase|datefiletestingerror|checkxmr|installvbox|installskype|downchromeos)" "$DIR0" "$lastno"
 printallfn $lastno
 prechoosefn $1
 }
