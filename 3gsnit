@@ -2405,16 +2405,28 @@ fi
 sudo mkdir -p $usbmountdir/{casper,notes/Documentsv2}
 if [[ $mode =~ (3) ]]
 then
+
+if [[ $userid =~ (user) ]] ; then
 squashdir="$userhomedir/custom-img/extract/casper/filesystem.squashfs"
 casperdir="$usbbootdir/MB/casper"
 notesdir="$usbbootdir/Documents3"
 sudo cp -rv $casperdir $usbmountdir
 sudo cp -fv $squashdir $usbmountdir/casper
 sudo cp -rv $notesdir/* $usbmountdir/notes/Documentsv2
+
+elif [[ $userid =~ (ubuntu) ]] ; then
+sourcecasperdir="/cdrom/casper"
+sourcenotesdir="$userhomedir/Documents/Documentsv2"
+sudo cp -fv $sourcecasperdir $usbmountdir/casper
+sudo cp -rv $sourcenotesdir/* $usbmountdir/notes/Documentsv2
+fi
+
+
 fi
 
 copygrubcfg "$usbmountdir" "$MBlabel" "$mode"
 relabelusb
+sudo umount /mnt/usb
 }
 
 #####EXTRACTINITRD
