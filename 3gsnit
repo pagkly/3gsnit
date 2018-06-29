@@ -203,6 +203,7 @@ lynx -dump http://api.macvendors.com/$MA
 #####REINSTALL
 portand() {
 #https://forum.xda-developers.com/showthread.php?t=2284985
+#https://www.lineageosrom.com/2017/01/how-to-build-lineageos-rom-for-any.html
 return 0
 }
 #203
@@ -394,6 +395,41 @@ echo 'exec socat UNIX-LISTEN:/var/run/docker.sock,fork,group=docker,umask=007 EX
 sudo adduser $userid docker
 }
 
+
+downchromeos() {
+#https://neverware.zendesk.com/hc/en-us/articles/213346247-How-do-I-create-a-CloudReady-USB-installer-on-Linux-
+sudo apt-get install -y unzip p7zip-full
+userdowndir="$userhomedir/Downloads"
+crlink="https://davrt8itj6cgg.cloudfront.net/cloudready-free-66.4.25-64-bit/cloudready-free-66.4.25-64-bit.zip"
+crfile="$(awk -F'/' '{gsub(/.zip/,"");print $NF}' <<< "$crlink")"
+echo $crfile
+crdir="$userdowndir/$crfile"
+crzipdir="$userdowndir/$crfile.zip"
+crbindir="userdowndir/$crfile/$crfile.bin"
+if [[ ! -f "$crzipdir" ]] ; then
+curl -o "$crzipdir" "$crlink"
+[[ ! -f "$crdir" ]] && mkdir -p "$crdir";
+[[ ! -f "$crbindir" ]] && unzip "$crzipdir" -d "$crdir"
+#7z x "$crzipdir"
+fi
+read -p "label = " label
+#sudo dd if="$crbindir" of=/dev/sd${label} bs=4M
+}
+installskype(){
+#https://askubuntu.com/questions/887389/how-to-install-skype-for-linux-in-ubuntu-16-04-via-console-only
+sudo apt install -y apt-transport-https curl
+curl https://repo.skype.com/data/SKYPE-GPG-KEY | sudo apt-key add -
+echo "deb https://repo.skype.com/deb stable main" | sudo tee /etc/apt/sources.list.d/skypeforlinux.list
+sudo apt update
+sudo apt install -y skypeforlinux
+}
+installvbox() {
+#https://askubuntu.com/questions/367248/how-to-install-virtualbox-from-command-line/713526#713526
+sudo apt-add-repository -y "deb http://download.virtualbox.org/virtualbox/debian $(lsb_release -sc) contrib"
+wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install -y virtualbox-5.0 dkms 
+}
 installdockeruv10() {
 ##https://unix.stackexchange.com/questions/4897/providing-bin-and-lib-inside-a-chroot-jailt
 #mount --bind /bin /chroot/bin
@@ -2405,31 +2441,16 @@ fi
 sudo mkdir -p $usbmountdir/{casper,notes/Documentsv2}
 if [[ $mode =~ (3) ]]
 then
-
-if [[ $userid =~ (user) ]] ; then
 squashdir="$userhomedir/custom-img/extract/casper/filesystem.squashfs"
 casperdir="$usbbootdir/MB/casper"
 notesdir="$usbbootdir/Documents3"
 sudo cp -rv $casperdir $usbmountdir
 sudo cp -fv $squashdir $usbmountdir/casper
 sudo cp -rv $notesdir/* $usbmountdir/notes/Documentsv2
-
-elif [[ $userid =~ (ubuntu) ]] ; then
-sourcecasperdir="/cdrom/casper"
-sourcenotesdir="$userhomedir/Documents/Documentsv2"
-sudo cp -rfv $sourcecasperdir $usbmountdir/casper
-sudo cp -rv $sourcenotesdir/* $usbmountdir/notes/Documentsv2
-sudo rm -f $usbmountdir/notes/Documentsv2/M*.desktop ;
-sudo rm -f $usbmountdir/notes/Documentsv2/1mcloned ;
-sudo rm -f $usbmountdir/notes/Documentsv2/setupdone ;
-fi
-
-
 fi
 
 copygrubcfg "$usbmountdir" "$MBlabel" "$mode"
 relabelusb
-sudo umount /mnt/usb
 }
 
 #####EXTRACTINITRD
@@ -2810,7 +2831,7 @@ xterm -hold -e "sudo ~/xmr-stak/build/bin/xmr-stak -r \"\" -i 0 --currency moner
 
 checkxmr() {
 command=$(cat <<EOF
-/opt/google/chrome/chrome --password-store=basic --tab "supportxmr.com/#/dashboard" --tab "google.com/45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo"
+/opt/google/chrome/chrome --password-store=basic --tab "supportxmr.com/#/dashboard" --tab "45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo"
 EOF
 )
 nohup xterm -hold -e "$command" & 
@@ -3161,21 +3182,6 @@ filedir=${filedir:-$sfiledir}
 notice "choose $filedir"
 }
 
-gitclonegsm() {
-if [[ $userid =~ (user) ]] ; then
-sudo rm -f $userhomedir/1mstart2 ;
-sudo rm -f $userhomedir/3gsnit ;
-cd $userhomedir
-git clone github.com/pagkly/1mstart2
-git clone github.com/pagkly/3gsnit
-user1ms="$userhomedir/Documents/Docs/mlinuxproject/3gsnit"
-user3gs="$userhomedir/Documents/Docs/mlinuxproject/usbboot/Documents3/1mstart2"
-mv $user1ms $user1ms\bk ;
-cp $userhomedir/1mstart2/1mstart2 $user1ms
-mv $user3gs $user3gs\bk ;
-cp $userhomedir/3gsnit/3gsnit $user3gs
-fi
-}
 gitpushusbuniv() {
 #choosefile1m
 filedir=""
@@ -4063,7 +4069,7 @@ populatefn "(arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(n6pts|onlinesop|refreshall|testcase|datefiletestingerror|checkxmr|gitclonegsm)" "$DIR0" "$lastno"
+populatefn "(n6pts|onlinesop|refreshall|testcase|datefiletestingerror|checkxmr|installskype|installvbox|downchromeos)" "$DIR0" "$lastno"
 printallfn $lastno
 prechoosefn $1
 }
