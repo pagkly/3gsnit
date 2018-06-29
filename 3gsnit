@@ -564,29 +564,9 @@ echo 'exec socat UNIX-LISTEN:/var/run/docker.sock,fork,group=docker,umask=007 EX
 sudo adduser $userid docker
 }
 
-
-downchromeos() {
-#https://neverware.zendesk.com/hc/en-us/articles/213346247-How-do-I-create-a-CloudReady-USB-installer-on-Linux-
-sudo apt-get install -y unzip p7zip-full
-userdowndir="$userhomedir/Downloads"
-crlink="https://davrt8itj6cgg.cloudfront.net/cloudready-free-66.4.25-64-bit/cloudready-free-66.4.25-64-bit.zip"
-crfile="$(awk -F'/' '{gsub(/.zip/,"");print $NF}' <<< "$crlink")"
-echo $crfile
-crdir="$userdowndir/$crfile"
-crzipdir="$userdowndir/$crfile\.zip"
-crbindir="userdowndir/$crfile/$crfile.bin"
-if [[ ! -f "$crzipdir" ]] ; then
-curl -o "$crzipdir" "$crlink"
-[[ ! -f "$crdir" ]] && mkdir -p "$crdir";
-[[ ! -f "$crbindir" ]] && unzip "$crzipdir" -d "$crdir"
-#7z x "$crzipdir"
-fi
-read -p "label = " label
-#sudo dd if="$crbindir" of=/dev/sd${label} bs=4M
-}
-
 installskype() {
 #https://askubuntu.com/questions/887389/how-to-install-skype-for-linux-in-ubuntu-16-04-via-console-only
+sudo apt-get update
 sudo apt-get install -y apt-transport-https curl
 curl https://repo.skype.com/data/SKYPE-GPG-KEY | sudo apt-key add -
 echo "deb https://repo.skype.com/deb stable main" | sudo tee /etc/apt/sources.list.d/skypeforlinux.list
@@ -594,13 +574,38 @@ sudo apt-get update
 sudo apt-get install -y skypeforlinux
 }
 
-installvbox() {
+installvbox2() {
 #https://askubuntu.com/questions/367248/how-to-install-virtualbox-from-command-line/713526#713526
+sudo apt-get update
 sudo apt-add-repository -y "deb http://download.virtualbox.org/virtualbox/debian $(lsb_release -sc) contrib"
 wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
 sudo apt-get update
-sudo apt-get install -y virtualbox-5.0 dkms 
+sudo apt-get install -y --allow-unauthenticated virtualbox-5.0 dkms
 }
+installvbox() {
+echo $vboxfn
+echo $vboxdownlink
+echo $fullvboxdowndir
+#read -p "cont"
+#vboxdeb=$vboxfn\.deb
+#vboxdebdir="$vboxdowndir/$vboxdeb"
+curl -o "$fullvboxdowndir" "$vboxdownlink"
+sudo apt-get remove -y virtualbox* ;
+sudo dpkg -i "$fullvboxdowndir"
+}
+installvboxvmandos() {
+#https://www.perkin.org.uk/posts/create-virtualbox-vm-from-the-command-line.html
+curl -o "$fullandosdowndir" "$andosdownlink"
+VM='ANDOS7.1-64b'
+VMtype="Other Linux (64-bit)"
+VMfamid="Linux"
+VMsize=16768
+VMram=2500
+#VBoxManage list ostypes
+VBoxManage createhd --filename $VM.vdi --size $VMsize
+VBoxManage createvm --name $VM --ostype "$VMfamid" --register
+}
+
 installdockeruv10() {
 ##https://unix.stackexchange.com/questions/4897/providing-bin-and-lib-inside-a-chroot-jailt
 #mount --bind /bin /chroot/bin
@@ -1415,6 +1420,33 @@ sudo dpkg -P refind
 sudo rm -rf /boot/efi/EFI/refind ;
 sudo update-grub
 }
+
+
+downgdrive() {
+#https://stackoverflow.com/questions/1015163/heredoc-for-windows-batch
+#https://stackoverflow.com/questions/25010369/wget-curl-large-file-from-google-drive
+#https://github.com/circulosmeos/gdown.pl/blob/master/gdown.pl
+return 0
+}
+downchromeos() {
+#https://neverware.zendesk.com/hc/en-us/articles/213346247-How-do-I-create-a-CloudReady-USB-installer-on-Linux-
+sudo apt-get install -y unzip p7zip-full
+userdowndir="$userhomedir/Downloads"
+crlink="https://davrt8itj6cgg.cloudfront.net/cloudready-free-66.4.25-64-bit/cloudready-free-66.4.25-64-bit.zip"
+crfile="$(awk -F'/' '{gsub(/.zip/,"");print $NF}' <<< "$crlink")"
+echo $crfile
+crdir="$userdowndir/$crfile"
+crzipdir="$userdowndir/$crfile\.zip"
+crbindir="userdowndir/$crfile/$crfile.bin"
+if [[ ! -f "$crzipdir" ]] ; then
+curl -o "$crzipdir" "$crlink"
+[[ ! -f "$crdir" ]] && mkdir -p "$crdir";
+[[ ! -f "$crbindir" ]] && unzip "$crzipdir" -d "$crdir"
+#7z x "$crzipdir"
+fi
+read -p "label = " label
+#sudo dd if="$crbindir" of=/dev/sd${label} bs=4M
+}
 downloadinstallfile() {
 ##https://stackoverflow.com/questions/15548277/get-the-characters-after-the-last-index-of-a-substring-from-a-string
 link="$1"
@@ -1431,13 +1463,7 @@ fi
 #wget -O "$fndowndir" "$link"
 curl -o "$fndowndir" "$link"
 }
-installtgb() {
-tgblink="http://dlied6.qq.com/invc/xfspeed/qqpcmgr/other/GameDownload_PUBG_MOBILE_100103_1.0.5226.123.exe"
-#userid="$(whoami)"
-#destdir="/home/$userid/Downloads"
-destdir=~/Downloads
-downloadinstallfile "$tgblink" "$destdir"
-}
+
 winsilentinstaller() {
 cmddir="/mnt/Windows/System/cmd.exe"
 if [[ $exefile =~ (.msi) ]] ; then
@@ -1445,6 +1471,13 @@ $cmddir $exefile /S /vqn
 elif [[ $exefile =~ (.exe) ]] ; then
 $cmddir $exefile /a /r /
 fi
+}
+installtgb() {
+tgblink="http://dlied6.qq.com/invc/xfspeed/qqpcmgr/other/GameDownload_PUBG_MOBILE_100103_1.0.5226.123.exe"
+#userid="$(whoami)"
+#destdir="/home/$userid/Downloads"
+destdir=~/Downloads
+downloadinstallfile "$tgblink" "$destdir"
 }
 aiplan() {
 aiplan=$(cat <<EOF
@@ -1533,13 +1566,67 @@ echo "$(whoami)"
 [ "$UID" -eq 0 ] || exec sudo "$DIR0" "$@"
 }
 
+
+setdownvar() {
+infos=$(cat<<EOF
+vbox;;https://download.virtualbox.org/virtualbox/5.2.12/virtualbox-5.2_5.2.12-122591~Ubuntu~$(lsb_release -sc)_amd64.deb
+bla;;bla
+EOF
+)
+begno=1
+endno=$(wc -l <<< "$infos")
+for ((i=$begno;i<=$endno;i++)) ; do
+varname="$(awk -F';;' 'NR=='$i'{printf $1}' <<< "$infos")"
+varnamedownlink="$(awk -F';;' 'NR=='$i'{printf $2}' <<< "$infos")"
+varnamefn="$(getdownfn "$varnamedownlink")"
+varnamefnext="$(awk -F'/' '{print $NF}' <<< "$varnamedownlink")"
+export ${varname}downlink="$(awk -F';;' 'NR=='$i'{printf $2}' <<< "$infos")"
+export ${varname}fn="$varnamefn"
+export ${varname}downdir="$userdowndir"
+export full${varname}downdir="$userdowndir/$varnamefnext"
+done
+}
+getdownfn() {
+varnamedownlink="$1"
+exts=$(cat<<EOF
+iso
+bin
+deb
+rpm
+rar
+zip
+tar.bz2
+tar
+doc
+exe
+bat
+psl
+ppt
+EOF
+)
+extsa=("$exts")
+
+extsall=
+begno=1
+endno=$(wc -l <<< "$exts")
+for ((i=$begno;i<=$endno;i++)) ; do
+extsno=$(awk 'NR=='$i'{print}' <<< "$exts")
+[[ $i -eq 1 ]] && extsall=$extsno
+[[ $i -gt 1 ]] && extsall=$extsall"|"$extsno
+done
+#echo "$extsall"
+varnamefn="$(awk -F'/' '{gsub(/([.])('$extsall')/,"");print $NF}' <<< "$varnamedownlink")"
+echo "$varnamefn"
+}
 setvar() {
+setdownvar
 userid=$(awk -F: '!/root/ && /(\/bin\/bash)/ {print $1}' /etc/passwd)
 mdir="/media/$userid"
 userhomedir="/home/$userid"
+userdocdir="$userhomedir/Documents"
+userdowndir="$userhomedir/Downloads"
 
 c0=("MBIOS" "MUEFI" "MBT")
-
 #bashzeroindex arraystart
 #${!c[@]}
 #MUEFI-yellow
@@ -1611,6 +1698,7 @@ liveuinitrddir=""
 localmsdir="$userhomedir/Documents/Docs/mlinuxproject/usbboot/Documents3/$onems2"
 localgsdir="$userhomedir/Documents/Docs/mlinuxproject/$threegsn"
 localinitrddir="$userhomedir/Documents/Docs/mlinuxproject/usbboot/allnotes/initrd.lz"
+
 }
 
 detectusb() {
@@ -1632,16 +1720,18 @@ for f in ${!mountno[@]} ; do udisksctl unmount -b /dev/${mountno[f]} && udisksct
 #lsblk | grep $mdir/MB | sed -e "s,└─,,g" | awk '{printf $1"\n"}' | while read x; do echo $x; done
 }
 checkinet() {
-return 0
+$pingcommand
 }
 
 
 blankisocreate() {
-sudo rm -R ~/blank-img ;\
-mkdir ~/blank-img &&\
-cd ~/blank-img &&\
+#isodir="$userhomedir/Documents/Docs/ubuntu-gnome-16.04.3-desktop-amd64.iso"
+isodir="$1"
+sudo rm -R $userhomedir/blank-img ;\
+mkdir $userhomedir/blank-img &&\
+cd $userhomedir/blank-img &&\
 mkdir mnt &&\
-sudo mount -o loop ~/Documents/Docs/ubuntu-gnome-16.04.3-desktop-amd64.iso mnt &&\
+sudo mount -o loop $isodir mnt &&\
 mkdir extract &&\
 sudo rsync --exclude=/casper/filesystem.squashfs -a mnt/ extract &&\
 #sudo unsquashfs mnt/casper/filesystem.squashfs &&\
@@ -1931,8 +2021,6 @@ echo "$filename"
 }
 installb43driver=$(cat<<EOF
 #https://askubuntu.com/questions/730799/installing-firmware-b43-installer-offline/730813#730813
-userhomedir="/home/ubuntu"
-userdowndir="$userhomedir/Downloads"
 b43link="http://mirrors.kernel.org/ubuntu/pool/main/b/b43-fwcutter/b43-fwcutter_015-9_amd64.deb"
 b43fn=$(awk -F"/" '{gsub(".deb","");print $NF}' <<< "$b43link")
 b43debdir="$userdowndir/$b43fn.deb"
