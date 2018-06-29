@@ -223,13 +223,119 @@ if [[ $comp =~ ^(SP3)$ ]] ; then
 wintheme
 fi
 }
-reinstallMBP() 
-{
+installandroidstudio() {
+#https://askubuntu.com/questions/634082/how-to-install-android-studio-on-ubuntu
+#sudo add-apt-repository ppa:webupd8team/java
+#sudo apt-get update
+#sudo apt-get install -y oracle-java8-installer oracle-java8-set-default
+sudo snap install --classic ubuntu-make
+ubuntu-make.umake android
+}
+installkernelown() {
+return 0
+}
+installkerneltigerite() {
+sudo add-apt-repository ppa:tigerite/kernel
+sudo apt-get update
+sudo apt-get install -y linux-surface
+}
+installkernelfridgecow() {
+curl "https://drive.google.com/drive/folders/0Bw1woTKAWzFAb0hkaUtDUVVoQVU"
+sudo dpkg -i './linux-headers-4.9.0-rc8-mssp4+_4.9.0-rc8-mssp4+-10.00.Custom_amd64.deb'
+sudo dpkg -i './linux-image-4.9.0-rc8-mssp4+_4.9.0-rc8-mssp4+-10.00.Custom_amd64.deb'
+}
+installkernelnpjohnson() {
+curl http://ods.ninja/Server/Linux/LXSurface/linux-image-4.6.7+_1.0.lxsurface_amd64.deb
+sudo dpkg -i './linux-headers-4.6*'
+sudo dpkg -i './linux-image-4.6*'
+}
+installkernelcantenna() {
+curl "https://mega.nz/#!nJJ2DSJZ!4BYSRvzp3hb6NxU5X6_38xFkpuUEmSNvRo2px2TCDqc"
+sudo dpkg -i './linux-headers-4.4.0-rc8touchkernel+_1_amd64.deb'
+sudo dpkg -i './linux-image-4.4.0-rc8touchkernel+_1_amd64.deb'
+}
+installkernelsuperktouch() {
+curl "mega.nz/#!KQ4CmQCR!vYcyTWD-KWDuYhnZ6cFsw6eq1XSnXvjgR-S64MQKsDU"
+sudo dpkg -i linux-headers-4.9.3-superkerneltouch+_1_amd64.deb
+sudo dpkg -i linux-image-4.9.3-superkerneltouch+_1_amd64.deb
+sudo echo 0 > /sys/kernel/debug/ipts/mode
+}
+
+sp3lidfix() {
+#swapsuspendwithhibernate
+suspendt="/etc/systemd/system/suspend.target"
+sdsuspends="/etc/systemd/system/systemd-suspend.service"
+#sudo rm -Rf $suspendt
+sudo mv $suspendt $suspendt\bk
+sudo ln -sf /usr/lib/systemd/system/hibernate.target $suspendt
+#sudo rm -Rf $sdsuspends
+sudo mv $sdsuspends $sdsuspends\bk
+sudo ln -sf /usr/lib/systemd/system/systemd-hibernate.service $sdsuspends
+sudo sed -ri "s/IgnoreLid=false/IgnoreLid=true/g" /etc/UPower/UPower.conf
+}
+typecoverfix() {
+echo "Section "InputClass"  
+        Identifier "Surface Pro 3 cover"
+        MatchIsPointer "on"
+        MatchDevicePath "/dev/input/event*"
+        Driver "evdev"
+        Option "vendor" "045e"
+        Option "product" "07dc"
+        Option "IgnoreAbsoluteAxes" "True"
+EndSection " | sudo tee -a /usr/share/X11/xorg.conf.d/10-evdev.conf
+}
+installmwifiex() {
+sudo apt-get install -y git
+git clone git://git.marvell.com/mwifiex-firmware.git  
+mkdir -p /lib/firmware/mrvl/  
+cp mwifiex-firmware/mrvl/* /lib/firmware/mrvl/
+}
+
+
+reinstallSP3() {
+#shrinkwinpart
+#win
+#http://www.itprotoday.com/management-mobility/can-i-shrink-volume-command-line
+#https://unix.stackexchange.com/questions/169395/how-do-i-resize-partitions-and-filesystems-on-them
+#diskpart select disk 0 && diskpart select part 1 && diskpart shrink desired=60000
+#ubuntulive
+#sudo parted /dev/sdb resizepart 1 200000M
+#sudo resize2fs /dev/sdb1 200000M
+#https://unix.stackexchange.com/questions/169395/how-do-i-resize-partitions-and-filesystems-on-them
+#old
+#https://www.reddit.com/r/SurfaceLinux/comments/6j9hjc/guide_installing_linux_on_surfaceseries_devices/
+#https://www.reddit.com/r/SurfaceLinux/comments/7kb1ky/guide_installing_linux_on_surfaceseries_devices/
+#http://blog.davidelner.com/dual-booting-ubuntu-14-10-on-the-surface-pro-3/
+#https://ramsdenj.com/2016/08/29/arch-linux-on-the-surface-pro-4.html#secure-boot-options
+#https://askubuntu.com/questions/390769/how-do-i-resize-partitions-using-command-line-without-using-a-gui-on-a-server
 updaterepo
+sp3lidfix
+typecoverfix
+installmwifiex
+sudo update-grub
 installchromebrowser
 installdockerce
 installandroidstudio
-installgnirehtet
+installpython
+installpythonext1
+installplymouththeme
+driveuuid="01D2CDF49BBAF180"
+echo "#UUID=01D2CDF49BBAF180/Users/SP3/Documents/Docs/Tech    $userhomedir/Documents/Docs       ntfs    permissions,locale=en_US.utf8    0   2
+#UUID=01D2CDF49BBAF180  $userhomedir/Documents/Docs       ntfs-3g  rbind,nosuid,user,umask=0222  0  0
+UUID=$driveuuid   $mdir/Windows     ntfs-3g  nosuid,nodev,nofail,x-gvfs-show  0  0
+#$mdir/Windows/Users/SP3/Documents/Docs/Tech      $userhomedir/Documents/Docs       ntfs-3g  nosuid,nodev,nofail,x-gvfs-show  0  0
+#nosuid,nodev,nofail,x-gvfs-show
+#/dev/sda4/Users/SP3/Documents/Docs/Tech        $userhomedir/Documents/Docs       ntfs-3g  nosuid,nodev,nofail,x-gvfs-show  0  0
+$mdir/Windows/Users/SP3/Documents/Docs $userhomedir/Documents/Docs auto defaults,nofail,nobootwait,bind 0 2
+#mount --bind /home/ubuntu/stuff /home/bob/things
+" | sudo tee -a /etc/fstab
+sudo mount -a
+xhost + && sudo /home/Documents/TW/layoutmanager.sh --windows &
+}
+reinstallMBP() {
+updaterepo
+$installb43driver
+installchromebrowser
 installpython
 installpythonext1
 }
@@ -253,17 +359,6 @@ gparted \
 #mklink /d C:\Users\SP3\Documents\Docs\Tech\Automate\FiiNote\Save\@pagkly "C:\Users\SP3\AppData\Roaming\Microsoft\Windows\Network Shortcuts\10.0.0.1\fiinote"
 #mklink /d C:\Users\SP3\Documents\Docs\Tech\Automate\FiiNote\Save\@pagkly "\\10.0.0.1@8080\DavWWWRoot\fiinote"
 #\\10.0.0.1@8080\DavWWWRoot
-echo "#UUID=01D2CDF49BBAF180/Users/SP3/Documents/Docs/Tech    $userhomedir/Documents/Docs       ntfs    permissions,locale=en_US.utf8    0   2
-#UUID=01D2CDF49BBAF180  $userhomedir/Documents/Docs       ntfs-3g  rbind,nosuid,user,umask=0222  0  0
-UUID=01D2CDF49BBAF180   $mdir/Windows     ntfs-3g  nosuid,nodev,nofail,x-gvfs-show  0  0
-#$mdir/Windows/Users/SP3/Documents/Docs/Tech      $userhomedir/Documents/Docs       ntfs-3g  nosuid,nodev,nofail,x-gvfs-show  0  0
-#nosuid,nodev,nofail,x-gvfs-show
-#/dev/sda4/Users/SP3/Documents/Docs/Tech        $userhomedir/Documents/Docs       ntfs-3g  nosuid,nodev,nofail,x-gvfs-show  0  0
-$mdir/Windows/Users/SP3/Documents/Docs $userhomedir/Documents/Docs auto defaults,nofail,nobootwait,bind 0 2
-#mount --bind /home/ubuntu/stuff /home/bob/things
-" | sudo tee -a /etc/fstab
-sudo mount -a
-xhost + && sudo /home/Documents/TW/layoutmanager.sh --windows &
 }
 
 #####INSTALL
@@ -282,12 +377,7 @@ echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' | sud
 sudo apt-get update ;
 sudo apt-get install -y google-chrome-stable
 }
-installb43d() {
-return 0
-}
-installmwifiexf() {
-return 0
-}
+
 installblesshex() {
 sudo apt-get install -y bless
 }
@@ -406,7 +496,7 @@ crlink="https://davrt8itj6cgg.cloudfront.net/cloudready-free-66.4.25-64-bit/clou
 crfile="$(awk -F'/' '{gsub(/.zip/,"");print $NF}' <<< "$crlink")"
 echo $crfile
 crdir="$userdowndir/$crfile"
-crzipdir="$userdowndir/$crfile.zip"
+crzipdir="$userdowndir/$crfile\.zip"
 crbindir="userdowndir/$crfile/$crfile.bin"
 if [[ ! -f "$crzipdir" ]] ; then
 curl -o "$crzipdir" "$crlink"
@@ -461,7 +551,7 @@ echo $contid
 sudo docker rmi $contid
 done
 )
-[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ; [[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q)
+#[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ; [[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q)
 builduv10=$(cat <<EOF
 FROM ubuntu:18.04
 #ARG ORIBGPIC=/usr/share/backgrounds/xfce/xfce-teal.jpg
@@ -1717,12 +1807,31 @@ sudo sh ./autorun.sh
 EOF
 )
 
+getdownfn() {
+downlink="$1"
+filename=$(awk '{gsub(/.zip/,"");print $NF}' <<< "$downlink")
+echo "$filename"
+}
 installb43driver=$(cat<<EOF
-b43dir="/home/Documents/Driver/b43"
-sudo apt-get purge bcmwl-kernel-source ;
+#https://askubuntu.com/questions/730799/installing-firmware-b43-installer-offline/730813#730813
+userhomedir="/home/ubuntu"
+userdowndir="$userhomedir/Downloads"
+b43link="http://mirrors.kernel.org/ubuntu/pool/main/b/b43-fwcutter/b43-fwcutter_015-9_amd64.deb"
+b43fn=$(awk -F"/" '{gsub(".deb","");print $NF}' <<< "$b43link")
+b43debdir="$userdowndir/$b43fn.deb"
+b43dir="$userdowndir"
+bwllink="http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2"
+bwlfn=$(awk -F"/" '{gsub(".tar.bz2","");print $NF}' <<< "$bwllink")
+bwltbzdir="$userdowndir/$bwlfn.tar.bz2"
+bwldir="$userdowndir/bwl"
+
+sudo apt-get purge -y bcmwl-kernel-source ;
+curl -o "$b43debdir" "$b43link"
+curl -o "$bwltbzdir" "$bwllink"
 cd $b43dir
 sudo rm -R broadcom-wl-5.100.138 ;
-sudo dpkg -i b43-fwcutter_019-2_amd64.deb
+#sudo dpkg -i b43-fwcutter_019-2_amd64.deb
+sudo dpkg -i b43-fwcutter_015-9_amd64.deb
 tar xfvj broadcom-wl-5.100.138.tar.bz2
 sudo b43-fwcutter -w /lib/firmware broadcom-wl-5.100.138/linux/wl_apsta.o
 #sudo modprobe b43 -r &&\
