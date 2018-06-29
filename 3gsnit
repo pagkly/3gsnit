@@ -3924,7 +3924,8 @@ xycoord() {
 ##MBP
 getscreenres
 if [[ $screenres =~ (1280x800) ]] ; then
-avgclosead="176 465"
+#avgclosead="176 465"
+avgclosead="176 441"
 avgplay="459 592"
 jfwnow="699 758"
 jfs2="371 769"
