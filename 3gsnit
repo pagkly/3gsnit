@@ -594,16 +594,35 @@ sudo apt-get remove -y virtualbox* ;
 sudo dpkg -i "$fullvboxdowndir"
 }
 installvboxvmandos() {
+#https://superuser.com/questions/741734/virtualbox-how-can-i-add-mount-a-iso-image-file-from-command-line
 #https://www.perkin.org.uk/posts/create-virtualbox-vm-from-the-command-line.html
+#VBoxManage list ostypes
 curl -o "$fullandosdowndir" "$andosdownlink"
 VM='ANDOS7.1-64b'
 VMtype="Other Linux (64-bit)"
 VMfamid="Linux"
 VMsize=16768
 VMram=2500
-#VBoxManage list ostypes
 VBoxManage createhd --filename $VM.vdi --size $VMsize
 VBoxManage createvm --name $VM --ostype "$VMfamid" --register
+VBoxManage storagectl $VM --name "SATA Controller" --add sata --controller IntelAHCI
+VBoxManage storageattach $VM --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium $VM.vdi
+VBoxManage storagectl $VM --name "IDE Controller" --add ide
+VBoxManage storageattach $VM --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium "$fullandosdowndir"
+
+VBoxManage modifyvm $VM --ioapic on
+VBoxManage modifyvm $VM --boot1 dvd --boot2 disk --boot3 none --boot4 none
+VBoxManage modifyvm $VM --memory $VMram --vram 128
+VBoxManage modifyvm $VM --nic1 bridged --bridgeadapter1 e1000g0
+
+#VBoxManage storageattach $VM --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium none
+tips=$(cat<<EOF
+#vboxhost:3389
+#VBoxHeadless -s $VM
+VBoxManage snapshot $VM take <name of snapshot>
+VBoxManage snapshot $VM restore <name of snapshot>
+EOF
+)
 }
 
 installdockeruv10() {
@@ -1535,9 +1554,6 @@ return 0
 ##echo "WIN"
 ###WINDOWS
 
-
-
-
 ##https://all3dp.com/1/best-free-3d-printing-software-3d-printer-program/
 ##Blender	3D Design, CAD	Professional	PC, Mac, Linux
 ##Onshape	3D Design, CAD	Professional	Web Browser
@@ -1570,7 +1586,7 @@ echo "$(whoami)"
 setdownvar() {
 infos=$(cat<<EOF
 vbox;;https://download.virtualbox.org/virtualbox/5.2.12/virtualbox-5.2_5.2.12-122591~Ubuntu~$(lsb_release -sc)_amd64.deb
-bla;;bla
+andos;;https://osdn.net/projects/android-x86/downloads/67834/android-x86_64-7.1-r2.iso
 EOF
 )
 begno=1
@@ -4396,7 +4412,11 @@ populatefn "(arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(n6pts|onlinesop|refreshall|testcase|datefiletestingerror|checkxmr|installvbox|installskype|downchromeos)" "$DIR0" "$lastno"
+populatefn "(installvbox|installvboxvmandos|installskype|downchromeos)" "$DIR0" "$lastno"
+printallfn $lastno
+echo "------------"
+lastno="$totalallfn"
+populatefn "(n6pts|onlinesop|refreshall|testcase|datefiletestingerror|checkxmr)" "$DIR0" "$lastno"
 printallfn $lastno
 prechoosefn $1
 }
