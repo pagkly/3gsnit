@@ -2661,9 +2661,13 @@ fi
 echo "example=
 $userid
 $defdir"
-#read -p "originalfile (default=$defdir)=" sourceftocopy
 
-sourceftocopy=$msdir
+sourceftocopy=""
+defsourceftocopy="$msdir"
+read -p "sourcefiletocp (default=$msdir)=" sourceftocopy
+sourceftocopy=${sourceftocopy:-$defsourceftocopy}
+donecopytousb=""
+
 if [[ $sourceftocopy =~ (initrd) ]] ; then
 notdonecopytousb=("${c3[@]}")
 elif [[ $sourceftocopy =~ ($liveumsdir) ]] ; then
@@ -2672,9 +2676,14 @@ else
 echo "restart again"
 return 0
 fi
-donecopytousb=""
 echo "$sourceftocopy ==to==> ${notdonecopytousb[@]}"
-read -p "entertocontinue"
+read -p "entertocontinue" copycont
+#if [[ $copycont =~ (y|Y) ]] ; then
+#elif [[ $copycont =~ (n|N) ]] ; then
+#fi
+
+
+
 
 until [[ -z $notdonecopytousb ]] ; do
 for f in ${notdonecopytousb[@]} ; do
