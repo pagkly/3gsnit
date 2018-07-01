@@ -394,7 +394,6 @@ installchromebrowser
 installdockerce
 installandroidstudio
 installpython
-installpythonext1
 installplymouththeme
 driveuuid="01D2CDF49BBAF180"
 echo "#UUID=01D2CDF49BBAF180/Users/SP3/Documents/Docs/Tech    $userhomedir/Documents/Docs       ntfs    permissions,locale=en_US.utf8    0   2
@@ -414,7 +413,6 @@ updaterepo
 $installb43driver
 installchromebrowser
 installpython
-installpythonext1
 }
 reinstallcomp2() {
 read -p "COMP (SP3|MBP)=" comp
@@ -625,41 +623,15 @@ EOF
 )
 }
 
-installdockeruv10() {
-##https://unix.stackexchange.com/questions/4897/providing-bin-and-lib-inside-a-chroot-jailt
-#mount --bind /bin /chroot/bin
-#mount --bind /lib /chroot/lib
-#chroot /chroot
-#echo "/bin /chroot/bin none bind
-#/lib /chroot/lib none bind" | tee -a /etc/fstab
-#https://vsupalov.com/docker-arg-env-variable-guide/
-#https://stackoverflow.com/questions/44331836/apt-get-install-tzdata-noninteractive
-#https://stackoverflow.com/questions/16296753/can-you-run-gui-apps-in-a-docker-container
-#https://unix.stackexchange.com/questions/317053/x11vnc-change-resolution
-#https://stackoverflow.com/questions/8928224/trying-to-retrieve-first-5-characters-from-string-in-bash-error
-#https://markhneedham.com/blog/2013/06/26/unixawk-extracting-substring-using-a-regular-expression-with-capture-groups/
-#https://www.unix.com/shell-programming-and-scripting/41734-how-print-specific-lines-awk.html
-#https://forums.docker.com/t/how-do-i-send-runs-output-to-env-in-dockerfile/16106/3
-sudo apt-get install -y vncviewer
-rmall=$(cat <<EOF
-[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ;
-[[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q) ;
-#sudo docker-machine rm -f $(sudo docker-machine ls -q) ;
-EOF
-for f in {2..6} ; do
-contid=$(awk 'NR=='$f <<< "$(sudo docker images -q)")
-echo $contid
-sudo docker rmi $contid
-done
-)
-#[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ; [[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q)
+
+
 builduv10=$(cat <<EOF
 FROM ubuntu:18.04
 #ARG ORIBGPIC=/usr/share/backgrounds/xfce/xfce-teal.jpg
 #ENV ORIBGPIC=/usr/share/backgrounds/xfce/xfce-teal.jpg
 MAINTAINER py
 RUN export DEBIAN_FRONTEND=noninteractive \
-&& echo $ORIBGPIC \
+&& echo "ORIBGPIC=$ORIBGPIC" \
 && apt-get update \
 && apt install -y sudo nano \
 && apt-get install -y xterm \
@@ -695,9 +667,37 @@ EOF
 #perl -pi -e "s/^(x11vnc -forever -create)//g" /etc/rc.local &&\
 #perl -pi -e "s/^(exit 0)/x11vnc -forever -create\n\1/g" /etc/rc.local &&\
 #echo "sudo mount -a && sudo python3 /media/Surface2/Automate/FN30.py & exec xfce4-session" | tee /root/.xinitrc
-
 dfname="Dockerfile"
-cd ~
+installdockeruv10() {
+##https://unix.stackexchange.com/questions/4897/providing-bin-and-lib-inside-a-chroot-jailt
+#mount --bind /bin /chroot/bin
+#mount --bind /lib /chroot/lib
+#chroot /chroot
+#echo "/bin /chroot/bin none bind
+#/lib /chroot/lib none bind" | tee -a /etc/fstab
+#https://vsupalov.com/docker-arg-env-variable-guide/
+#https://stackoverflow.com/questions/44331836/apt-get-install-tzdata-noninteractive
+#https://stackoverflow.com/questions/16296753/can-you-run-gui-apps-in-a-docker-container
+#https://unix.stackexchange.com/questions/317053/x11vnc-change-resolution
+#https://stackoverflow.com/questions/8928224/trying-to-retrieve-first-5-characters-from-string-in-bash-error
+#https://markhneedham.com/blog/2013/06/26/unixawk-extracting-substring-using-a-regular-expression-with-capture-groups/
+#https://www.unix.com/shell-programming-and-scripting/41734-how-print-specific-lines-awk.html
+#https://forums.docker.com/t/how-do-i-send-runs-output-to-env-in-dockerfile/16106/3
+sudo apt-get install -y vncviewer
+rmall=$(cat <<EOF
+[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ;
+[[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q) ;
+#sudo docker-machine rm -f $(sudo docker-machine ls -q) ;
+EOF
+for f in {2..6} ; do
+contid=$(awk 'NR=='$f <<< "$(sudo docker images -q)")
+echo $contid
+sudo docker rmi $contid
+done
+)
+#[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ; [[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q)
+
+cd $userhomedir
 mkdir -p Dockerfileuxv ;
 cd Dockerfileuxv
 echo "$builduv10" | tee $dfname
@@ -742,6 +742,7 @@ xfconf-query --channel xfce4-desktop --list
 #export DISPLAY=:0.0 && firefox &
 return 0
 }
+
 installblender() {
 #sudo cp ~/blender /usr/lib/blender -r
 #sudo add-apt-repository ppa:thomas-schiex/blender
@@ -827,7 +828,20 @@ sudo dpkg --add-architecture i386
 export WINEARCH=win32
 winecfg
 }
-installpy() {
+installpython() {
+sudo apt-get install -y build-essential cmake \
+libgtk-3-dev \
+libboost-all-dev
+sudo apt-get install -y python3.5 \
+python3-pip \
+idle3 \
+python3-xlib \
+python3-psutil \
+android-tools-adb ;
+#pip3 install --upgrade pip
+pip3 install pyscreenshot
+}
+installpythonext2() {
 #https://www.pyimagesearch.com/2016/10/24/ubuntu-16-04-how-to-install-opencv/
 sudo apt-get update
 sudo apt-get upgrade
@@ -1498,24 +1512,6 @@ tgblink="http://dlied6.qq.com/invc/xfspeed/qqpcmgr/other/GameDownload_PUBG_MOBIL
 destdir=~/Downloads
 downloadinstallfile "$tgblink" "$destdir"
 }
-aiplan() {
-aiplan=$(cat <<EOF
-land on the furthest point from flight
-or
-safe points
-cape town
-
-get a shotgun
-get rifle
-get armor
-get helmets
-get medkits
-get mushroom
-get a car
-
-EOF
-)
-}
 #####USBOFF(NOTWORKing)
 usbpwr() {
 usbno=$1
@@ -1582,25 +1578,13 @@ echo "$(whoami)"
 [ "$UID" -eq 0 ] || exec sudo "$DIR0" "$@"
 }
 
-
-setdownvar() {
-infos=$(cat<<EOF
-vbox;;https://download.virtualbox.org/virtualbox/5.2.12/virtualbox-5.2_5.2.12-122591~Ubuntu~$(lsb_release -sc)_amd64.deb
-andos;;https://osdn.net/projects/android-x86/downloads/67834/android-x86_64-7.1-r2.iso
-EOF
-)
-begno=1
-endno=$(wc -l <<< "$infos")
-for ((i=$begno;i<=$endno;i++)) ; do
-varname="$(awk -F';;' 'NR=='$i'{printf $1}' <<< "$infos")"
-varnamedownlink="$(awk -F';;' 'NR=='$i'{printf $2}' <<< "$infos")"
-varnamefn="$(getdownfn "$varnamedownlink")"
-varnamefnext="$(awk -F'/' '{print $NF}' <<< "$varnamedownlink")"
-export ${varname}downlink="$(awk -F';;' 'NR=='$i'{printf $2}' <<< "$infos")"
-export ${varname}fn="$varnamefn"
-export ${varname}downdir="$userdowndir"
-export full${varname}downdir="$userdowndir/$varnamefnext"
-done
+getsubstr() {
+result=$(awk '{print substr($0,'$1','$2')}' <<< "$3")
+echo "$result"
+}
+getlaststrdel() {
+thestr=$(awk -F"$1" '{print $NF}' <<< "$2")
+echo "$thestr"
 }
 getdownfn() {
 varnamedownlink="$1"
@@ -1633,6 +1617,27 @@ done
 #echo "$extsall"
 varnamefn="$(awk -F'/' '{gsub(/([.])('$extsall')/,"");print $NF}' <<< "$varnamedownlink")"
 echo "$varnamefn"
+}
+setdownvar() {
+infos=$(cat<<EOF
+vbox;;https://download.virtualbox.org/virtualbox/5.2.12/virtualbox-5.2_5.2.12-122591~Ubuntu~$(lsb_release -sc)_amd64.deb
+andos;;https://osdn.net/projects/android-x86/downloads/67834/android-x86_64-7.1-r2.iso
+chrome;;https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+EOF
+)
+begno=1
+endno=$(wc -l <<< "$infos")
+for ((i=$begno;i<=$endno;i++)) ; do
+varname="$(awk -F';;' 'NR=='$i'{printf $1}' <<< "$infos")"
+varnamedownlink="$(awk -F';;' 'NR=='$i'{printf $2}' <<< "$infos")"
+varnamefn="$(getdownfn "$varnamedownlink")"
+varnamefnext="$(awk -F'/' '{print $NF}' <<< "$varnamedownlink")"
+export ${varname}downlink="$(awk -F';;' 'NR=='$i'{printf $2}' <<< "$infos")"
+export ${varname}fn="$varnamefn"
+export ${varname}fnext="$varnamefnext"
+export ${varname}downdir="$userdowndir"
+export full${varname}downdir="$userdowndir/$varnamefnext"
+done
 }
 setvar() {
 setdownvar
@@ -1714,7 +1719,7 @@ liveuinitrddir=""
 localmsdir="$userhomedir/Documents/Docs/mlinuxproject/usbboot/Documents3/$onems2"
 localgsdir="$userhomedir/Documents/Docs/mlinuxproject/$threegsn"
 localinitrddir="$userhomedir/Documents/Docs/mlinuxproject/usbboot/allnotes/initrd.lz"
-
+gitlocalrepodir="$userhomedir/agit"
 }
 
 detectusb() {
@@ -1792,28 +1797,26 @@ uisolink="$uisolink1804lts"
 uisolinkt="$uisolink1804ltst"
 uisofn="$(awk -F "/" '{print $NF}' <<< $uisolink)"
 uisodir=$downdir/$uisofn
+chrootdir="$cimgdir/edit"
 #sudo apt-get install -y transmission-cli
 #awk '{gsub("/","\n");print} /.iso/' <<< $uisolink
 
-if [[ ! -f $ubuntuiso ]]; then
+if [[ ! -f $uisodir ]]; then
 #downloadinstallfile "$uisolink" "$downdir"
 torrentdl $uisolinkt $downdir
 fi
+export -f setdownvar
 
-chrootdir="$cimgdir/edit"
-startnonchrootprep "$cimgdir" "$uisodir"
-resquashchrootmountlib "$cimgdir"
-sudo chroot $chrootdir su -c "$resquashaddrepo"
-sudo chroot $chrootdir su -c "$resquashinstallnremove"
-sudo chroot $chrootdir su -c "$resquashblacklist"
-sudo chroot $chrootdir su -c "$grubsplashplymouthg"
-
-if [[ ! -d $cimgdir ]]; then
+if [[ ! -d $cimgdir ]] ; then
 mkdir -p $cimgdir ;
 startnonchrootprep "$cimgdir" "$uisodir"
 resquashchrootmountlib "$cimgdir"
 sudo chroot $chrootdir su -c "$resquashaddrepo"
 sudo chroot $chrootdir su -c "$resquashinstallnremove"
+
+sudo chroot $chrootdir /bin/bash -c "$resquashcreaterootdowndir"
+sudo chroot $chrootdir /bin/bash -c "$resquashinstallchrome"
+
 sudo chroot $chrootdir su -c "$resquashblacklist"
 sudo chroot $chrootdir su -c "$grubsplashplymouthg"
 #installr8169driver
@@ -1823,8 +1826,11 @@ installnvidiadriver "$downdir"
 #resquashaddcommand
 resquashrclocal
 resquashfinishing
-elif [[ -d $customimg ]]; then
-resquashonly
+elif [[ -d $cimgdir ]] ; then
+sudo chroot $chrootdir /bin/bash -c "$resquashcreaterootdowndir"
+sudo chroot $chrootdir /bin/bash -c "$resquashinstallchrome"
+sleep 3600
+#resquashonly
 fi
 return 0
 }
@@ -1871,34 +1877,40 @@ dpkg-divert --local --rename --add /sbin/initctl ;\
 ln -s /bin/true /sbin/initctl ;"
 return 0
 }
-resquashaddrepo=$(cat <<EOF
-sudo apt update --fix-missing -y
-sudo apt-get update --fix-missing ;
-sudo apt-get purge -y nvidia* bcmwl-kernel-source ;
-sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe multiverse restricted" ;
+
+#release=bionic
+resquashaddrepo=$(cat <<'EOF'
+release="$(lsb_release -sc)"
+echo release=$release
+apt update --fix-missing -y
+apt-get update --fix-missing ;
+apt-get purge -y nvidia* bcmwl-kernel-source ;
+#add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $release main restricted"
+add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $release universe multiverse" ;
 wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
 echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' | sudo tee /etc/apt/sources.list.d/google-chrome.list
-sudo add-apt-repository -y ppa:graphics-drivers ;
-sudo rm /etc/X11/xorg.conf ;
-sudo dpkg --add-architecture i386 ;
-#sudo add-apt-repository -y ppa:caffeine-developers/ppa &&\
-#sudo apt install -y curl wget git caffeine &&\
-#sudo docker pull cedricwalter/xmr-stak-nvidia:nodevfee &&\
-sudo apt-get update ;
+add-apt-repository -y ppa:graphics-drivers ;
+dpkg --add-architecture i386 ;
+apt-get update ;
+rm /etc/X11/xorg.conf ;
+#sudo add-apt-repository -y ppa:caffeine-developers/ppa
+#sudo apt install -y curl wget git caffeine
+#sudo docker pull cedricwalter/xmr-stak-nvidia:nodevfee
 EOF
 )
-resquashinstallnremove=$(cat <<EOF
-sudo rm /usr/share/applications/ubuntu-amazon-default.desktop ;
-sudo rm /usr/share/unity-webapps/userscripts/unity-webapps-amazon/Amazon.user.js ;
-sudo rm /usr/share/unity-webapps/userscripts/unity-webapps-amazon/manifest.json ;
-sudo apt install -y linux-headers-$(uname -r) ;
-sudo apt-get install -y dkms \
+
+resquashinstallnremove=$(cat <<'EOF'
+rm /usr/share/applications/ubuntu-amazon-default.desktop ;
+rm /usr/share/unity-webapps/userscripts/unity-webapps-amazon/Amazon.user.js ;
+rm /usr/share/unity-webapps/userscripts/unity-webapps-amazon/manifest.json ;
+apt install -y linux-headers-$(uname -r) ;
+apt-get install -y dkms \
 wget \
 curl ;
-sudo apt-get install -y git build-essential cmake ;
-sudo apt install -y libuv1-dev libmicrohttpd-dev libhwloc-dev libssl-dev ;
-sudo apt install -y amd64-microcode ;
-sudo apt-get install -y xnest \
+apt-get install -y git build-essential cmake ;
+apt install -y libuv1-dev libmicrohttpd-dev libhwloc-dev libssl-dev ;
+apt install -y amd64-microcode ;
+apt-get install -y xnest \
 xdotool \
 wmctrl \
 google-chrome-stable \
@@ -1930,22 +1942,38 @@ gnome-getting-started* ;
 #sudo apt-get autoremove appmenu-gtk appmenu-gtk3 appmenu-qt
 EOF
 )
+rootdowndir="/root/Downloads"
+resquashcreaterootdowndir=$(cat<<EOF
+echo $rootdowndir
+[[ ! -d "$rootdowndir" ]] && mkdir "$rootdowndir"
+EOF
+)
+resquashinstallchrome=$(cat<<EOF
+##https://linuxconfig.org/how-to-install-google-chrome-web-browser-on-ubuntu-18-04-bionic-beaver-linux
+export rootdowndir="/root/Downloads"
+apt-get remove -y google-chrome-stable ;
+echo "$rootdowndir/$chromefnext"
+curl -o "$rootdowndir/$chromefnext" "$chromedownlink"
+dpkg -i "$rootdowndir/$chromefnext"
+echo "installchromedone"
+EOF
+)
+
 resquashblacklist=$(cat <<EOF
 echo "blacklist nouveau 
-options nouveau modeset=0" | sudo tee /etc/modprobe.d/blacklist-nouveau.conf ;
+options nouveau modeset=0" | tee /etc/modprobe.d/blacklist-nouveau.conf ;
 echo "blacklist nouveau
 blacklist lbm-nouveau
 options nouveau modeset=0
 alias nouveau off
-alias lbm-nouveau off" | sudo tee -a /etc/modprobe.d/blacklist.conf
-echo "options nouveau modeset=0" | sudo tee -a /etc/modprobe.d/nouveau-kms.conf
+alias lbm-nouveau off" | tee -a /etc/modprobe.d/blacklist.conf
+echo "options nouveau modeset=0" | tee -a /etc/modprobe.d/nouveau-kms.conf
 EOF
 )
 
 
 detectcurdesktop() {
-#https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-
-bash-script
+#https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
 #https://askubuntu.com/questions/125062/how-can-i-find-which-desktop-enviroment-i-am-using
 #echo $XDG_DATA_DIRS
 #/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
@@ -1953,6 +1981,7 @@ bash-script
 #echo $DESKTOP_SESSION
 #echo $XDG_SESSION_DESKTOP
 
+#sessionlist="$XDG_DATA_DIRS"
 #sessionlist=$(ls /usr/bin/*session)
 #[[ $sessionlist =~ (gnome) ]] && desktop="gnome"
 #[[ $sessionlist =~ (mate) ]] && desktop="mate"
@@ -1968,7 +1997,8 @@ fi
 
 grubsplashplymouthg=$(cat <<EOF
 #sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash\"*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet\"/g' "/etc/default/grub"
-#desk=$XDG_CURRENT_DESKTOP
+sessionlist=$(ls /usr/bin/*session)
+[[ $sessionlist =~ (gnome) ]] && desk="gnome"
 echo "$desk"
 pdir="/usr/share/plymouth/themes"
 bgdir="/usr/share/backgrounds"
@@ -2024,17 +2054,12 @@ EOF
 installr8169driver=$(cat<<EOF
 #sh -c 'echo blacklist r8169 >> /etc/modprobe.d/blacklist.conf'
 echo "blacklist r8169" | sudo tee -a /etc/modprobe.d/blacklist.conf
-cd /home/Documents/Driver/r8168-8.045.08
+cd $rootdowndir/r8168-8.045.08
 sudo chmod +x ./autorun.sh
 sudo sh ./autorun.sh
 EOF
 )
 
-getdownfn() {
-downlink="$1"
-filename=$(awk '{gsub(/.zip/,"");print $NF}' <<< "$downlink")
-echo "$filename"
-}
 installb43driver=$(cat<<EOF
 #https://askubuntu.com/questions/730799/installing-firmware-b43-installer-offline/730813#730813
 b43link="http://mirrors.kernel.org/ubuntu/pool/main/b/b43-fwcutter/b43-fwcutter_015-9_amd64.deb"
@@ -2060,14 +2085,6 @@ sudo b43-fwcutter -w /lib/firmware broadcom-wl-5.100.138/linux/wl_apsta.o
 EOF
 )
 
-getsubstr() {
-result=$(awk '{print substr($0,'$1','$2')}' <<< "$3")
-echo "$result"
-}
-getlaststrdel() {
-thestr=$(awk -F"$1" '{print $NF}' <<< "$2")
-echo "$thestr"
-}
 installinteldriver() {
 error=$(cat <<EOF
 W: Possible missing firmware /lib/firmware/i915/kbl_dmc_ver1_01.bin for module i915
@@ -3215,19 +3232,47 @@ nohup xterm -hold -e "$command" &
 
 
 #####PPGIT
+notice() {
+#getlineno
+echo "================"
+echo "$1"
+echo "================"
+}
 gitcred() {
 email="ajsgisayid@gmail.com"
 username="pagkly"
 pwd="Myloxyloto2012"
 git config --global user.email "$email"
 git config --global user.name "$username"
+userhomedir="/home/ubuntu"
+gitlocalrepodir="$userhomedir/agit"
+if [[ ! -d "$gitlocalrepodir" ]] ; then
+mkdir -p $gitlocalrepodir
+fi
 }
+gitcred
+
 gitaskdir() {
 #read -p "localdir" localdir
 #read -p "remotegit" remotegit
 #localdir="/home/ubuntu/Documents/Documentsv2/usbboot"
-localdir="/cdrom/notes/Documentsv2/usbboot"
-remotegit="generaluse"
+#localdir="/cdrom/notes/Documentsv2/usbboot"
+#remotegit="generaluse"
+return 0
+}
+
+gitnewrepo() {
+read -p "newreponame = " newreponame
+read -p "newreporeadme = " newreporeadme
+newlocaldir="$gitlocalrepodir/$newreponame"
+if [[ -d $newlocaldir ]] ; then
+echo "dirrepoexists"
+elif [[ ! -d $newlocaldir ]] ; then
+echo "creating localdir"
+mkdir $newlocaldir
+fi
+#gitaddprep $newlocaldir $newreponame $newreporeadme
+gitadd $newlocaldir $newreponame
 }
 gitaddprep() {
 localdir=$1
@@ -3238,25 +3283,19 @@ sudo chown $userid $localdir
 sudo rm -rf "$localdir" ;
 sudo rm -f "$localdir" ;
 #sleep 1
-cd $userhomedir
+cd $gitlocalrepodir
 git clone "$gitremotelink"
 #sleep 3600
 cd $localdir
 git remote add origin "$gitremotelink"
 }
 
-#gitpush1m
-notice() {
-#getlineno
-echo "================"
-echo "$1"
-echo "================"
-}
-
 gitadd() {
 #https://stackoverflow.com/questions/15612003/how-to-push-a-new-folder-containing-other-folders-and-files-to-an-existing-git
 localdir=$1
 remotegit=$2
+message=$3
+update=$4
 gitremotelink="https://$username:$pwd@github.com/$username/$remotegit.git"
 notice "pushing $localdir"
 cd $localdir
@@ -3272,9 +3311,9 @@ else
 echo "direxists"
 fi
 readmefn="README.md"
-if [[ -n $3 ]] ; then
+if [[ -n $message ]] ; then
 #rm -f README.md
-echo "$3" | tee $readmefn
+echo "$message" | tee $readmefn
 else
 echo '#'"$remotegit" | tee $readmefn
 fi
@@ -3284,8 +3323,18 @@ git add $localdir/*
 gettimenowinnumber
 git commit -m "$now commit by $userid"
 #git checkout -b experiments
+
 git push --force-with-lease origin master
-#git push -f origin master
+if [[ -z $update ]] ; then
+git push --force-with-lease origin master
+elif [[ -n $update ]] ; then
+if [[ $update =~ (new) ]] ; then
+git push -f origin master
+elif [[ $update =~ (update) ]] ; then
+git push --force-with-lease origin master
+fi
+fi
+
 }
 gitrecover() {
 #https://evilmartians.com/chronicles/git-push---force-and-how-to-deal-with-it
@@ -3308,12 +3357,98 @@ git rm --cached README.md
 git commit -m "$(date) commit"
 git push -f origin master
 }
-gitcred
-#gitaskdir
+
 
 gettimenowinnumber() {
 now=$(date +%Y%m%d%H%M%S)
 }
+gitpushusbuniv() {
+#choosefile1m
+filedir=""
+curfiledir="$1"
+usbfiledir="$2"
+sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$($3)")"
+#read -p "example=$filedir" filedir
+filedir=${filedir:-$sfiledir}
+localdir="$gitlocalrepodir/$4"
+remotedir="$4"
+
+notice "$filedir $localdir"
+gitaddprep $localdir $remotedir
+sudo chown $userid $localdir/$4
+sudo rm -rf $localdir/$4 ;
+sudo cp $filedir $localdir
+gitadd $localdir $remotedir
+
+if [[ "$filedir" == "$usbfiledir" ]] ; then
+sudo chown $userid $curfiledir
+sudo mv $curfiledir $curfiledir\bk
+sudo cp $usbfiledir $curfiledir
+sudo chmod +x $curfiledir
+sudo chown $userid $curfiledir
+fi
+
+if [[ ! "$filedir" == "$usbfiledir" ]] && [[ -f $usbfiledir ]] ; then
+mv $usbfiledir $usbfiledir\bk
+cp $filedir $usbfiledir
+fi
+}
+gitpush1m() {
+gitpushusbuniv "$livecur1msdir" "$liveusb1msdir" "datefile1m" "$onems2"
+}
+gitpush3gsnit() {
+gitpushusbuniv "$livecur3gsdir" "$liveusb3gsdir" "datefile3gsnit" "$threegsn"
+}
+#gitpush3gsnit
+#https://github.com/RajuKoushik/Automated-Login/blob/master/login.sh
+#https://help.github.com/articles/basic-writing-and-formatting-syntax/
+gitpushuv10df() {
+#filedir=$gitlocalrepodir/uv10
+localdir=$gitlocalrepodir/uv10
+readmedir=$localdir/README.md
+remotedir="uv10"
+contname="uv10"
+buildcont="sudo docker build -t $contname ."
+runcont="sudo docker run -it --user 0 --restart=always -d -p 5900 --privileged --cap-add SYS_ADMIN --cap-add DAC_READ_SEARCH --security-opt seccomp=unconfined $contname sudo su -c \"x11vnc -forever -create -scale 1024x768\""
+echo "$builduv10" | tee $dfname
+ls $localdir
+#dockercont="$remotedir"
+rmmessage=$(cat <<EOF
+# $remotedir
+Docker container with :
+- xfce4
+- x11vnc
+- thunar
+- bless
+- ...some other tools
+
+BUILD container :
+\`\`\`
+git clone https://github.com/$username/$remotedir
+cd ./$remotedir
+$buildcont
+\`\`\`
+
+RUN container as root with vnc @ 1024x768:
+\`\`\`
+$runcont
+\`\`\`
+
+RUN vnc :
+\`\`\`
+sudo apt-get install -y vncviewer
+vncviewer :port
+\`\`\`
+EOF
+)
+#rmmessageedit=$(awk 'NR>0 {print $0"\r\n"}' <<< "$rmmessage")
+#echo "$rmmessageedit" | tee $readmedir2
+gitaddprep $localdir $remotedir
+gitadd $localdir $remotedir "$rmmessage"
+}
+#gitpushuv10df
+#gitremove
+
 choosenewest() {
 gettimenowinnumber
 echo nowcdate=$now
@@ -3523,91 +3658,6 @@ fi
 filedir=${filedir:-$sfiledir}
 notice "choose $filedir"
 }
-
-gitpushusbuniv() {
-#choosefile1m
-filedir=""
-curfiledir="$1"
-usbfiledir="$2"
-sfiledir="$(awk -F'choose ' '/choose/ {print $2}' <<< "$($3)")"
-#read -p "example=$filedir" filedir
-filedir=${filedir:-$sfiledir}
-localdir="$userhomedir/$4"
-remotedir="$4"
-
-notice "$filedir $localdir"
-gitaddprep $localdir $remotedir
-sudo chown $userid $localdir/$4
-sudo rm -rf $localdir/$4 ;
-sudo cp $filedir $localdir
-gitadd $localdir $remotedir
-
-if [[ "$filedir" == "$usbfiledir" ]] ; then
-sudo chown $userid $curfiledir
-sudo mv $curfiledir $curfiledir\bk
-sudo cp $usbfiledir $curfiledir
-sudo chmod +x $curfiledir
-sudo chown $userid $curfiledir
-fi
-
-if [[ ! "$filedir" == "$usbfiledir" ]] && [[ -f $usbfiledir ]] ; then
-mv $usbfiledir $usbfiledir\bk
-cp $filedir $usbfiledir
-fi
-}
-gitpush1m() {
-gitpushusbuniv "$livecur1msdir" "$liveusb1msdir" "datefile1m" "$onems2"
-}
-gitpush3gsnit() {
-gitpushusbuniv "$livecur3gsdir" "$liveusb3gsdir" "datefile3gsnit" "$threegsn"
-}
-#gitpush3gsnit
-#https://github.com/RajuKoushik/Automated-Login/blob/master/login.sh
-#https://help.github.com/articles/basic-writing-and-formatting-syntax/
-gitpushuv10df() {
-filedir=~/Dockerfileuxv
-localdir=~/Dockerfileuxv
-readmedir=$localdir/README.md
-remotedir="uv10"
-contname="uv10"
-buildcont="sudo docker build -t $contname ."
-runcont="sudo docker run -it --user 0 --restart=always -d -p 5900 --privileged --cap-add SYS_ADMIN --cap-add DAC_READ_SEARCH --security-opt seccomp=unconfined $contname sudo su -c \"x11vnc -forever -create -scale 1024x768\""
-ls $localdir
-dockercont="$remotedir"
-rmmessage=$(cat <<EOF
-# $remotedir
-Docker container with :
-- xfce4
-- x11vnc
-- thunar
-- bless
-- ...some other tools
-
-BUILD container :
-\`\`\`
-git clone https://github.com/$username/$remotedir
-cd ./$remotedir
-$buildcont
-\`\`\`
-
-RUN container as root with vnc @ 1024x768:
-\`\`\`
-$runcont
-\`\`\`
-
-RUN vnc :
-\`\`\`
-sudo apt-get install -y vncviewer
-vncviewer :port
-\`\`\`
-EOF
-)
-#rmmessageedit=$(awk 'NR>0 {print $0"\r\n"}' <<< "$rmmessage")
-#echo "$rmmessageedit" | tee $readmedir2
-gitadd $localdir $remotedir "$rmmessage"
-}
-#gitpushuv10df
-#gitremove
 
 nvidianotes() {
 #REBOOT LOGIN
@@ -4408,11 +4458,15 @@ populatefn "$listthisfn" "$DIR0"
 printallfn
 echo "------------"
 lastno="$totalallfn"
-populatefn "(arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM|fastcopy)" "$DIR0" "$lastno"
+populatefn "(resquashfromthebeginning|arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM|fastcopy)" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(installvbox|installvboxvmandos|installskype|downchromeos)" "$DIR0" "$lastno"
+populatefn "(downchromeos|installvbox|installvboxvmandos|installskype|installpython)" "$DIR0" "$lastno"
+printallfn $lastno
+echo "------------"
+lastno="$totalallfn"
+populatefn "(gitnewrepo|gitpushuv10df)" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
@@ -4580,4 +4634,21 @@ google pixel 2 xl
 nexus 6p glass back cover
 EOF
 )
+aiplan() {
+aiplan=$(cat <<EOF
+land on the furthest point from flight
+or
+safe points
+cape town
 
+get a shotgun
+get rifle
+get armor
+get helmets
+get medkits
+get mushroom
+get a car
+
+EOF
+)
+}
