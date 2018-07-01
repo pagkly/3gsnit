@@ -699,6 +699,7 @@ done
 )
 #[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ; [[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q)
 [[ ! -d $gitlocalrepodir ]] && mkdir $gitlocalrepodir
+git clone github.com/pagkly/uv10.git
 #echo "$builduv10" | tee $dfname
 #awk '{gsub(/(\\EOF)/,"EOF");print}' $dfname >> $dfname\bk
 #mv $dfname\bk $dfname
@@ -1701,7 +1702,7 @@ usbpart="/dev/sd$part"
 #echo "$usbpart"
 
 curlabel=$(sed -rn "/(\/media\/$userid)/p" <<< "$(lsblk)" | awk '{printf($7)}' | awk -F"/" '{printf($4)}')
-echo "/media/$userid/$curlabel"
+echo "$mdir/$curlabel"
 
 onems2="1mstart2"
 threegsn="3gsnit"
@@ -1719,6 +1720,10 @@ localmsdir="$userhomedir/Documents/Docs/mlinuxproject/usbboot/Documents3/$onems2
 localgsdir="$userhomedir/Documents/Docs/mlinuxproject/$threegsn"
 localinitrddir="$userhomedir/Documents/Docs/mlinuxproject/usbboot/allnotes/initrd.lz"
 gitlocalrepodir="$userhomedir/agit"
+
+cimgdir="$mdir/SED/customimg"
+cimgchrootdir="$cimgdir/edit"
+cimgdowndir="$mdir/SED/Downloads"
 }
 
 detectusb() {
@@ -1785,9 +1790,6 @@ resquashfromthebeginning() {
 #https://www.maketecheasier.com/how-to-download-torrents-from-the-command-line-in-ubuntu/
 #cimgdir=/home/$USER/customimg
 #downdir=/home/$USER/Downloads
-#userid="$(whoami)"
-cimgdir=/media/$userid/SED/customimg
-downdir=/media/$userid/SED/Downloads
 uisolink1804lts="http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso"
 uisolink1804ltst="$uisolink1804lts.torrent"
 uisolink1604lts="http://releases.ubuntu.com/16.04/ubuntu-16.04.4-desktop-amd64.iso"
@@ -1795,14 +1797,14 @@ uisolink1604ltsg="http://cdimage.ubuntu.com/ubuntu-gnome/releases/16.04/release/
 uisolink="$uisolink1804lts"
 uisolinkt="$uisolink1804ltst"
 uisofn="$(awk -F "/" '{print $NF}' <<< $uisolink)"
-uisodir=$downdir/$uisofn
+uisodir=$cimgdowndir/$uisofn
 chrootdir="$cimgdir/edit"
 #sudo apt-get install -y transmission-cli
 #awk '{gsub("/","\n");print} /.iso/' <<< $uisolink
 
 if [[ ! -f $uisodir ]]; then
 #downloadinstallfile "$uisolink" "$downdir"
-torrentdl $uisolinkt $downdir
+torrentdl $uisolinkt $cimgdowndir
 fi
 export -f setdownvar
 
@@ -1859,14 +1861,13 @@ return 0
 }
 resquashchrootmountlib() {
 cimgdir="$1"
-chrootdir="$cimgdir/edit"
-#sudo umount $chrootdir/dev ;
+#sudo umount $cimgchrootdir/dev ;
 #cd "$cimgdir"
-sudo cp /etc/resolv.conf $chrootdir/etc/ ;
-sudo cp /etc/hosts $chrootdir/etc/ ;
-sudo mount --bind /dev/ $chrootdir/dev ;
+sudo cp /etc/resolv.conf $cimgchrootdir/etc/ ;
+sudo cp /etc/hosts $cimgchrootdir/etc/ ;
+sudo mount --bind /dev/ $cimgchrootdir/dev ;
 #sudo mount --bind ~/Documents/Docs/XMRnonchroot $cimgdir/mnt ;\
-sudo chroot $chrootdir su -c "mount -t proc none /proc ;\
+sudo chroot $cimgchrootdir su -c "mount -t proc none /proc ;\
 mount -t sysfs none /sys ;\
 mount -t devpts none /dev/pts ;\
 export HOME=/root ;\
@@ -2176,10 +2177,10 @@ return 0
 }
 
 resquashaddcommand() {
-sudo chroot $chrootdir su -c "$command"
+sudo chroot $cimgchrootdir su -c "$command"
 if [[ ! -z $addcommand ]]
 then
-sudo chroot $chrootdir su -c "$addcommand"
+sudo chroot $cimgchrootdir su -c "$addcommand"
 fi
 #rm ~/lala ; echo "\$dir" | tee -a ~/lala && cat ~/lala
 return 0
@@ -2189,7 +2190,7 @@ return 0
 resquashrclocal(){
 if [[ $type =~ ^(1)$ ]]
 then
-sudo chroot edit su -c "rm -f /etc/rc.local ;\
+sudo chroot $cimgchrootdir su -c "rm -f /etc/rc.local ;\
 echo '#!/bin/sh -e' | tee -a /etc/rc.local &&\
 echo \"#
 # rc.local
@@ -2214,8 +2215,8 @@ fi
 return 0
 }
 
-resquashfinishing() {
-sudo chroot $cimgdir su -c "aptitude clean ;\
+resquashchrootexit() {
+sudo chroot $cimgchrootdir /bin/bash -c "aptitude clean ;\
 apt-get autoremove && apt-get autoclean &&\
 rm -rf /tmp/* ~/.bash_history ;\
 rm /etc/resolv.conf ;\
@@ -2237,6 +2238,9 @@ search gateway
 # search unimelb.edu.au\" | tee -a /etc/resolv.conf &&\
 chmod +x /etc/resolv.conf ;\
 cat /etc/resolv.conf ;"
+}
+resquashfinishing() {
+resquashchrootexit
 #exit"
 cd $cimgdir &&
 sudo rm -R $cimgdir/extract ;
@@ -3391,16 +3395,34 @@ cp $filedir $usbfiledir
 fi
 }
 gitpushmoddedwp() {
-gitaddprep $localdir $remotedir
-echo "$builduv10" | tee $localdir/$dfname
+localdir="$gitlocalrepodir/moddedwp"
+readmedir="$localdir/README.md"
+remotedir="moddedwp"
+commitmessage="moddedwp from wifiphisher-1.2"
+#gitaddprep $localdir $remotedir
 ls $localdir
-gitadd $localdir $remotedir "$rmmessage"
+gitadd $localdir $remotedir "$commitmessage" new
+#gitadd $localdir $remotedir "$commitmessage" update
 }
-gitpush1m() {
-gitpushusbuniv "$livecur1msdir" "$liveusb1msdir" "datefile1m" "$onems2"
+gitpushwltools() {
+localdir="$gitlocalrepodir/wltools"
+readmedir="$localdir/README.md"
+remotedir="wltools"
+commitmessage="wltools with moddedwp"
+#gitaddprep $localdir $remotedir
+ls $localdir
+gitadd $localdir $remotedir "$commitmessage" new
+#gitadd $localdir $remotedir "$commitmessage" update
 }
-gitpush3gsnit() {
-gitpushusbuniv "$livecur3gsdir" "$liveusb3gsdir" "datefile3gsnit" "$threegsn"
+gitpushfn35ocv() {
+localdir="$gitlocalrepodir/FN35AOCV"
+readmedir="$localdir/README.md"
+remotedir="FN35AOCV"
+commitmessage="FN35AOCV"
+#gitaddprep $localdir $remotedir
+ls $localdir
+gitadd $localdir $remotedir "$commitmessage" new
+#gitadd $localdir $remotedir "$commitmessage" update
 }
 #https://github.com/RajuKoushik/Automated-Login/blob/master/login.sh
 #https://help.github.com/articles/basic-writing-and-formatting-syntax/
@@ -3444,6 +3466,12 @@ gitaddprep $localdir $remotedir
 echo "$builduv10" | tee $localdir/$dfname
 ls $localdir
 gitadd $localdir $remotedir "$rmmessage"
+}
+gitpush1m() {
+gitpushusbuniv "$livecur1msdir" "$liveusb1msdir" "datefile1m" "$onems2"
+}
+gitpush3gsnit() {
+gitpushusbuniv "$livecur3gsdir" "$liveusb3gsdir" "datefile3gsnit" "$threegsn"
 }
 
 choosenewest() {
@@ -4455,7 +4483,7 @@ populatefn "$listthisfn" "$DIR0"
 printallfn
 echo "------------"
 lastno="$totalallfn"
-populatefn "(resquashfromthebeginning|arubootlusb|resquash|^rcp|extractinitrd|repackinitrd|CPUMININGONRAM|fastcopy)" "$DIR0" "$lastno"
+populatefn "(resquashfromthebeginning|arubootlusb|resquash|^rcp|resquashchrootexit|extractinitrd|repackinitrd|CPUMININGONRAM|fastcopy)" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
@@ -4463,7 +4491,7 @@ populatefn "(downchromeos|installvbox|installvboxvmandos|installskype|installpyt
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(gitnewrepo|gitpushuv10df|gitpush1m|gitpush$threegsn|gitpushmoddedwp)" "$DIR0" "$lastno"
+populatefn "(gitnewrepo|gitpushfn35ocv|gitpushuv10df|gitpush1m|gitpush$threegsn|gitpushmoddedwp|gitpushwltools)" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
