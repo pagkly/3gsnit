@@ -3136,54 +3136,54 @@ make install
 }
 
 rebuildxmrigv7() {
-cd ~ &&\
-sudo rm -rf ~/xmrig ;\
-sudo apt-get install git build-essential cmake libuv1-dev libmicrohttpd-dev &&\
-git clone https://github.com/xmrig/xmrig.git &&\
-sudo killall xmrig ;\
-sudo sed -i "s,constexpr const int kDonateLevel = 5,constexpr const int kDonateLevel = 0,g" ~/xmrig/src/donate.h &&\
-cat ~/xmrig/src/donate.h &&\
-cd ~/xmrig &&\
-mkdir ./build &&\
-cd ./build &&\
-cmake .. &&\
-make &&\
-sudo chmod +x ~/xmrig/build/xmrig &&\
-xterm -hold -e "sudo ~/xmrig/build/xmrig -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo --donate-level=0% -p 1" &\
+cd ~
+sudo rm -rf ~/xmrig ;
+sudo apt-get install git build-essential cmake libuv1-dev libmicrohttpd-dev
+git clone https://github.com/xmrig/xmrig.git
+sudo killall xmrig ;
+sudo sed -i "s,constexpr const int kDonateLevel = 5,constexpr const int kDonateLevel = 0,g" ~/xmrig/src/donate.h
+cat ~/xmrig/src/donate.h
+cd ~/xmrig
+mkdir ./build
+cd ./build
+cmake ..
+make
+sudo chmod +x ~/xmrig/build/xmrig
+xterm -hold -e "sudo ~/xmrig/build/xmrig -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo --donate-level=0% -p 1" &
 }
 
 rebuildxmrignpov7() {
-cd ~ &&\
-sudo rm -rf ~/xmrig-nvidia ;\
-sudo apt-get install git build-essential cmake libuv1-dev libmicrohttpd-dev gcc-5 g++-5 &&\
-##nvidia-cuda-dev nvidia-cuda-toolkit \
-git clone https://github.com/xmrig/xmrig-nvidia.git &&\
-##sudo killall xmrig-nvidia ;\
-sudo sed -i "s,constexpr const int kDonateLevel = 5,constexpr const int kDonateLevel = 0,g" ~/xmrig-nvidia/src/donate.h &&\
-cat ~/xmrig-nvidia/src/donate.h &&\
-cd ~/xmrig-nvidia &&\
-mkdir ./build &&\
-cd ./build &&\
-cmake .. -DCUDA_ARCH="30;50" &&\
-make &&\
-sudo chmod +x ~/xmrig-nvidia/build/xmrig-nvidia &&\
+cd ~
+sudo rm -rf ~/xmrig-nvidia ;
+sudo apt-get install git build-essential cmake libuv1-dev libmicrohttpd-dev gcc-5 g++-5
+##nvidia-cuda-dev nvidia-cuda-toolkit
+git clone https://github.com/xmrig/xmrig-nvidia.git
+##sudo killall xmrig-nvidia ;
+sudo sed -i "s,constexpr const int kDonateLevel = 5,constexpr const int kDonateLevel = 0,g" ~/xmrig-nvidia/src/donate.h
+cat ~/xmrig-nvidia/src/donate.h
+cd ~/xmrig-nvidia
+mkdir ./build
+cd ./build
+cmake .. -DCUDA_ARCH="30;50"
+make
+sudo chmod +x ~/xmrig-nvidia/build/xmrig-nvidia
 xterm -hold -e "sudo ~/xmrig-nvidia/build/xmrig-nvidia -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo --donate-level=0% -p 1" ;
 }
 
 rebuildxmrstakpov7() {
-cd ~ &&\
-sudo rm -rf ~/xmr-stak ;\
-sudo apt install libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev &&\
-git clone https://github.com/fireice-uk/xmr-stak.git &&\
+cd ~
+sudo rm -rf ~/xmr-stak ;
+sudo apt install libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev
+git clone https://github.com/fireice-uk/xmr-stak.git
 sudo killall xmr-stak ;\
-sudo sed -i "s,fDevDonationLevel = 2.0,fDevDonationLevel = 0.0,g" ~/xmr-stak/xmrstak/donate-level.hpp &&\
-cat ~/xmr-stak/xmrstak/donate-level.hpp &&\
-mkdir xmr-stak/build &&\
-cd xmr-stak/build &&\
-cmake .. -DOpenCL_ENABLE=OFF &&\
-make install &&\
-sudo chmod +x ~/xmr-stak/build/bin/xmr-stak &&\
-xterm -hold -e "sudo ~/xmr-stak/build/bin/xmr-stak -r \"\" -i 0 --currency monero7 -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo -p t1" ;\
+sudo sed -i "s,fDevDonationLevel = 2.0,fDevDonationLevel = 0.0,g" ~/xmr-stak/xmrstak/donate-level.hpp
+cat ~/xmr-stak/xmrstak/donate-level.hpp
+mkdir xmr-stak/build
+cd xmr-stak/build
+cmake .. -DOpenCL_ENABLE=OFF
+make install
+sudo chmod +x ~/xmr-stak/build/bin/xmr-stak
+xterm -hold -e "sudo ~/xmr-stak/build/bin/xmr-stak -r \"\" -i 0 --currency monero7 -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo -p t1" ;
 }
 
 checkxmr() {
@@ -3282,7 +3282,6 @@ notice "preparing $localdir"
 sudo chown $userid $localdir
 sudo rm -rf "$localdir" ;
 sudo rm -f "$localdir" ;
-#sleep 1
 cd $gitlocalrepodir
 git clone "$gitremotelink"
 #sleep 3600
@@ -3324,7 +3323,6 @@ gettimenowinnumber
 git commit -m "$now commit by $userid"
 #git checkout -b experiments
 
-git push --force-with-lease origin master
 if [[ -z $update ]] ; then
 git push --force-with-lease origin master
 elif [[ -n $update ]] ; then
@@ -3399,20 +3397,16 @@ gitpushusbuniv "$livecur1msdir" "$liveusb1msdir" "datefile1m" "$onems2"
 gitpush3gsnit() {
 gitpushusbuniv "$livecur3gsdir" "$liveusb3gsdir" "datefile3gsnit" "$threegsn"
 }
-#gitpush3gsnit
 #https://github.com/RajuKoushik/Automated-Login/blob/master/login.sh
 #https://help.github.com/articles/basic-writing-and-formatting-syntax/
 gitpushuv10df() {
-#filedir=$gitlocalrepodir/uv10
+#https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet
 localdir=$gitlocalrepodir/uv10
 readmedir=$localdir/README.md
 remotedir="uv10"
 contname="uv10"
 buildcont="sudo docker build -t $contname ."
 runcont="sudo docker run -it --user 0 --restart=always -d -p 5900 --privileged --cap-add SYS_ADMIN --cap-add DAC_READ_SEARCH --security-opt seccomp=unconfined $contname sudo su -c \"x11vnc -forever -create -scale 1024x768\""
-echo "$builduv10" | tee $dfname
-ls $localdir
-#dockercont="$remotedir"
 rmmessage=$(cat <<EOF
 # $remotedir
 Docker container with :
@@ -3444,10 +3438,10 @@ EOF
 #rmmessageedit=$(awk 'NR>0 {print $0"\r\n"}' <<< "$rmmessage")
 #echo "$rmmessageedit" | tee $readmedir2
 gitaddprep $localdir $remotedir
+echo "$builduv10" | tee $localdir/$dfname
+ls $localdir
 gitadd $localdir $remotedir "$rmmessage"
 }
-#gitpushuv10df
-#gitremove
 
 choosenewest() {
 gettimenowinnumber
