@@ -1240,7 +1240,7 @@ sudo apt-get install -y plymouth-x11
 #"ubuntu-logo"
 #"win10"
 ##custompdir="/home/$userid/Documents/Docs/mlinuxproject/usbboot/TW"
-#pthemedir1="$chrootdir/usr/share/plymouth/themes"
+#pthemedir1="$cimgchrootdir/usr/share/plymouth/themes"
 #pthemedir2="/usr/share/plymouth/themes"
 #custompfile2 "win10" "$pthemedir1" "$pthemedir2"
 #pthemedir1="/home/user/Documents/Docs/mlinuxproject/usbboot/initrdlz/usr/share/plymouth/themes"
@@ -1265,12 +1265,12 @@ showsplash
 #sudo nautilus "/home/user/Documents/Docs/mlinuxproject/usbboot/Documents3/allnotes" &
 #sudo nautilus "/home/user/Documents/Docs/mlinuxproject" &
 #sudo nautilus "/usr/share/plymouth/themes" &
-#sudo nautilus "$chrootdir/usr/share/plymouth/themes" &
+#sudo nautilus "$cimgchrootdir/usr/share/plymouth/themes" &
 #sudo nautilus "/home/user/Documents/Docs/mlinuxproject/usbboot/initrdlz/usr/share/plymouth/themes" &
 #"/usr/share/plymouth/themes"
-#"$chrootdir"
+#"$cimgchrootdir"
 #"/home/user/Documents/Docs/mlinuxproject/usbboot/initrdlz"
-#--new-root-dir="$chrootdir"
+#--new-root-dir="$cimgchrootdir"
 #--get-splash-plugin-path
 #/usr/lib/x86_64-linux-gnu/plymouth/
 }
@@ -1499,7 +1499,7 @@ if [[ -f "$fndowndir" ]] ; then
 rm -f "$fndowndir"
 fi
 #wget -O "$fndowndir" "$link"
-curl -o "$fndowndir" "$link"
+sudo curl -o "$fndowndir" "$link"
 }
 
 winsilentinstaller() {
@@ -1634,6 +1634,9 @@ chrome;;https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.de
 wmctrlbionic;;http://archive.ubuntu.com/ubuntu/pool/universe/w/wmctrl/wmctrl_1.07-7build1_amd64.deb
 xdotoolbionic;;http://archive.ubuntu.com/ubuntu/pool/universe/x/xdotool/xdotool_3.20160805.1-3_amd64.deb
 blackbgjpg;;https://wallpapercave.com/wp/DTvUQor.jpg
+
+b43;;http://mirrors.kernel.org/ubuntu/pool/main/b/b43-fwcutter/b43-fwcutter_015-9_amd64.deb
+bwl;;http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2
 EOF
 )
 begno=1
@@ -1648,13 +1651,35 @@ export ${varname}fn="$varnamefn"
 export ${varname}fnext="$varnamefnext"
 export ${varname}downdir="$userdowndir"
 export full${varname}downdir="$userdowndir/$varnamefnext"
+export chroot${varname}downdir="$chrootdowndir/$varnamefnext"
 done
-
-
 }
 setresquashchrootvar() {
+#https://www.backblaze.com/blog/10-rules-for-how-to-write-cross-platform-code/
+#https://www.maketecheasier.com/how-to-download-torrents-from-the-command-line-in-ubuntu/
+dir="SED"
+if [[ "$dir" =~ (SED) ]] ; then
+cimgdir="$mdir/SED/customimg"
+cimgchrootdir="$cimgdir/edit"
+cimgdowndir="$mdir/SED/Downloads"
 chrootrelease=bionic
 desk=gnome
+elif [[ "$dir" =~ (MBP) ]] ; then
+cimgdir="$userhomedir/customimg"
+cimgchrootdir="$cimgdir/edit"
+cimgdowndir="$userhomedir/Downloads"
+chrootrelease=xenial
+desk=gnome
+fi
+uisolink1804lts="http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso"
+uisolink1804ltst="$uisolink1804lts.torrent"
+uisolink1604lts="http://releases.ubuntu.com/16.04/ubuntu-16.04.4-desktop-amd64.iso"
+uisolink1604ltsg="http://cdimage.ubuntu.com/ubuntu-gnome/releases/16.04/release/ubuntu-gnome-16.04.4-desktop-amd64.iso"
+uisolink="$uisolink1804lts"
+uisolinkt="$uisolink1804ltst"
+uisofn="$(awk -F "/" '{print $NF}' <<< $uisolink)"
+uisodir=$cimgdowndir/$uisofn
+
 chrootdowndir="/root/Downloads"
 wmctrldowndir="$chrootdowndir/$wmctrlbionicfnext"
 xdotooldowndir="$chrootdowndir/$xdotoolbionicfnext"
@@ -1673,10 +1698,13 @@ gpdir="$dpdir.grub"
 dbg="$bgdir/Greenish_by_EstebanMitnick.jpg"
 dbg2="$bgdir/gnome/adwaita-morning.jpg"
 dbg3="$bgdir/gnome/adwaita-day.jpg"
+bgdefault="$dbg"
 elif [[ $desk =~ (UNITY) ]] ; then
 gcolor="44,0,30"
 dpdir="ubuntu-logo"
 gpdir="$dpdir.grub"
+bgdefaultxenial="$bgdir/warty-final-ubuntu.png"
+bgdefault="$bgdefaultxenial"
 fi
 elif [[ $chrootrelease =~ (bionic) ]] ; then
 gcolor="44,0,30"
@@ -1685,6 +1713,7 @@ gpdir="$dpdir.grub"
 bgdefaultbionic="$bgdir/warty-final-ubuntu.png"
 bgdefault="$bgdefaultbionic"
 fi
+
 }
 setvar() {
 setdownvar
@@ -1769,10 +1798,8 @@ localgsdir="$userhomedir/Documents/Docs/mlinuxproject/$threegsn"
 localinitrddir="$userhomedir/Documents/Docs/mlinuxproject/usbboot/allnotes/initrd.lz"
 gitlocalrepodir="$userhomedir/agit"
 
-cimgdir="$mdir/SED/customimg"
-cimgchrootdir="$cimgdir/edit"
-cimgdowndir="$mdir/SED/Downloads"
 }
+setvar
 
 detectusb() {
 mountno=($(awk '/(\/media\/'$userid$usbr')/ {gsub("└─","");printf $1"\n"}' <<< "$(lsblk)"))
@@ -1839,18 +1866,13 @@ xnest
 google-chrome-stable
 }
 ###resquash
+resquashmount() {
+#startnonchrootprep "$cimgdir" "$uisodir"
+resquashchrootmountlib "$cimgdir"
+}
 resquashfromthebeginning() {
 #https://www.backblaze.com/blog/10-rules-for-how-to-write-cross-platform-code/
 #https://www.maketecheasier.com/how-to-download-torrents-from-the-command-line-in-ubuntu/
-uisolink1804lts="http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso"
-uisolink1804ltst="$uisolink1804lts.torrent"
-uisolink1604lts="http://releases.ubuntu.com/16.04/ubuntu-16.04.4-desktop-amd64.iso"
-uisolink1604ltsg="http://cdimage.ubuntu.com/ubuntu-gnome/releases/16.04/release/ubuntu-gnome-16.04.4-desktop-amd64.iso"
-uisolink="$uisolink1804lts"
-uisolinkt="$uisolink1804ltst"
-uisofn="$(awk -F "/" '{print $NF}' <<< $uisolink)"
-uisodir=$cimgdowndir/$uisofn
-chrootdir="$cimgdir/edit"
 #sudo apt-get install -y transmission-cli
 #awk '{gsub("/","\n");print} /.iso/' <<< $uisolink
 
@@ -1858,46 +1880,50 @@ if [[ ! -f $uisodir ]]; then
 #downloadinstallfile "$uisolink" "$downdir"
 torrentdl $uisolinkt $cimgdowndir
 fi
-
 if [[ ! -d "$cimgdir" ]] ; then
 mkdir -p $cimgdir ;
 startnonchrootprep "$cimgdir" "$uisodir"
-resquashchrootmountlib "$cimgdir"
-sudo chroot $chrootdir su -c "$resquashaddrepo"
-sleep 3600
-sudo chroot $chrootdir su -c "$resquashinstall1"
-sudo chroot $chrootdir su -c "$resquashinstall2"
-sudo chroot $chrootdir /bin/bash -c "$resquashcreaterootdowndir"
-sudo chroot $chrootdir /bin/bash -c "$resquashinstallchrome"
-sudo chroot $chrootdir su -c "$resquashblacklist"
-sudo chroot $chrootdir su -c "$resquashremove"
-sleep 3600
-sudo chroot $chrootdir su -c "$grubsplashplymouthg"
-#installr8169driver
-sudo chroot edit su -c "$installb43driver"
-installinteldriver "$downdir"
-installnvidiadriver "$downdir"
-#resquashaddcommand
-resquashrclocal
-resquashfinishing
-elif [[ -d "$cimgdir" ]] ; then
+fi
+if [[ -d "$cimgdir" ]] ; then
+#resquashchrootmountlib "$cimgdir"
+sudo chroot $cimgchrootdir su -c "$resquashaddrepo"
+sudo chroot $cimgchrootdir su -c "$resquashinstall1"
+sudo chroot $cimgchrootdir su -c "$resquashinstall2"
+sudo chroot $cimgchrootdir /bin/bash -c "$resquashrelease"
+sudo chroot $cimgchrootdir /bin/bash -c "$resquashcreaterootdowndir"
 echo "$wmctrlbionicfnext 
 $xdotoolbionicfnext"
 echo "$wmctrlbionicdownlink 
 $xdotoolbionicdownlink"
 echo "$wmctrldowndir
 $xdotooldowndir"
-#wget -O "$userdowndir/$wmctrlbionicfnext" "$wmctrlbionicdownlink"
-#wget -O "$userdowndir/$xdotoolbionicfnext" "$xdotoolbionicdownlink"
-#sleep 3600
-sudo chroot $chrootdir /bin/bash -c "$resquashrelease"
-sudo chroot $chrootdir /bin/bash -c "$resquashcreaterootdowndir && $resquashinstall3"
-#sudo chroot $chrootdir /bin/bash -c "$resquashinstallwmctrl"
-#sudo chroot $chrootdir /bin/bash -c "$resquashinstallxdotool"
-sudo chroot $chrootdir /bin/bash -c "$resquashinstallchrome"
-sleep 3600
+sudo chroot $cimgchrootdir /bin/bash -c "$resquashinstallwmctrl"
+sudo chroot $cimgchrootdir /bin/bash -c "$resquashinstallxdotool"
+sudo chroot $cimgchrootdir /bin/bash -c "$resquashinstallchrome"
+sleep 10
+sudo chroot $cimgchrootdir su -c "$resquashblacklist"
+sudo chroot $cimgchrootdir su -c "$resquashremove"
+sudo chroot $cimgchrootdir su -c "$grubsplashplymouthg"
+cpw10plymouth
+#installr8169driver
+sudo chroot $cimgchrootdir  su -c "$installb43driver"
+installinteldriver "$cimgchrootdir/$chrootdowndir"
+installnvidiadriverchroot "$cimgchrootdir/$chrootdowndir"
+#installnvidiadriver "$chrootdowndir"
+#resquashaddcommand
+resquashrclocal
+resquashfinishing
 #resquashonly
 fi
+return 0
+}
+runthiscommandinchroot() {
+echo "bla"
+#sudo chroot $cimgchrootdir /bin/bash -c "$resquashinstallwmctrl"
+#sudo chroot $cimgchrootdir /bin/bash -c "$resquashinstallxdotool"
+#sudo chroot $cimgchrootdir /bin/bash -c "$resquashinstallchrome"
+#cpw10plymouth
+installnvidiadriverchroot "$cimgchrootdir/$chrootdowndir"
 return 0
 }
 
@@ -1917,12 +1943,12 @@ sudo mount -o loop $isodir $cimgdir/mnt
 mkdir $cimgdir/extract
 sudo rsync --exclude=/casper/filesystem.squashfs -a $cimgdir/mnt/ $cimgdir/extract
 sudo unsquashfs $cimgdir/mnt/casper/filesystem.squashfs
-sudo mv squashfs-root $chrootdir ;
+sudo mv squashfs-root $cimgchrootdir ;
 
-#sudo rm -R $chrootdir/home/Documents ;\
-#sudo cp -a /home/user/Documents/Documents $chrootdir/home &&\
-#ls $chrootdir/home/Documents &&\
-#cat $chrootdir/home/Documents/mstart
+#sudo rm -R $cimgchrootdir/home/Documents ;\
+#sudo cp -a /home/user/Documents/Documents $cimgchrootdir/home &&\
+#ls $cimgchrootdir/home/Documents &&\
+#cat $cimgchrootdir/home/Documents/mstart
 return 0
 }
 resquashchrootmountlib() {
@@ -2031,12 +2057,12 @@ echo "installchromedone"
 EOF
 )
 resquashinstall3=$(cat <<EOF
-if [[ "$release" =~ (xenial) ]] ; then \
+if [[ "$chrootrelease" =~ (xenial) ]] ; then \
 apt-get install -y xnest \
 xdotool \
 wmctrl \
 google-chrome-stable ;
-elif [[ "$release" =~ (bionic) ]] ; then \
+elif [[ "$chrootrelease" =~ (bionic) ]] ; then \
 echo "$wmctrlbionicfnext 
 $xdotoolbionicfnext"
 echo "$wmctrlbionicdownlink 
@@ -2052,7 +2078,7 @@ wmctrl \
 google-chrome-stable"
 
 resquashremove=$(cat <<'EOF'
-sudo apt-get remove -y --allow-change-held-packages firefox \
+apt-get remove -y --allow-change-held-packages firefox \
 thunderbird \
 libreoffice-* \
 gnome-mahjongg \
@@ -2110,31 +2136,43 @@ desktop="unity"
 fi
 }
 
-grubsplashplymouthg=$(cat <<EOF
-#sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash\"*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet\"/g' "/etc/default/grub"
+#sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash\"*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet\"/g' "/etc/default/grub"
 #sessionlist=$(ls /usr/bin/*session)
 #[[ $sessionlist =~ (gnome) ]] && desk="gnome"
+grubsplashplymouthg=$(cat <<EOF
+#export chrootrelease=bionic
+echo "$bgblackjpgdir"
+if [[ "$chrootrelease" =~ (bionic) ]] ; then
+echo "$chrootrelease"
+echo "$bgblackjpgdir"
+elif [[ "$chrootrelease" =~ (xenial) ]] && [[ "$desk" =~ (gnome) ]] ; then
+mv "$dbg" "$dbg"bk
+cp "$bgblackdir" "$dbg"
+mv "$dbg2" "$dbg2"bk
+cp "$bgblackdir" "$dbg2"
+mv "$dbg3" "$dbg3"bk
+cp "$bgblackdir" "$dbg3"
+fi
+sed -ri 's/([0-9]){0,},([0-9]){0,},([0-9]){0,}/0,0,0/g' "$pdir/$dpdir/$gpdir"
+cat "$pdir/$dpdir/$gpdir"
 
 curl -o "$bgblackjpgdir" "$blackbgjpgdownlink"
 convert "$bgblackjpgdir" "$bgblackpngdir"
-mv $bgdefaultbionic $bgdefaultbionic\bk
-mv "$bgblackpngdir" "$bgdefaultbionic"
+mv "$bgdefault" "$bgdefault"bk
+mv "$bgblackpngdir" "$bgdefault"
+ls "/usr/share/backgrounds"
 
-sudo sed -i 's/'$gcolor'*/0,0,0/g' "$pdir/$dpdir/$gpdir"
-sudo mv $dbg $dbg\bk
-sudo cp $bgblackdir $dbg
-sudo mv $dbg2 $dbg2\bk
-sudo cp $bgblackdir $dbg2
-sudo mv $dbg3 $dbg3\bk
-sudo cp $bgblackdir $dbg3
-sudo sed -i "s,timeout 300,timeout 3,g" /etc/dhcp/dhclient.conf
-sudo rm -f /etc/resolvconf/resolv.conf.d/head
+sed -i "s,timeout 300,timeout 3,g" /etc/dhcp/dhclient.conf
+rm -f "/etc/resolvconf/resolv.conf.d/head"
+mkdir /etc/resolvconf/resolv.conf.d ;
 echo "# Dynamic resolv.conf(5) file for glibc resolver(3) generated by resolvconf(8)
 #     DO NOT EDIT THIS FILE BY HAND -- YOUR CHANGES WILL BE OVERWRITTEN
-nameserver 8.8.8.8" | sudo tee -a "/etc/resolvconf/resolv.conf.d/head"
-sudo update-initramfs -u ;
-sudo update-grub
-sudo update-grub2
+nameserver 8.8.8.8" | tee -a "/etc/resolvconf/resolv.conf.d/head"
+cat "/etc/resolvconf/resolv.conf.d/head"
+
+update-initramfs -u ;
+update-grub
+update-grub2
 #passwd
 #cp -a /home/Documents/Windows-10-master/. /usr/share/themes/Windows-10-master/ ;
 #cd /home/Documents/Shell-Scripts-master
@@ -2143,13 +2181,31 @@ sudo update-grub2
 EOF
 )
 #./3gsnit: line 1608: warning: here-document at line 1603 delimited by end-of-file (wanted `EOF')
-#echo 1 | echo y | sudo ./transpack.sh &&\
+#echo 1 | echo y | sudo ./transpack.sh
 
+cpw10plymouth() {
+w10pdir="$mdir/SED/Downloads/Documentsv2/TW/splash/win10"
+cimgpdir="$cimgchrootdir/$pdir"
+cimgw10pdir="$cimgpdir/win10"
+localw10pdir="$pdir/win10"
+cimgdefp="$cimgpdir/default.plymouth"
+cimgdeftp="$cimgpdir/text.plymouth"
+cimgdefg="$cimgpdir/default.grub"
+#mkdir -p "$cimgw10pdir" ;
+cp -rv "$w10pdir" "$cimgpdir"
+rm -f "$cimgdefp" ;
+rm -f "$cimgdeftp" ;
+rm -f "$cimgdefg" ;
+ln -s "$localw10pdir/win10.plymouth" "$cimgdefp"
+ln -s "$localw10pdir/win10text.plymouth" "$cimgdeftp"
+ln -s "$localw10pdir/win10.grub" "$cimgdefg"
+ls "$cimgw10pdir"
+}
 
 installr8169driver=$(cat<<EOF
 #sh -c 'echo blacklist r8169 >> /etc/modprobe.d/blacklist.conf'
 echo "blacklist r8169" | sudo tee -a /etc/modprobe.d/blacklist.conf
-cd $rootdowndir/r8168-8.045.08
+cd $chrootdowndir/r8168-8.045.08
 sudo chmod +x ./autorun.sh
 sudo sh ./autorun.sh
 EOF
@@ -2157,24 +2213,16 @@ EOF
 
 installb43driver=$(cat<<EOF
 #https://askubuntu.com/questions/730799/installing-firmware-b43-installer-offline/730813#730813
-b43link="http://mirrors.kernel.org/ubuntu/pool/main/b/b43-fwcutter/b43-fwcutter_015-9_amd64.deb"
-b43fn=$(awk -F"/" '{gsub(".deb","");print $NF}' <<< "$b43link")
-b43debdir="$userdowndir/$b43fn.deb"
-b43dir="$userdowndir"
-bwllink="http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2"
-bwlfn=$(awk -F"/" '{gsub(".tar.bz2","");print $NF}' <<< "$bwllink")
-bwltbzdir="$userdowndir/$bwlfn.tar.bz2"
-bwldir="$userdowndir/bwl"
 
-sudo apt-get purge -y bcmwl-kernel-source ;
-curl -o "$b43debdir" "$b43link"
-curl -o "$bwltbzdir" "$bwllink"
-cd $b43dir
+apt-get purge -y bcmwl-kernel-source ;
+curl -o "$chrootb43downdir" "$b43downlink"
+curl -o "$chrootbwldowndir" "$bwldownlink"
+cd $chrootdowndir
 sudo rm -R broadcom-wl-5.100.138 ;
-#sudo dpkg -i b43-fwcutter_019-2_amd64.deb
-sudo dpkg -i b43-fwcutter_015-9_amd64.deb
+#dpkg -i b43-fwcutter_019-2_amd64.deb
+dpkg -i b43-fwcutter_015-9_amd64.deb
 tar xfvj broadcom-wl-5.100.138.tar.bz2
-sudo b43-fwcutter -w /lib/firmware broadcom-wl-5.100.138/linux/wl_apsta.o
+b43-fwcutter -w /lib/firmware broadcom-wl-5.100.138/linux/wl_apsta.o
 #sudo modprobe b43 -r
 #sudo modprobe b43
 EOF
@@ -2214,35 +2262,67 @@ downloadinstallfile "$thelink" "$downdir"
 cd $downdir
 sudo rm -r $regname ;
 tar xf $thename
-cd $regname
+
+if [[ "$downdir" =~ (SED) ]] ; then
+sudo chroot $cimgchrootdir su -c "cd /root/Downloads/$regname && bash ./install.sh"
+fi
+##cd $regname
 #break
-sudo bash ./install.sh
-sudo rm -rf $regname ;
-sudo rm -rf $thename ;
+##sudo bash ./install.sh
+##sudo rm -rf $regname ;
+##sudo rm -rf $thename ;
 done
+
 #vim install.sh  #check variables, mainly if you are in Android environment where you might need to edit the Linux Firmware Directory.
 return 0
 }
-#installinteldriver
+
+installnvidiadriverchroot() {
+downdir="$1"
+#http://ubuntuguide.net/install-latest-nvidia-graphics-drivers-in-ubuntu-linux
+nvidiadriverver="390.67"
+nvidiadriverfn="NVIDIA-Linux-x86_64-$nvidiadriverver"
+nvidiadriverfnext=$nvidiadriverfn.run
+nvidiadriverdowndir="$downdir/$nvidiadriverfnext"
+nvidiadriverdownlink="http://us.download.nvidia.com/XFree86/Linux-x86_64/$nvidiadriverver/$nvidiadriverfnext"
+if [[ ! -f "$nvidiadriverdowndir" ]] ; then
+curl -o "$nvidiadriverdowndir" "$nvidiadriverdownlink"
+fi
+#linux-headers-$(uname -r)
+#rmmod nvidia ;
+sudo chroot $cimgchrootdir su -c "apt-get install -y build-essential gcc-multilib dkms xorg xorg-dev &&\
+chmod u+x $chrootdowndir/$nvidiadriverfnext &&\
+apt-get purge -y nvidia* ;\
+apt-get autoremove ;\
+rm -rf /lib/modules/$(uname -r)/kernel/drivers/video/nvidia ;"
+sudo chroot $cimgchrootdir su -c "$chrootdowndir/$nvidiadriverfnext --no-opengl-files --dkms -s"
+}
 
 installnvidiadriver() {
 #http://ubuntuguide.net/install-latest-nvidia-graphics-drivers-in-ubuntu-linux
+downdir=$1
 nvidiadriverver="390.67"
 nvidiadriver="NVIDIA-Linux-x86_64-$nvidiadriverver"
-wget http://us.download.nvidia.com/XFree86/Linux-x86_64/$nvidiadriverver/$nvidiadriver
+nvidiadriverdowndir="$downdir/$nvidiadriver.run"
+nvidiadriverdownlink="http://us.download.nvidia.com/XFree86/Linux-x86_64/$nvidiadriverver/$nvidiadriver.run"
+wget -O "$nvidiadriverdowndir" "$nvidiadriverdownlink"
 sudo service lightdm stop ;
 sudo service gdm stop ;
 sudo apt-get install -y linux-headers-$(uname -r) build-essential gcc-multilib dkms xorg xorg-dev
-cd $chrootdowndir
+cd $downdir
 chmod u+x ./$nvidiadriver
 
 sudo apt-get purge -y nvidia*
 sudo apt-get autoremove
 #sudo /etc/init.d/gdm stop
 #sudo service lightdm stop
-sudo rmmod nvidia
-sudo rm -r -f /lib/modules/$(uname -r)/kernel/drivers/video/nvidia
-sudo ./$nvidiadriver --no-opengl-files --dkms -s
+sudo rmmod nvidia ;
+sudo rm -r -f /lib/modules/$(uname -r)/kernel/drivers/video/nvidia ;
+if [[ "$downdir" =~ (SED) ]] ; then
+sudo chroot $cimgchrootdir su -c "cd /root/Downloads && ./$nvidiadriver --no-opengl-files --dkms -s"
+else
+sudo $downdir/$nvidiadriver --no-opengl-files --dkms -s
+fi
 #sudo service lightdm restart
 }
 installcudatkdriver() {
@@ -3308,8 +3388,8 @@ nohup xterm -hold -e "$command" &
 ##sudo apt-get install dkms build-essential linux-headers-generic
 # echo "chmod +x /home/Documents/minenow && sudo /home/Documents/minenow" | sudo tee -a /etc/rc.local
 
-##sudo mount --bind ~/Documents/Docs/XMRchroot $chrootdir/mnt
-##sudo mount --bind $mdir/USB8A $chrootdir/mnt
+##sudo mount --bind ~/Documents/Docs/XMRchroot $cimgchrootdir/mnt
+##sudo mount --bind $mdir/USB8A $cimgchrootdir/mnt
 
 ###git clone https://github.com/B00merang-Project/Shell-Scripts.git
 ###gsettings get org.gnome.desktop.background picture-uri
@@ -3981,7 +4061,7 @@ tracker reset --hard ;
 sudo sed -i 's,xmr.mypool.online:3333,pool.supportxmr.com:3333,' "Dockerfile"
 ##UNUSED
 /home/user/Documents/Docs/mlinuxproject/usbboot/initrdlz/usr/share/plymouth/themes/ubuntu-logo
-$chrootdir/usr/share/plymouth/themes/ubuntu-gnome-logo
+$cimgchrootdir/usr/share/plymouth/themes/ubuntu-gnome-logo
 
 sudo cp -r /home/Documents/TW/blank /usr/share/plymouth/themes
 cd /usr/share/plymouth/themes/ubuntu-gnome-logo
@@ -4574,7 +4654,7 @@ populatefn "$listthisfn" "$DIR0"
 printallfn
 echo "------------"
 lastno="$totalallfn"
-populatefn "(resquashfromthebeginning|arubootlusb|resquash|^rcp|resquashchrootexit|extractinitrd|repackinitrd|CPUMININGONRAM|fastcopy)" "$DIR0" "$lastno"
+populatefn "(resquashmount|runthiscommandinchroot|resquashfromthebeginning|arubootlusb|resquash|^rcp|resquashchrootexit|extractinitrd|repackinitrd|CPUMININGONRAM|fastcopy)" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
