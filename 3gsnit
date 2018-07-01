@@ -3552,7 +3552,7 @@ sudo rm -rf $localdir/$4 ;
 sudo cp $filedir $localdir
 gitadd $localdir $remotedir
 
-if [[ "$filedir" == "$usbfiledir" ]] ; then
+if [[ "$filedir" == "$usbfiledir" ]] && [[ -f $usbfiledir ]] ; then
 sudo chown $userid $curfiledir
 sudo mv $curfiledir $curfiledir\bk
 sudo cp $usbfiledir $curfiledir
@@ -3683,7 +3683,7 @@ correctlista=("$(awk 'FNR>=2{print}' <<< "$correctlist")")
 begno=0
 endno=$[${#correctlista[@]}]
 for ((i=$begno;i<=$endno;i++)) ; do
-if [[ ${formattedthisfdate[$i]} -gt $newdatefile ]] ; then
+if [[ ${formattedthisfdate[$i]} -gt $newdatefile ]] && [[ -f ${thisfile[$i]} ]] ; then
 newdatefile=${formattedthisfdate[$i]}
 newestfile=${thisfile[$i]}
 newestname=${name[$i]}
