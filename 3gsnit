@@ -640,10 +640,14 @@ curl \
 wget \
 bless \
 gedit \
-python3 \
 python \
 python-pip \
 idle \
+python3.5 \
+python3-pip \
+idle3 \
+python3-xlib \
+python3-psutil \
 git \
 imagemagick \
 x11vnc \
@@ -654,12 +658,13 @@ zathura &&\
 ln -fs /usr/share/zoneinfo/Australia/Melbourne /etc/localtime \
 && dpkg-reconfigure --frontend noninteractive tzdata \
 && echo "exec xfce4-session" | tee /root/.xinitrc \
-&& export ORIBGPIC=/usr/share/backgrounds/xfce/xfce-blue.jpg \
+&& export ORIBGPIC=/usr/share/backgrounds/xfce/xfce-teal.jpg \
 && echo $ORIBGPIC \
 && sudo curl -o /root/black.jpg https://wallpapercave.com/wp/DTvUQor.jpg \
 && sudo mv /usr/share/backgrounds/xfce/xfce-teal.jpg /usr/share/backgrounds/xfce/xfce-teal.jpgbk \
 && sudo mv /root/black.jpg /usr/share/backgrounds/xfce/xfce-teal.jpg \
-&& pip install pyscreenshot
+&& pip install pyscreenshot \
+&& pip3 install pyscreenshot
 EOF
 )
 #RUN touch /etc/rc.local &&\
@@ -1618,11 +1623,17 @@ done
 varnamefn="$(awk -F'/' '{gsub(/([.])('$extsall')/,"");print $NF}' <<< "$varnamedownlink")"
 echo "$varnamefn"
 }
+
+##wmctrlbionic;;http://mirrors.kernel.org/ubuntu/pool/universe/w/wmctrl/wmctrl_1.07-7build1_amd64.deb
+##xdotoolbionic;;http://mirrors.kernel.org/ubuntu/pool/universe/x/xdotool/xdotool_3.20160805.1-3_amd64.deb
 setdownvar() {
 infos=$(cat<<EOF
 vbox;;https://download.virtualbox.org/virtualbox/5.2.12/virtualbox-5.2_5.2.12-122591~Ubuntu~$(lsb_release -sc)_amd64.deb
 andos;;https://osdn.net/projects/android-x86/downloads/67834/android-x86_64-7.1-r2.iso
 chrome;;https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+wmctrlbionic;;http://archive.ubuntu.com/ubuntu/pool/universe/w/wmctrl/wmctrl_1.07-7build1_amd64.deb
+xdotoolbionic;;http://archive.ubuntu.com/ubuntu/pool/universe/x/xdotool/xdotool_3.20160805.1-3_amd64.deb
+blackbgjpg;;https://wallpapercave.com/wp/DTvUQor.jpg
 EOF
 )
 begno=1
@@ -1638,9 +1649,46 @@ export ${varname}fnext="$varnamefnext"
 export ${varname}downdir="$userdowndir"
 export full${varname}downdir="$userdowndir/$varnamefnext"
 done
+
+
+}
+setresquashchrootvar() {
+chrootrelease=bionic
+desk=gnome
+chrootdowndir="/root/Downloads"
+wmctrldowndir="$chrootdowndir/$wmctrlbionicfnext"
+xdotooldowndir="$chrootdowndir/$xdotoolbionicfnext"
+
+echo "$desk"
+pdir="/usr/share/plymouth/themes"
+bgdir="/usr/share/backgrounds"
+bgblackjpgdir="$chrootdowndir/black.jpg"
+bgblackpngdir="$chrootdowndir/black.png"
+
+if [[ $chrootrelease =~ (xenial) ]] ; then
+if [[ $desk =~ (GNOME) ]] || [[ $desk =~ (gnome) ]]; then
+gcolor="45,51,53"
+dpdir="ubuntu-gnome-logo"
+gpdir="$dpdir.grub"
+dbg="$bgdir/Greenish_by_EstebanMitnick.jpg"
+dbg2="$bgdir/gnome/adwaita-morning.jpg"
+dbg3="$bgdir/gnome/adwaita-day.jpg"
+elif [[ $desk =~ (UNITY) ]] ; then
+gcolor="44,0,30"
+dpdir="ubuntu-logo"
+gpdir="$dpdir.grub"
+fi
+elif [[ $chrootrelease =~ (bionic) ]] ; then
+gcolor="44,0,30"
+dpdir="ubuntu-logo"
+gpdir="$dpdir.grub"
+bgdefaultbionic="$bgdir/warty-final-ubuntu.png"
+bgdefault="$bgdefaultbionic"
+fi
 }
 setvar() {
 setdownvar
+setresquashchrootvar
 userid=$(awk -F: '!/root/ && /(\/bin\/bash)/ {print $1}' /etc/passwd)
 mdir="/media/$userid"
 userhomedir="/home/$userid"
@@ -1784,12 +1832,16 @@ mkdir $downdir
 fi
 transmission-cli $1 -w $2
 }
+notinstalledonbionic() {
+wmctrl
+xdotool
+xnest
+google-chrome-stable
+}
 ###resquash
 resquashfromthebeginning() {
 #https://www.backblaze.com/blog/10-rules-for-how-to-write-cross-platform-code/
 #https://www.maketecheasier.com/how-to-download-torrents-from-the-command-line-in-ubuntu/
-#cimgdir=/home/$USER/customimg
-#downdir=/home/$USER/Downloads
 uisolink1804lts="http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso"
 uisolink1804ltst="$uisolink1804lts.torrent"
 uisolink1604lts="http://releases.ubuntu.com/16.04/ubuntu-16.04.4-desktop-amd64.iso"
@@ -1806,19 +1858,20 @@ if [[ ! -f $uisodir ]]; then
 #downloadinstallfile "$uisolink" "$downdir"
 torrentdl $uisolinkt $cimgdowndir
 fi
-export -f setdownvar
 
-if [[ ! -d $cimgdir ]] ; then
+if [[ ! -d "$cimgdir" ]] ; then
 mkdir -p $cimgdir ;
 startnonchrootprep "$cimgdir" "$uisodir"
 resquashchrootmountlib "$cimgdir"
 sudo chroot $chrootdir su -c "$resquashaddrepo"
-sudo chroot $chrootdir su -c "$resquashinstallnremove"
-
+sleep 3600
+sudo chroot $chrootdir su -c "$resquashinstall1"
+sudo chroot $chrootdir su -c "$resquashinstall2"
 sudo chroot $chrootdir /bin/bash -c "$resquashcreaterootdowndir"
 sudo chroot $chrootdir /bin/bash -c "$resquashinstallchrome"
-
 sudo chroot $chrootdir su -c "$resquashblacklist"
+sudo chroot $chrootdir su -c "$resquashremove"
+sleep 3600
 sudo chroot $chrootdir su -c "$grubsplashplymouthg"
 #installr8169driver
 sudo chroot edit su -c "$installb43driver"
@@ -1827,14 +1880,27 @@ installnvidiadriver "$downdir"
 #resquashaddcommand
 resquashrclocal
 resquashfinishing
-elif [[ -d $cimgdir ]] ; then
-sudo chroot $chrootdir /bin/bash -c "$resquashcreaterootdowndir"
+elif [[ -d "$cimgdir" ]] ; then
+echo "$wmctrlbionicfnext 
+$xdotoolbionicfnext"
+echo "$wmctrlbionicdownlink 
+$xdotoolbionicdownlink"
+echo "$wmctrldowndir
+$xdotooldowndir"
+#wget -O "$userdowndir/$wmctrlbionicfnext" "$wmctrlbionicdownlink"
+#wget -O "$userdowndir/$xdotoolbionicfnext" "$xdotoolbionicdownlink"
+#sleep 3600
+sudo chroot $chrootdir /bin/bash -c "$resquashrelease"
+sudo chroot $chrootdir /bin/bash -c "$resquashcreaterootdowndir && $resquashinstall3"
+#sudo chroot $chrootdir /bin/bash -c "$resquashinstallwmctrl"
+#sudo chroot $chrootdir /bin/bash -c "$resquashinstallxdotool"
 sudo chroot $chrootdir /bin/bash -c "$resquashinstallchrome"
 sleep 3600
 #resquashonly
 fi
 return 0
 }
+
 startnonchrootprep() {
 #isodir="~/Documents/Docs/ubuntu-gnome-16.04.3-desktop-amd64.iso"
 isodir=$2
@@ -1878,10 +1944,14 @@ ln -s /bin/true /sbin/initctl ;"
 return 0
 }
 
-#release=bionic
+resquashrelease=$(cat <<'EOF'
+chrootrelease="$(lsb_release -sc)"
+echo release=$chrootrelease
+EOF
+)
 resquashaddrepo=$(cat <<'EOF'
-release="$(lsb_release -sc)"
-echo release=$release
+chrootrelease="$(lsb_release -sc)"
+echo release=$chrootrelease
 apt update --fix-missing -y
 apt-get update --fix-missing ;
 apt-get purge -y nvidia* bcmwl-kernel-source ;
@@ -1899,7 +1969,7 @@ rm /etc/X11/xorg.conf ;
 EOF
 )
 
-resquashinstallnremove=$(cat <<'EOF'
+resquashinstall1=$(cat <<'EOF'
 rm /usr/share/applications/ubuntu-amazon-default.desktop ;
 rm /usr/share/unity-webapps/userscripts/unity-webapps-amazon/Amazon.user.js ;
 rm /usr/share/unity-webapps/userscripts/unity-webapps-amazon/manifest.json ;
@@ -1908,19 +1978,80 @@ apt-get install -y dkms \
 wget \
 curl ;
 apt-get install -y git build-essential cmake ;
+EOF
+)
+resquashinstall2=$(cat <<'EOF'
 apt install -y libuv1-dev libmicrohttpd-dev libhwloc-dev libssl-dev ;
 apt install -y amd64-microcode ;
+apt-get install -y intel-microcode \
+openvpn ;
+#grub-efi-ia32 \
+#grub-efi-ia32-bin \
+#ubuntu-desktop \
+#ubuntu-gnome-desktop \
+#unity-tweak-tool ;
+EOF
+)
+
+resquashcreaterootdowndir=$(cat <<'EOF'
+export chrootdowndir="/root/Downloads"
+echo $chrootdowndir
+[[ ! -d "$chrootdowndir" ]] && mkdir "$chrootdowndir"
+EOF
+)
+
+#wmctrlbionic;;http://archive.ubuntu.com/ubuntu/pool/universe/w/wmctrl/wmctrl_1.07-7build1_amd64.deb
+#xdotoolbionic;;http://archive.ubuntu.com/ubuntu/pool/universe/x/xdotool/xdotool_3.20160805.1-3_amd64.deb
+resquashinstallwmctrl=$(cat <<EOF
+echo "$chrootdowndir/wmctrl_1.07-7build1_amd64.deb"
+#wget -O "$wmctrldowndir" "$wmctrlbionicdownlink"
+#curl -o "$wmctrldowndir" "$wmctrlbionicdownlink"
+curl -o "$chrootdowndir/wmctrl_1.07-7build1_amd64.deb" "$wmctrlbionicdownlink"
+dpkg -i "$chrootdowndir/wmctrl_1.07-7build1_amd64.deb"
+echo "installwmctrldone"
+EOF
+)
+resquashinstallxdotool=$(cat <<EOF
+echo "$chrootdowndir/xdotool_3.20160805.1-3_amd64.deb"
+#wget -O "$xdotooldowndir" "$xdotoolbionicdownlink"
+#curl -o "$xdotooldowndir" "$xdotoolbionicdownlink"
+curl -o "$chrootdowndir/xdotool_3.20160805.1-3_amd64.deb" "$xdotoolbionicdownlink"
+dpkg -i "$chrootdowndir/xdotool_3.20160805.1-3_amd64.deb"
+apt --fix-broken install
+echo "installxdotooldone"
+EOF
+)
+resquashinstallchrome=$(cat <<EOF
+##https://linuxconfig.org/how-to-install-google-chrome-web-browser-on-ubuntu-18-04-bionic-beaver-linux
+apt-get remove -y google-chrome-stable ;
+echo "$chrootdowndir/$chromefnext"
+curl -o "$chrootdowndir/$chromefnext" "$chromedownlink"
+dpkg -i "$chrootdowndir/$chromefnext"
+echo "installchromedone"
+EOF
+)
+resquashinstall3=$(cat <<EOF
+if [[ "$release" =~ (xenial) ]] ; then \
 apt-get install -y xnest \
 xdotool \
 wmctrl \
-google-chrome-stable \
-intel-microcode \
-openvpn ;\
-#grub-efi-ia32 \
-#grub-efi-ia32-bin ;\
-#ubuntu-desktop \
-#ubuntu-gnome-desktop \
-#unity-tweak-tool;\
+google-chrome-stable ;
+elif [[ "$release" =~ (bionic) ]] ; then \
+echo "$wmctrlbionicfnext 
+$xdotoolbionicfnext"
+echo "$wmctrlbionicdownlink 
+$xdotoolbionicdownlink"
+echo "$awmctrlbionicdowndir
+$axdotoolbionicdowndir"
+fi
+EOF
+)
+bla="xnest \
+xdotool \
+wmctrl \
+google-chrome-stable"
+
+resquashremove=$(cat <<'EOF'
 sudo apt-get remove -y --allow-change-held-packages firefox \
 thunderbird \
 libreoffice-* \
@@ -1937,27 +2068,12 @@ unity-scope-home+ \
 webbrowser-app \
 gnome-contacts \
 gnome-getting-started* ;
-#sudo apt-get remove firefox-globalmenu thunderbird-globalmenu &&\
-#sudo apt-get remove indicator-appmenu &&\
+#sudo apt-get remove firefox-globalmenu thunderbird-globalmenu
+#sudo apt-get remove indicator-appmenu
 #sudo apt-get autoremove appmenu-gtk appmenu-gtk3 appmenu-qt
 EOF
 )
-rootdowndir="/root/Downloads"
-resquashcreaterootdowndir=$(cat<<EOF
-echo $rootdowndir
-[[ ! -d "$rootdowndir" ]] && mkdir "$rootdowndir"
-EOF
-)
-resquashinstallchrome=$(cat<<EOF
-##https://linuxconfig.org/how-to-install-google-chrome-web-browser-on-ubuntu-18-04-bionic-beaver-linux
-export rootdowndir="/root/Downloads"
-apt-get remove -y google-chrome-stable ;
-echo "$rootdowndir/$chromefnext"
-curl -o "$rootdowndir/$chromefnext" "$chromedownlink"
-dpkg -i "$rootdowndir/$chromefnext"
-echo "installchromedone"
-EOF
-)
+
 
 resquashblacklist=$(cat <<EOF
 echo "blacklist nouveau 
@@ -1970,7 +2086,6 @@ alias lbm-nouveau off" | tee -a /etc/modprobe.d/blacklist.conf
 echo "options nouveau modeset=0" | tee -a /etc/modprobe.d/nouveau-kms.conf
 EOF
 )
-
 
 detectcurdesktop() {
 #https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
@@ -1997,41 +2112,21 @@ fi
 
 grubsplashplymouthg=$(cat <<EOF
 #sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash\"*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet\"/g' "/etc/default/grub"
-sessionlist=$(ls /usr/bin/*session)
-[[ $sessionlist =~ (gnome) ]] && desk="gnome"
-echo "$desk"
-pdir="/usr/share/plymouth/themes"
-bgdir="/usr/share/backgrounds"
-blackbg="/home/Documents/TW/black.jpg"
+#sessionlist=$(ls /usr/bin/*session)
+#[[ $sessionlist =~ (gnome) ]] && desk="gnome"
 
-if [[ $(lsb_release -sc) =~ (xenial) ]] ; then
-if [[ $desk =~ (GNOME) ]] ; then
-gcolor="45,51,53"
-dpdir="ubuntu-gnome-logo"
-gpdir="$dpdir.grub"
-dbg="$bgdir/Greenish_by_EstebanMitnick.jpg"
-dbg2="$bgdir/gnome/adwaita-morning.jpg"
-dbg3="$bgdir/gnome/adwaita-day.jpg"
+curl -o "$bgblackjpgdir" "$blackbgjpgdownlink"
+convert "$bgblackjpgdir" "$bgblackpngdir"
+mv $bgdefaultbionic $bgdefaultbionic\bk
+mv "$bgblackpngdir" "$bgdefaultbionic"
 
-elif [[ $desk =~ (UNITY) ]] ; then
-gcolor="44,0,30"
-dpdir="ubuntu-logo"
-gpdir="$dpdir.grub"
-
-#UBUNTUISO
-#sudo cp /usr/share/backgrounds/warty-final-ubuntu.png /usr/share/backgrounds/warty-final-ubuntu-old.png
-#sudo rm -f /usr/share/backgrounds/warty-final-ubuntu.png
-#sudo cp /mnt/Documents/TW/black.jpg /usr/share/backgrounds/warty-final-ubuntu.png
-fi
-
-fi
 sudo sed -i 's/'$gcolor'*/0,0,0/g' "$pdir/$dpdir/$gpdir"
 sudo mv $dbg $dbg\bk
-sudo cp $blackbg $dbg
+sudo cp $bgblackdir $dbg
 sudo mv $dbg2 $dbg2\bk
-sudo cp $blackbg $dbg2
+sudo cp $bgblackdir $dbg2
 sudo mv $dbg3 $dbg3\bk
-sudo cp $blackbg $dbg3
+sudo cp $bgblackdir $dbg3
 sudo sed -i "s,timeout 300,timeout 3,g" /etc/dhcp/dhclient.conf
 sudo rm -f /etc/resolvconf/resolv.conf.d/head
 echo "# Dynamic resolv.conf(5) file for glibc resolver(3) generated by resolvconf(8)
@@ -2080,7 +2175,7 @@ sudo rm -R broadcom-wl-5.100.138 ;
 sudo dpkg -i b43-fwcutter_015-9_amd64.deb
 tar xfvj broadcom-wl-5.100.138.tar.bz2
 sudo b43-fwcutter -w /lib/firmware broadcom-wl-5.100.138/linux/wl_apsta.o
-#sudo modprobe b43 -r &&\
+#sudo modprobe b43 -r
 #sudo modprobe b43
 EOF
 )
@@ -2132,12 +2227,14 @@ return 0
 
 installnvidiadriver() {
 #http://ubuntuguide.net/install-latest-nvidia-graphics-drivers-in-ubuntu-linux
-wget http://us.download.nvidia.com/XFree86/Linux-x86_64/390.67/NVIDIA-Linux-x86_64-390.67.run
-sudo service lightdm stop ;\
-sudo service gdm stop ;\
+nvidiadriverver="390.67"
+nvidiadriver="NVIDIA-Linux-x86_64-$nvidiadriverver"
+wget http://us.download.nvidia.com/XFree86/Linux-x86_64/$nvidiadriverver/$nvidiadriver
+sudo service lightdm stop ;
+sudo service gdm stop ;
 sudo apt-get install -y linux-headers-$(uname -r) build-essential gcc-multilib dkms xorg xorg-dev
-cd /home/Documents/Driver
-chmod u+x ./NVIDIA-Linux-x86_64-390.25.run
+cd $chrootdowndir
+chmod u+x ./$nvidiadriver
 
 sudo apt-get purge -y nvidia*
 sudo apt-get autoremove
@@ -2145,8 +2242,8 @@ sudo apt-get autoremove
 #sudo service lightdm stop
 sudo rmmod nvidia
 sudo rm -r -f /lib/modules/$(uname -r)/kernel/drivers/video/nvidia
-sudo ./NVIDIA-Linux-x86_64-390.25.run --no-opengl-files --dkms -s
-#sudo service lightdm start
+sudo ./$nvidiadriver --no-opengl-files --dkms -s
+#sudo service lightdm restart
 }
 installcudatkdriver() {
 #CUDATOOLKIT INSTALLL
@@ -2185,8 +2282,6 @@ fi
 #rm ~/lala ; echo "\$dir" | tee -a ~/lala && cat ~/lala
 return 0
 }
-
-
 resquashrclocal(){
 if [[ $type =~ ^(1)$ ]]
 then
@@ -2294,7 +2389,7 @@ return 0
 }
 
 copytombios() {
-cd /media/$userid/MBIOS/casper &&
+cd $mdir/MBIOS/casper &&
 sudo rm -f filesystem.squashfs ;
 sudo cp $cimgdir/extract/casper/filesystem.squashfs . &&
 echo "copytobios done"
@@ -3208,11 +3303,7 @@ nohup xterm -hold -e "$command" &
 ##wget 
 ##tar xfvj 0005-r8168-8.042.00.tar.bz2
 ##lsmod | grep nvidia 
-##gsettings get org.gnome.desktop.background picture-uri
-## gsettings set org.gnome.desktop.background picture-uri file:///media/ubuntu/USB8A/ALL/black.jpg
 
-## cp /mnt/Documents/black.jpg /home
-##gsettings set org.gnome.desktop.background picture-uri file:///home/black.jpg
 #sudo apt-get upgrade ;\
 ##sudo apt-get install dkms build-essential linux-headers-generic
 # echo "chmod +x /home/Documents/minenow && sudo /home/Documents/minenow" | sudo tee -a /etc/rc.local
