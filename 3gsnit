@@ -39,7 +39,7 @@ currentos="$1"
 fi
 
 if [[ "$currentos" == "linux-gnu" ]]; then
-listthisfn="(reinstallcomp|installdockeruv10|install|getspecs|testecho|showsplash|choosesplash|startupdaten6p|gitpush1m|gitpush$threegsn)"
+listthisfn="(reinstallcomp|installdockeruv10|install|getspecs|testecho|showsplash|choosesplash|startupdaten6p)"
 if [[ -d "/mnt/c" ]]; then
 # POSIX compatibility layer and Linux environment emulation for Windows
 echo "cygwin"
@@ -668,6 +668,8 @@ EOF
 #perl -pi -e "s/^(exit 0)/x11vnc -forever -create\n\1/g" /etc/rc.local &&\
 #echo "sudo mount -a && sudo python3 /media/Surface2/Automate/FN30.py & exec xfce4-session" | tee /root/.xinitrc
 dfname="Dockerfile"
+buildcont="sudo docker build -t $contname ."
+runcont="sudo docker run -it --user 0 --restart=always -d -p 5900 --privileged --cap-add SYS_ADMIN --cap-add DAC_READ_SEARCH --security-opt seccomp=unconfined $contname sudo su -c \"x11vnc -forever -create -scale 1024x768\""
 installdockeruv10() {
 ##https://unix.stackexchange.com/questions/4897/providing-bin-and-lib-inside-a-chroot-jailt
 #mount --bind /bin /chroot/bin
@@ -696,13 +698,10 @@ sudo docker rmi $contid
 done
 )
 #[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ; [[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q)
-
-cd $userhomedir
-mkdir -p Dockerfileuxv ;
-cd Dockerfileuxv
-echo "$builduv10" | tee $dfname
-awk '{gsub(/(\\EOF)/,"EOF");print}' $dfname >> $dfname\bk
-mv $dfname\bk $dfname
+[[ ! -d $gitlocalrepodir ]] && mkdir $gitlocalrepodir
+#echo "$builduv10" | tee $dfname
+#awk '{gsub(/(\\EOF)/,"EOF");print}' $dfname >> $dfname\bk
+#mv $dfname\bk $dfname
 #--build-arg oribgpic="/usr/share/backgrounds/xfce/xfce-teal.jpg"
 contname="uv10"
 $buildcont
@@ -3391,6 +3390,12 @@ mv $usbfiledir $usbfiledir\bk
 cp $filedir $usbfiledir
 fi
 }
+gitpushmoddedwp() {
+gitaddprep $localdir $remotedir
+echo "$builduv10" | tee $localdir/$dfname
+ls $localdir
+gitadd $localdir $remotedir "$rmmessage"
+}
 gitpush1m() {
 gitpushusbuniv "$livecur1msdir" "$liveusb1msdir" "datefile1m" "$onems2"
 }
@@ -3405,8 +3410,6 @@ localdir=$gitlocalrepodir/uv10
 readmedir=$localdir/README.md
 remotedir="uv10"
 contname="uv10"
-buildcont="sudo docker build -t $contname ."
-runcont="sudo docker run -it --user 0 --restart=always -d -p 5900 --privileged --cap-add SYS_ADMIN --cap-add DAC_READ_SEARCH --security-opt seccomp=unconfined $contname sudo su -c \"x11vnc -forever -create -scale 1024x768\""
 rmmessage=$(cat <<EOF
 # $remotedir
 Docker container with :
@@ -4460,7 +4463,7 @@ populatefn "(downchromeos|installvbox|installvboxvmandos|installskype|installpyt
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(gitnewrepo|gitpushuv10df)" "$DIR0" "$lastno"
+populatefn "(gitnewrepo|gitpushuv10df|gitpush1m|gitpush$threegsn|gitpushmoddedwp)" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
