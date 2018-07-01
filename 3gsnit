@@ -1664,12 +1664,14 @@ cimgchrootdir="$cimgdir/edit"
 cimgdowndir="$mdir/SED/Downloads"
 chrootrelease=bionic
 desk=gnome
+kernel="4.15.0-10-generic"
 elif [[ "$dir" =~ (MBP) ]] ; then
 cimgdir="$userhomedir/customimg"
 cimgchrootdir="$cimgdir/edit"
 cimgdowndir="$userhomedir/Downloads"
 chrootrelease=xenial
 desk=gnome
+kernel="4.10.0-28-generic"
 fi
 uisolink1804lts="http://releases.ubuntu.com/18.04/ubuntu-18.04-desktop-amd64.iso"
 uisolink1804ltst="$uisolink1804lts.torrent"
@@ -3658,9 +3660,15 @@ endno=$[${#listfilea[@]}-1]
 for ((i=$begno;i<=$endno;i++)) ; do
 name[$i]="$(awk -F ';;' '{printf $2}' <<< "${listfilea[$i]}")"
 thisfile[$i]="$(awk -F ';;' '{printf $1}' <<< "${listfilea[$i]}")"
+if [[ -f ${thisfile[$i]} ]] ; then
 thisdatefile[$i]="$(stat -c %y "${thisfile[$i]}")"
 thisfdate[$i]="$(awk -F" " '{printf $1" "$2}' <<< "${thisdatefile[$i]}")"
 formattedthisfdate[$i]="$(date -d "${thisfdate[$i]}" +%Y%m%d%H%M%S)"
+else
+thisdatefile[$i]=0
+thisfdate[$i]=0
+formattedthisfdate[$i]=0
+fi
 #echo "$thisfile"
 #echo $thisfdate
 echo ${name[$i]}"date=${formattedthisfdate[$i]}"
@@ -3683,7 +3691,7 @@ correctlista=("$(awk 'FNR>=2{print}' <<< "$correctlist")")
 begno=0
 endno=$[${#correctlista[@]}]
 for ((i=$begno;i<=$endno;i++)) ; do
-if [[ ${formattedthisfdate[$i]} -gt $newdatefile ]] && [[ -f ${thisfile[$i]} ]] ; then
+if [[ ${formattedthisfdate[$i]} -gt $newdatefile ]] ; then
 newdatefile=${formattedthisfdate[$i]}
 newestfile=${thisfile[$i]}
 newestname=${name[$i]}
