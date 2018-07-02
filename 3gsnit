@@ -3414,19 +3414,38 @@ echo "================"
 echo "$1"
 echo "================"
 }
+
+#listallubuntuppa
+#https://askubuntu.com/questions/148932/how-can-i-get-a-list-of-all-repositories-and-ppas-from-the-command-line-into-an
+checkallrepo() {
+#https://stackoverflow.com/questions/3742983/how-to-get-the-contents-of-a-webpage-in-a-shell-variable
+#latestcommitdate="git show -s --format=%ci https://github.com/pagkly/1mstart2.git"
+gitusername="$1"
+link="https://github.com/$gitusername?tab=repositories"
+content=$(wget $link -q -O -)
+#<a href="/pagkly/FN35AOCV" itemprop="name codeRepository">
+#allrepo="$(awk -F'/' 'match($0, /(["])([/]pagkly[/])(.*?)(["])/, ARR) {print ARR[3]}' <<< "$content")"
+allrepo=$(perl -nl -e'/(a href="\/pagkly\/)(.*?)(" itemprop)/ && printf "$2\n"' <<< "$content")
+allrepoa=("$allrepo")
+notice "gitrepo=
+$allrepo"
+}
 gitcred() {
-email="ajsgisayid@gmail.com"
-username="pagkly"
-pwd="Myloxyloto2012"
-git config --global user.email "$email"
-git config --global user.name "$username"
+gitemail="ajsgisayid@gmail.com"
+gitusername="pagkly"
+gitpwd="Myloxyloto2012"
+git config --global user.email "$gitemail"
+git config --global user.name "$gitusername"
 userhomedir="/home/ubuntu"
 gitlocalrepodir="$userhomedir/agit"
 if [[ ! -d "$gitlocalrepodir" ]] ; then
-mkdir -p $gitlocalrepodir
+mkdir -p "$gitlocalrepodir"
 fi
+checkallrepo "$gitusername"
 }
 gitcred
+
+
 
 gitaskdir() {
 #read -p "localdir" localdir
@@ -3453,7 +3472,7 @@ gitadd $newlocaldir $newreponame
 gitaddprep() {
 localdir=$1
 remotegit=$2
-gitremotelink="https://$username:$pwd@github.com/$username/$remotegit.git"
+gitremotelink="https://$gitusername:$gitpwd@github.com/$gitusername/$remotegit.git"
 notice "preparing $localdir"
 sudo chown $userid $localdir
 sudo rm -rf "$localdir" ;
@@ -3471,7 +3490,7 @@ localdir=$1
 remotegit=$2
 message=$3
 update=$4
-gitremotelink="https://$username:$pwd@github.com/$username/$remotegit.git"
+gitremotelink="https://$gitusername:$gitpwd@github.com/$gitusername/$remotegit.git"
 notice "pushing $localdir"
 cd $localdir
 git remote add origin "$gitremotelink"
@@ -3523,7 +3542,7 @@ git push --force origin deadbeef:master
 #git rebase origin/master
 }
 gitremove() {
-git remote add origin https://$username:$pwd@github.com/pagkly/$remotegit.git
+git remote add origin https://$gitusername:$gitpwd@github.com/$gitusername/$remotegit.git
 cd $localdir
 #git pull origin master
 git rm --cached $onems2
