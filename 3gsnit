@@ -3758,7 +3758,7 @@ fi
 
 datefile1m() {
 #localvusb
-allfilesa=$(cat <<EOF 
+allfilesa=$(cat <<EOF
 $livecur1msdir;;locf
 $liveusb1msdir;;usbf
 EOF
