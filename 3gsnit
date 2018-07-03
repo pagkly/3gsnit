@@ -3430,6 +3430,21 @@ allrepoa=("$allrepo")
 notice "gitrepo=
 $allrepo"
 }
+clonerepo() {
+checkallrepo "$gitusername"
+begno=1
+endno=$(wc -l <<< "$allrepo")
+for ((i=$begno;i<=$endno;i++)) ; do
+reponame[$i]=$(awk 'NR=='$i'{print}' <<< "$allrepo")
+echo "$i.${reponame[$i]}"
+done
+read -p "choose repono=" repono
+echo "cloning $repono.${reponame[$repono]}"
+#sleep 3600
+cd "$gitlocalrepodir"
+#https://github.com/pagkly/FN35OCVbside.git
+git clone "https://github.com/$gitusername/${reponame[$repono]}.git"
+}
 gitcred() {
 gitemail="ajsgisayid@gmail.com"
 gitusername="pagkly"
@@ -4689,7 +4704,7 @@ populatefn "(downchromeos|installvbox|installvboxvmandos|installskype|installpyt
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(gitnewrepo|gitpushfn35ocv|gitpushuv10df|gitpush1m|gitpush$threegsn|gitpushmoddedwp|gitpushwltools)" "$DIR0" "$lastno"
+populatefn "(checkallrepo|clonerepo|gitnewrepo|gitpushfn35ocv|gitpushuv10df|gitpush1m|gitpush$threegsn|gitpushmoddedwp|gitpushwltools)" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
