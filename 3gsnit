@@ -393,7 +393,7 @@ sudo update-grub
 installchromebrowser
 installdockerce
 installandroidstudio
-installpython
+installpython3
 installplymouththeme
 driveuuid="01D2CDF49BBAF180"
 echo "#UUID=01D2CDF49BBAF180/Users/SP3/Documents/Docs/Tech    $userhomedir/Documents/Docs       ntfs    permissions,locale=en_US.utf8    0   2
@@ -833,7 +833,7 @@ sudo dpkg --add-architecture i386
 export WINEARCH=win32
 winecfg
 }
-installpython() {
+installpython3() {
 sudo apt-get install -y build-essential cmake \
 libgtk-3-dev \
 libboost-all-dev
@@ -3441,9 +3441,26 @@ done
 read -p "choose repono=" repono
 echo "cloning $repono.${reponame[$repono]}"
 #sleep 3600
+
 cd "$gitlocalrepodir"
-#https://github.com/pagkly/FN35OCVbside.git
+if [[ $repono =~ (all) ]] ; then
+for ((i=$begno;i<=$endno;i++)) ; do
+reponame[$i]=$(awk 'NR=='$i'{print}' <<< "$allrepo")
+echo "cloning $i.${reponame[$i]}"
+if [[ ! -d "${reponame[$i]}" ]] ; then
 git clone "https://github.com/$gitusername/${reponame[$repono]}.git"
+elif [[ -d "${reponame[$i]}" ]] ; then
+git clone "https://github.com/$gitusername/${reponame[$repono]}.git"
+fi
+done
+
+elif [[ ! $repono =~ (all) ]] ; then
+if [[ ! -d "${reponame[$i]}" ]] ; then
+git clone "https://github.com/$gitusername/${reponame[$repono]}.git"
+elif [[ -d "${reponame[$i]}" ]] ; then
+git clone "https://github.com/$gitusername/${reponame[$repono]}.git"
+fi
+fi
 }
 gitcred() {
 gitemail="ajsgisayid@gmail.com"
@@ -4700,7 +4717,7 @@ populatefn "(resquashmount|runthiscommandinchroot|resquashfromthebeginning|arubo
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(downchromeos|installvbox|installvboxvmandos|installskype|installpython)" "$DIR0" "$lastno"
+populatefn "(downchromeos|installvbox|installvboxvmandos|installskype|installpython3)" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
