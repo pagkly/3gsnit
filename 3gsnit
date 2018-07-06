@@ -562,6 +562,21 @@ echo 'exec socat UNIX-LISTEN:/var/run/docker.sock,fork,group=docker,umask=007 EX
 sudo adduser $userid docker
 }
 
+installatom2() {
+atomdowndirfnext="$userdowndir/atom-amd64.deb"
+curl -o "$atomdowndirfnext" "$atomdownlink"
+dpkg -i "$atomdowndirfnext"
+}
+
+installatom() {
+#https://flight-manual.atom.io/hacking-atom/sections/hacking-on-atom-core/#platform-linux
+gitcred
+cd $gitlocalrepodir
+git clone https://github.com/atom/atom.git
+script/bootstrap
+sudo apt-get install -y build-essential git libsecret-1-dev fakeroot rpm libx11-dev libxkbfile-dev
+}
+
 installskype() {
 #https://askubuntu.com/questions/887389/how-to-install-skype-for-linux-in-ubuntu-16-04-via-console-only
 sudo apt-get update
@@ -570,6 +585,38 @@ curl https://repo.skype.com/data/SKYPE-GPG-KEY | sudo apt-key add -
 echo "deb https://repo.skype.com/deb stable main" | sudo tee /etc/apt/sources.list.d/skypeforlinux.list
 sudo apt-get update
 sudo apt-get install -y skypeforlinux
+}
+
+installwine3() {
+wine;;https://dl.winehq.org/wine/source/3.0/wine-3.0.2.tar.xz;;http://mirrors.ibiblio.org/wine/source/3.0/wine-3.0.2.tar.xz
+dnfx35;;
+curl -o "$winedowndir" "$winedownlink"
+curl -o "$dnfx35downdir" "$dnfx35downlink"
+cd "$userdowndir"
+tar xf wine*
+cd wine*
+sudo dpkg --add-architecture i386
+sudo apt-get install -y flex bison
+sudo apt-get install -y libx11-dev:i386 libfreetype6-dev:i386 libx11-dev
+sudo apt-get install -y winbind
+sudo apt-get install -y libntlm0
+./configure
+#--without-x11
+make
+sudo make install
+winecfg
+wine "$dnfx35downdir"
+}
+
+installwineppa() {
+#http://ubuntuhandbook.org/index.php/2015/12/install-wine-1-8-stable-new-ppa/
+sudo add-apt-repository -y ppa:wine/wine-builds
+sudo apt-get update
+#stable
+sudo apt-get install wine1.8 winetricks
+#dev
+sudo apt-get install --install-recommends winehq-devel
+winecfg
 }
 
 installvbox2() {
@@ -621,6 +668,27 @@ VBoxManage snapshot $VM take <name of snapshot>
 VBoxManage snapshot $VM restore <name of snapshot>
 EOF
 )
+
+andapkdir="$mdir/SED/"
+vboxvdiandseddir=
+vboxvdiandlivedir=
+gpsapkdir=
+freefireapkdir=
+pubgmapkdir=
+octopusapkdir=
+if [[ -d "$mdir/SED" ]] ; then
+ln -s "$vboxvdiandseddir" "$vboxvdiandlivedir"
+fi
+sudo apt-get install -y adb
+adb devices
+adb sideload "$gpsapkdir"
+adb sideload "$octopusapkdir"
+adb sideload "$freefireapkdir"
+adb sideload "$pubgmapkdir"
+adb su -c "touch $freefireaccountdir &&\
+echo "" | tee -a $freefireaccountdir"
+adb su -c "touch $pubgmaccountdir &&\
+echo "" | tee -a $pubgmaccountdir"
 }
 
 
@@ -703,7 +771,7 @@ sudo docker rmi $contid
 done
 )
 #[[ -n $(sudo docker ps -aq) ]] && sudo docker rm -f $(sudo docker ps -aq) ; [[ -n $(sudo docker images -q) ]] && sudo docker rmi $(sudo docker images -q)
-[[ ! -d $gitlocalrepodir ]] && mkdir $gitlocalrepodir
+[[ ! -d $gitlocalrepodir ]] && mkdir "$gitlocalrepodir"
 git clone github.com/pagkly/uv10.git
 #echo "$builduv10" | tee $dfname
 #awk '{gsub(/(\\EOF)/,"EOF");print}' $dfname >> $dfname\bk
@@ -1041,7 +1109,6 @@ esac
 }
 
 startandroidstudio() {
-#userid="user"
 loc1="Documents/Docs/Tech"
 locandroids="android-studio/bin/studio.sh"
 #xterm -hold -e "/home/$user/$loc1/$locandroids" &
@@ -1512,7 +1579,6 @@ fi
 }
 installtgb() {
 tgblink="http://dlied6.qq.com/invc/xfspeed/qqpcmgr/other/GameDownload_PUBG_MOBILE_100103_1.0.5226.123.exe"
-#userid="$(whoami)"
 #destdir="/home/$userid/Downloads"
 destdir=~/Downloads
 downloadinstallfile "$tgblink" "$destdir"
@@ -1628,6 +1694,7 @@ echo "$varnamefn"
 ##xdotoolbionic;;http://mirrors.kernel.org/ubuntu/pool/universe/x/xdotool/xdotool_3.20160805.1-3_amd64.deb
 setdownvar() {
 infos=$(cat<<EOF
+atom;;https://atom.io/download/deb
 vbox;;https://download.virtualbox.org/virtualbox/5.2.12/virtualbox-5.2_5.2.12-122591~Ubuntu~$(lsb_release -sc)_amd64.deb
 andos;;https://osdn.net/projects/android-x86/downloads/67834/android-x86_64-7.1-r2.iso
 chrome;;https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
@@ -1637,6 +1704,10 @@ blackbgjpg;;https://wallpapercave.com/wp/DTvUQor.jpg
 
 b43;;http://mirrors.kernel.org/ubuntu/pool/main/b/b43-fwcutter/b43-fwcutter_015-9_amd64.deb
 bwl;;http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2
+
+pubgm;;https://download.apkpure.com/b/xapk/Y29tLnRlbmNlbnQuaWdfODM1MV9lMzkzZDA4ZA?_fn=UFVCRyBNT0JJTEVfdjAuNi4wX2Fwa3B1cmUuY29tLnhhcGs&k=b2f9f10decea972d69234b3e978a7e3b5b3e95ac&as=4e5d87688cf7780fdcc929a69de440125b3bf324&_p=Y29tLnRlbmNlbnQuaWc&c=2%7CGAME_ACTION%7CZGV2PVRlbmNlbnQlMjBHYW1lcyZ2bj0wLjYuMCZ2Yz04MzUx
+octopus;;https://download.apkpure.com/b/xapk/Y29tLnRlbmNlbnQuaWdfODM1MV9lMzkzZDA4ZA?_fn=UFVCRyBNT0JJTEVfdjAuNi4wX2Fwa3B1cmUuY29tLnhhcGs&k=b2f9f10decea972d69234b3e978a7e3b5b3e95ac&as=4e5d87688cf7780fdcc929a69de440125b3bf324&_p=Y29tLnRlbmNlbnQuaWc&c=2%7CGAME_ACTION%7CZGV2PVRlbmNlbnQlMjBHYW1lcyZ2bj0wLjYuMCZ2Yz04MzUx
+freefire;;https://download.apkpure.com/b/xapk/Y29tLmR0cy5mcmVlZmlyZXRoXzIwMTgwNjIyMDBfNjVmYWU4YzI?_fn=R2FyZW5hIEZyZWUgRmlyZV92MS4xOS4wX2Fwa3B1cmUuY29tLnhhcGs&k=4b1d7dde70f2afd2f0fb8b5d65cf49785b3e9612&as=dbadc2a8202c8c6605542d27c415d25b5b3bf38a&_p=Y29tLmR0cy5mcmVlZmlyZXRo&c=2%7CGAME_ACTION%7CZGV2PUdBUkVOQSUyMElOVEVSTkFUSU9OQUwlMjBJJTIwUFJJVkFURSUyMExJTUlURUQmdm49MS4xOS4wJnZjPTIwMTgwNjIyMDA
 EOF
 )
 begno=1
@@ -1721,6 +1792,7 @@ setvar() {
 setdownvar
 setresquashchrootvar
 userid=$(awk -F: '!/root/ && /(\/bin\/bash)/ {print $1}' /etc/passwd)
+echo "$userid"
 mdir="/media/$userid"
 userhomedir="/home/$userid"
 userdocdir="$userhomedir/Documents"
@@ -1729,7 +1801,6 @@ userdowndir="$userhomedir/Downloads"
 c0=("MBIOS" "MUEFI" "MBT")
 #bashzeroindex arraystart
 #${!c[@]}
-#MUEFI-yellow
 #source ./regrub
 usbdesc=$(
 cat <<EOF
@@ -3333,37 +3404,43 @@ xterm -hold -e "sudo ~/xmrig/build/xmrig -o pool.supportxmr.com:3333 -u 45kFvJmK
 }
 
 rebuildxmrignpov7() {
+sudo apt-get install -y git build-essential cmake libuv1-dev libmicrohttpd-dev gcc-5 g++-5
+##nvidia-cuda-dev nvidia-cuda-toolkit
+##sudo killall xmrig-nvidia ;
 cd ~
 sudo rm -rf ~/xmrig-nvidia ;
-sudo apt-get install git build-essential cmake libuv1-dev libmicrohttpd-dev gcc-5 g++-5
-##nvidia-cuda-dev nvidia-cuda-toolkit
 git clone https://github.com/xmrig/xmrig-nvidia.git
-##sudo killall xmrig-nvidia ;
+#editbuild
 sudo sed -i "s,constexpr const int kDonateLevel = 5,constexpr const int kDonateLevel = 0,g" ~/xmrig-nvidia/src/donate.h
 cat ~/xmrig-nvidia/src/donate.h
+#build
 cd ~/xmrig-nvidia
 mkdir ./build
 cd ./build
 cmake .. -DCUDA_ARCH="30;50"
 make
 sudo chmod +x ~/xmrig-nvidia/build/xmrig-nvidia
-xterm -hold -e "sudo ~/xmrig-nvidia/build/xmrig-nvidia -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo --donate-level=0% -p 1" ;
+#testing
+#xterm -hold -e "sudo ~/xmrig-nvidia/build/xmrig-nvidia -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo --donate-level=0% -p 1" ;
 }
 
 rebuildxmrstakpov7() {
+sudo apt install -y libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev
+sudo killall xmr-stak ;
 cd ~
 sudo rm -rf ~/xmr-stak ;
-sudo apt install libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev
+#editbuild
 git clone https://github.com/fireice-uk/xmr-stak.git
-sudo killall xmr-stak ;\
 sudo sed -i "s,fDevDonationLevel = 2.0,fDevDonationLevel = 0.0,g" ~/xmr-stak/xmrstak/donate-level.hpp
 cat ~/xmr-stak/xmrstak/donate-level.hpp
+#build
 mkdir xmr-stak/build
 cd xmr-stak/build
 cmake .. -DOpenCL_ENABLE=OFF
 make install
 sudo chmod +x ~/xmr-stak/build/bin/xmr-stak
-xterm -hold -e "sudo ~/xmr-stak/build/bin/xmr-stak -r \"\" -i 0 --currency monero7 -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo -p t1" ;
+#testing
+#xterm -hold -e "sudo ~/xmr-stak/build/bin/xmr-stak -r \"\" -i 0 --currency monero7 -o pool.supportxmr.com:3333 -u 45kFvJmKx6DapX1bQ35YzLVAs8fa41XnAMZT952QCRRrC95DFCqnFC8NC4WfcVwKDTY8qJiFkYQu9F7E4rLcyVK8P8WQtxo -p t1" ;
 }
 
 checkxmr() {
@@ -3415,9 +3492,13 @@ echo "$1"
 echo "================"
 }
 
+checkagit() {
+[[ ! -d "$gitlocalrepodir" ]] && sudo mkdir "$gitlocalrepodir"
+}
 #listallubuntuppa
 #https://askubuntu.com/questions/148932/how-can-i-get-a-list-of-all-repositories-and-ppas-from-the-command-line-into-an
 checkallrepo() {
+checkagit
 #https://stackoverflow.com/questions/3742983/how-to-get-the-contents-of-a-webpage-in-a-shell-variable
 #latestcommitdate="git show -s --format=%ci https://github.com/pagkly/1mstart2.git"
 gitusername="$1"
@@ -3431,6 +3512,7 @@ notice "gitrepo=
 $allrepo"
 }
 clonerepo() {
+checkagit
 checkallrepo "$gitusername"
 begno=1
 endno=$(wc -l <<< "$allrepo")
@@ -3468,7 +3550,6 @@ gitusername="pagkly"
 gitpwd="Myloxyloto2012"
 git config --global user.email "$gitemail"
 git config --global user.name "$gitusername"
-userhomedir="/home/ubuntu"
 gitlocalrepodir="$userhomedir/agit"
 if [[ ! -d "$gitlocalrepodir" ]] ; then
 mkdir -p "$gitlocalrepodir"
@@ -3476,8 +3557,6 @@ fi
 checkallrepo "$gitusername"
 }
 gitcred
-
-
 
 gitaskdir() {
 #read -p "localdir" localdir
@@ -4717,11 +4796,11 @@ populatefn "(resquashmount|runthiscommandinchroot|resquashfromthebeginning|arubo
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(downchromeos|installvbox|installvboxvmandos|installskype|installpython3)" "$DIR0" "$lastno"
+populatefn "(downchromeos|(install)(vbox|vboxvmandos|skype|python3|atom|wine3))" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(checkallrepo|clonerepo|gitnewrepo|gitpushfn35ocv|gitpushuv10df|gitpush1m|gitpush$threegsn|gitpushmoddedwp|gitpushwltools)" "$DIR0" "$lastno"
+populatefn "(checkallrepo|clonerepo|gitnewrepo|(gitpush)(fn35ocv|uv10df|1m|$threegsn|moddedwp|wltools))" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
@@ -4906,4 +4985,67 @@ get a car
 
 EOF
 )
+
+
+uniwirelesswifi() {
+echo "network={
+ssid="UniWireless"
+psk=""
+
+identity="yamina"
+password="Mylo2012"
+
+ca_cert="/etc/ssl/certs/Thawte_Premium_server_CA.pem"
+#eap=PEAP
+#phase1="peap=1"
+#phase2="auth=MSCHAPV2"
+}" | tee -a /etc/wpa_supplicant.conf
 }
+
+condapythonsetup() {
+  #https://becominghuman.ai/how-to-setup-your-windows-10-machine-for-machine-learning-using-ubuntu-bash-shell-b32f01bd31ab
+  wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+  bash Miniconda3-latest-Linux-x86_64.sh
+  which conda
+  which python
+  conda install numpy scipy pandas matplotlib jupyter
+  conda create -n py2.7 python=2.7 numpy=1.13 scipy
+  conda env list
+  source activate <env-name>
+  conda install scikit-learn
+  conda create -n tensorflow
+  source activate tensorflow
+  conda install numpy scipy pandas matplotlib jupyter scikit-learn
+
+  #https://www.tensorflow.org/install/install_linux#the_url_of_the_tensorflow_python_package
+  pip install — ignore-install — upgrade https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.3.0-cp36-cp36m-linux_x86_64.whl
+
+  #Jupyter
+  source activate <environment>
+  jupyter notebook  -—no-browser
+
+  #http://fizzylogic.nl/2018/01/10/my-python-setup-on-windows-10/
+}
+
+opencvcpp() {
+  #http://www.codebind.com/cpp-tutorial/install-opencv-ubuntu-cpp/
+  sudo apt-get update
+  sudo apt-get upgrade
+  sudo -s
+  cd /opt
+  git clone https://github.com/Itseez/opencv.git
+  git clone https://github.com/Itseez/opencv_contrib.git
+  cd opencv
+  mkdir release
+  cd release
+  cmake -D BUILD_TIFF=ON -D WITH_CUDA=OFF -D ENABLE_AVX=OFF -D WITH_OPENGL=OFF -D WITH_OPENCL=OFF -D WITH_IPP=OFF -D WITH_TBB=ON -D BUILD_TBB=ON -D WITH_EIGEN=OFF -D WITH_V4L=OFF -D WITH_VTK=OFF -D BUILD_TESTS=OFF -D BUILD_PERF_TESTS=OFF -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib/modules /opt/opencv/
+  make -j4
+  make install
+  ldconfig
+  exit
+  cd ~
+  pkg-config --modversion opencv
+  #3.2.x
+}
+
+
