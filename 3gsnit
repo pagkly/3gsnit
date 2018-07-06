@@ -607,7 +607,6 @@ sudo make install
 winecfg
 wine "$dnfx35downdir"
 }
-
 installwineppa() {
 #http://ubuntuhandbook.org/index.php/2015/12/install-wine-1-8-stable-new-ppa/
 sudo add-apt-repository -y ppa:wine/wine-builds
@@ -617,6 +616,40 @@ sudo apt-get install wine1.8 winetricks
 #dev
 sudo apt-get install --install-recommends winehq-devel
 winecfg
+}
+userid=user
+winedir="/home/$userid/.wine"
+winedrivec="$winedir/drive_c"
+winuserhomedir="/media/user/Windows/Users"
+subwinec() {
+mv "$winedrivec" "$winedrivec"\bk
+sudo mount --bind /media/user/Windows "$winedrivec"
+sudo mkdir $winuserhomedir/user
+sudo mount --bind $winuserhomedir/SP3 $winuserhomedir/user
+}
+subwinecbk() {
+sudo umount /media/user/Windows/Users/user ;
+sudo umount "$winedrivec" ;
+sudo fusermount -uz $winuserhomedir/user ;
+sudo fusermount -uz "$winedrivec" ;
+curdrivec="$(ls "$winedrivec")"
+echo "drivec=$curdrivec"
+read -p "checkdrivec"
+rm -rf "$winedrivec" ;
+#mv "$winedrivec"/drive_c\bk "$winedir"
+mv "$winedrivec"\bk "$winedrivec"
+}
+runwinefiinote() {
+#https://social.technet.microsoft.com/Forums/windows/en-US/b04c780a-86bd-420d-9d44-86e00e7c51de/compatibility-mode-from-command-line-is-it-possible?forum=w7itproappcompat
+wine FiiNote.exe WINXPSP2
+}
+
+wineeditreg() {
+#https://qtechbabble.wordpress.com/2016/08/23/run-application-in-compatibility-mode-from-command-line/
+#For an individual user: HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers
+#For all users: HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers
+#"C:\FiiNote.exe" "REG_SZ" "WINXPSP2"
+wine regedit
 }
 
 installvbox2() {
