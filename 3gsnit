@@ -992,6 +992,79 @@ cmake -D CMAKE_BUILD_TYPE=RELEASE \
     -D BUILD_EXAMPLES=ON ..
 }
 
+installpdftoppm2() {
+#https://poppler.freedesktop.org/
+#https://gist.github.com/Dayjo/618794d4ff37bb82ddfb02c63b450a81
+#popplerencfn="poppler-data-0.4.7"
+#popplerfn="poppler-0.48.0"
+#cd ..
+#cd poppler-data-0.4.7
+#sudo apt-get remove poppler-utils
+popplerencfn="poppler-data-0.4.9"
+popplerfn="poppler-0.66.0"
+sudo apt install -y g++ \
+autoconf \
+libfontconfig1-dev \
+pkg-config \
+libjpeg-dev \
+libopenjpeg-dev \
+gnome-common \
+libglib2.0-dev \
+gtk-doc-tools \
+libyelp-dev \
+yelp-tools \
+gobject-introspection \
+libsecret-1-dev \
+libnautilus-extension-dev &&\
+
+#Install build dependencies with 
+#Install cmake with 
+#Install development package for libopenjp2 with 
+#Install Gdk-PixBuf with 
+#Install checkinstall to make deb-package
+#sudo apt-get install -y build-dep libpoppler58
+
+wget https://poppler.freedesktop.org/$popplerencfn.tar.gz &&\
+tar -xf $popplerencfn.tar.gz &&\
+cd $popplerencfn &&\
+sudo make install &&\
+
+cd .. &&\
+#popplerfn="poppler-0.48.0"
+wget https://poppler.freedesktop.org/$popplerfn.tar.xz &&\
+tar -xf $popplerfn.tar.xz &&\
+cd $popplerfn &&\
+./configure &&\
+make &&\
+sudo make install &&\
+sudo ln -s /usr/local/bin/pdftotext /usr/bin/pdftotext &&\
+sudo ln -s /usr/local/bin/pdftoppm /usr/bin/pdftoppm &&\
+sudo ln -s /usr/local/lib/libpoppler.so.64 /usr/lib/libpoppler.so.64 &&\
+echo "Done"
+}
+installpdftoppm() {
+#https://askubuntu.com/questions/983716/installing-poppler-0-62-0-on-ubuntu-16-04
+sudo apt-get install -y cmake \
+libopenjp2-7-dev \
+libgdk-pixbuf2.0-dev \
+checkinstall
+
+popplerencfn="poppler-data-0.4.9"
+popplerfn="poppler-0.66.0"
+cd /tmp
+wget https://poppler.freedesktop.org/$popplerencfn.tar.gz &&\
+tar -xf $popplerencfn.tar.gz &&\
+cd $popplerencfn &&\
+sudo make install
+
+wget https://poppler.freedesktop.org/$popplerfn.tar.xz &&\
+tar -xf $popplerfn.tar.xz &&\
+cd $popplerfn
+mkdir build
+cd build
+cmake ..
+sudo checkinstall make install
+}
 upgradetobionic() {
 ##https://linuxconfig.org/how-to-upgrade-to-ubuntu-18-04-lts-bionic-beaver
 sudo apt update 
@@ -4833,7 +4906,7 @@ populatefn "(resquashmount|runthiscommandinchroot|resquashfromthebeginning|arubo
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
-populatefn "(downchromeos|(install)(vbox|vboxvmandos|skype|python3|atom|wine3))" "$DIR0" "$lastno"
+populatefn "(downchromeos|(install)(vbox|vboxvmandos|skype|python3|pdftoppm|atom|wine3))" "$DIR0" "$lastno"
 printallfn $lastno
 echo "------------"
 lastno="$totalallfn"
