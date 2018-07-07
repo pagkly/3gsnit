@@ -1064,6 +1064,12 @@ mkdir build
 cd build
 cmake ..
 sudo checkinstall make install
+sudo make install &&\
+sudo ln -s /usr/local/bin/pdftotext /usr/bin/pdftotext &&\
+sudo ln -s /usr/local/bin/pdftoppm /usr/bin/pdftoppm &&\
+ls /usr/local/lib | grep libpoppler
+sudo ln -s /usr/local/lib/libpoppler.so.77 /usr/lib/libpoppler.so.77
+echo "Done"
 }
 upgradetobionic() {
 ##https://linuxconfig.org/how-to-upgrade-to-ubuntu-18-04-lts-bionic-beaver
