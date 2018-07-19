@@ -588,8 +588,8 @@ sudo apt-get install -y skypeforlinux
 }
 
 installwine3() {
-wine;;https://dl.winehq.org/wine/source/3.0/wine-3.0.2.tar.xz;;http://mirrors.ibiblio.org/wine/source/3.0/wine-3.0.2.tar.xz
-dnfx35;;
+#wine;;https://dl.winehq.org/wine/source/3.0/wine-3.0.2.tar.xz;;http://mirrors.ibiblio.org/wine/source/3.0/wine-3.0.2.tar.xz
+#dnfx35;;
 curl -o "$winedowndir" "$winedownlink"
 curl -o "$dnfx35downdir" "$dnfx35downlink"
 cd "$userdowndir"
@@ -2711,19 +2711,39 @@ linux /casper/vmlinuz.efi boot=casper persistent quiet splash ignore_uuid
 initrd /casper/initrd.lz
 }
 
+set check0="(hd0,msdos1)"
+set check1="(hd1,msdos1)"
+set check2="(hd2,msdos1)"
 menuentry "W10Legacy" {   
-  insmod fat
-  insmod ntfs
-  insmod ntldr
-  insmod part_gpt
-  insmod part_msdos
-  insmod search_fs_uuid
-  insmod chain
-  search --no-floppy --set=root --fs-uuid AE10175B10172A3B
-  #nltdr (${root})/Windows/Boot/PCAT/bootmgr
-  #chainloader (${root})/Windows/Boot/PCAT/bootmgr
-  chainloader +1
-  boot
+insmod fat
+insmod ntfs
+insmod ntldr
+insmod part_gpt
+insmod part_msdos
+insmod search_fs_uuid
+insmod chain
+
+if [ -f $check0/Windows/Boot/PCAT/bootmgr ]; then
+set root=$check0
+elif [ -f $check1/Windows/Boot/PCAT/bootmgr ]; then
+set root=$check1
+elif [ -f $check2/Windows/Boot/PCAT/bootmgr ]; then
+set root=$check2
+
+else
+echo "NOT FOUND"
+sleep 10
+reboot
+fi
+
+echo "$root"
+sleep 2
+
+#search --no-floppy --set=root --fs-uuid AE10175B10172A3B
+#nltdr (${root})/Windows/Boot/PCAT/bootmgr
+chainloader (${root})/Windows/Boot/PCAT/bootmgr
+#chainloader +1
+boot
 #nltdr (${root})/bootmgr (winreenv)
 }
 
